@@ -171,6 +171,10 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hmons b{color:var(--ink);font-weight:700;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase}
 .mlink{color:var(--accent);cursor:pointer;border-bottom:1px dotted color-mix(in srgb,var(--accent) 50%,transparent)}
 .mlink:hover{color:var(--ink)}
+.more{display:block;width:100%;margin:12px 0 4px;padding:11px;font:inherit;font-size:13px;font-weight:600;
+  color:var(--accent);background:transparent;border:1px solid var(--line);border-radius:9px;cursor:pointer}
+.more:hover{background:color-mix(in srgb,var(--accent) 8%,transparent);border-color:var(--accent)}
+.more:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 </style>
 
 <div class="wrap">
@@ -311,41 +315,45 @@ function huntCard(h,qq,open){
     +`<div class="hmons"><b>Monstros:</b> ${mons}</div></div></details>`;
 }
 
+const CHUNK=60; let limit=CHUNK;
+
 function render(){
   const raw=q.value.trim(), qq=norm(raw);
-  let html="", n=0, shown=0, CAP=60;
-  legend.style.display = (mode==="hunt"||mode==="item") ? "none":"flex";
+  let cards=[], noun="", open="";
 
   if(mode==="mon" || mode==="boss"){
     const wantBoss = mode==="boss";
     const res = M.filter(m=>(!!m.boss===wantBoss) && (!qq || norm(m.n).includes(qq)));
-    n=res.length;
-    for(const m of res){ if(shown>=CAP) break; shown++;
-      html+=monCard(m,qq, raw && res.length<=6 ? " open":""); }
-    const noun = wantBoss ? (n>1?"bosses":"boss") : (n>1?"monstros":"monstro");
-    count.textContent = n? `${n} ${noun}${n>CAP?` · mostrando ${CAP}`:""}` : "";
+    open = raw && res.length<=6 ? " open":"";
+    cards = res.map(m=>()=>monCard(m,qq,open));
+    noun = wantBoss ? (res.length===1?"boss":"bosses") : (res.length===1?"monstro":"monstros");
   } else if(mode==="hunt"){
     const res = HUNTS.filter(h=>!qq || norm(h.name).includes(qq) || h.mons.some(x=>norm(x).includes(qq)));
-    n=res.length;
-    for(const h of res){ if(shown>=CAP) break; shown++;
-      html+=huntCard(h,qq, raw && res.length<=8 ? " open":""); }
-    count.textContent = n? `${n} hunt${n>1?"s":""}${n>CAP?` · mostrando ${CAP}`:""}` : "";
+    open = raw && res.length<=8 ? " open":"";
+    cards = res.map(h=>()=>huntCard(h,qq,open));
+    noun = res.length===1?"hunt":"hunts";
   } else {
     const res = ITEMS.filter(it=>!qq || norm(it).includes(qq));
-    n=res.length;
-    for(const it of res){ if(shown>=CAP) break; shown++;
-      const drops=ITEM.get(it), best=drops[0];
-      html+=`<details${raw && res.length<=6?" open":""}><summary><span class="name item">${hl(it,qq)}</span>`
+    open = raw && res.length<=6 ? " open":"";
+    cards = res.map(it=>()=>{ const drops=ITEM.get(it), best=drops[0];
+      return `<details${open}><summary><span class="name item">${hl(it,qq)}</span>`
         +`<span class="meta">dropa de <span class="chip">${drops.length}</span> · melhor <span class="${band(best.ch)}">${pct(best.ch)}%</span></span></summary>`
-        +`<div class="body"><table>${monRows(drops,"")}</table></div></details>`;
-    }
-    count.textContent = n? `${n} ${n>1?"itens":"item"}${n>CAP?` · mostrando ${CAP}`:""}` : "";
+        +`<div class="body"><table>${monRows(drops,"")}</table></div></details>`; });
+    noun = res.length===1?"item":"itens";
   }
-  list.innerHTML = html || `<div class="empty">Nada encontrado pra “${esc(raw)}”.</div>`;
+
+  const n=cards.length;
+  if(limit>n) limit=n<=CHUNK?CHUNK:limit;
+  const html = cards.slice(0,limit).map(fn=>fn()).join("");
+  const more = n>limit ? `<button class="more" id="more">mostrar mais (+${Math.min(CHUNK,n-limit)})</button>` : "";
+  list.innerHTML = html ? html+more : `<div class="empty">Nada encontrado pra “${esc(raw)}”.</div>`;
+  count.textContent = n? `${n} ${noun}${n>limit?` · mostrando ${limit}`:""}` : "";
+  const mb=document.getElementById("more");
+  if(mb) mb.onclick=()=>{ limit+=CHUNK; render(); };
 }
 
 function setMode(m){
-  mode=m;
+  mode=m; limit=CHUNK;
   [["mon",mMon],["boss",mBoss],["hunt",mHunt],["item",mItem]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
     : m==="item" ? "Buscar item (ex: crystal coin, crossbow)…"
@@ -364,7 +372,7 @@ list.addEventListener("click",ev=>{
   q.value=nm; setMode(m.boss?"boss":"mon");
   window.scrollTo({top:0,behavior:"smooth"});
 });
-q.addEventListener("input",render);
+q.addEventListener("input",()=>{ limit=CHUNK; render(); });
 setMode("mon");
 
 // painel de mudancas (nerf/buff) — abaixo do titulo
