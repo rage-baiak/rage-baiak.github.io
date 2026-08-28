@@ -176,7 +176,9 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hmon-hp{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .hmon-r{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:5px 0 0}
 .hmon-r .rlbl{min-width:66px;margin:0;font-size:10px}
-.dchip{display:inline-flex;align-items:center;font-size:12px;border-radius:7px;padding:2px 9px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.dchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;border-radius:7px;padding:2px 9px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.dchip b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+.dchip em{color:var(--muted);font-style:normal;font-size:10.5px;font-family:"JetBrains Mono",monospace}
 .hnone{font-size:11.5px;color:var(--muted);font-style:italic}
 .mlink{color:var(--accent);cursor:pointer;border-bottom:1px dotted color-mix(in srgb,var(--accent) 50%,transparent)}
 .mlink:hover{color:var(--ink)}
@@ -313,19 +315,21 @@ function huntMon(name){
   const dot=el=>`<i class="edot e-${el}"></i>`;
   const weak=[]; if(m.r) for(const el in m.r){const v=m.r[el]; if(v<0)weak.push([el,v]);}
   weak.sort((a,b)=>a[1]-b[1]);
-  const deals=new Set(); if(m.dm&&m.dm[1])deals.add("physical");
-  for(const ab of m.a||[]) if(ab.el&&ab.el!=="healing")deals.add(ab.el);
+  const dmg=[];
+  if(m.dm&&(m.dm[0]||m.dm[1])) dmg.push({el:"physical",mn:m.dm[0],mx:m.dm[1],ch:null});
+  for(const ab of m.a||[]) if(ab.el&&ab.el!=="healing"&&(ab.mn||ab.mx)) dmg.push({el:ab.el,mn:ab.mn,mx:ab.mx,ch:ab.ch});
+  dmg.sort((a,b)=>b.mx-a.mx);
   const wk = weak.length
     ? weak.map(([el,v])=>`<span class="rchip wk">${dot(el)}${ELPT[el]||el} +${Math.abs(v)}%</span>`).join("")
     : `<span class="hnone">sem fraqueza elemental</span>`;
-  const dl = deals.size
-    ? [...deals].map(el=>`<span class="dchip">${dot(el)}${ELPT[el]||el}</span>`).join("")
+  const dl = dmg.length
+    ? dmg.map(d=>`<span class="dchip">${dot(d.el)}${ELPT[d.el]||d.el} <b>${d.mn}–${d.mx}</b>${d.ch!=null?`<em>${d.ch}%</em>`:""}</span>`).join("")
     : `<span class="hnone">só corpo a corpo</span>`;
   return `<div class="hmon"><div class="hmon-h">`
     +`<span class="mlink" data-mon="${esc(m.n)}">${esc(m.n)}</span>`
     +`<span class="hmon-hp">HP ${m.hp.toLocaleString("pt-BR")}</span></div>`
-    +`<div class="hmon-r"><span class="rlbl wk">atacar com</span>${wk}</div>`
-    +`<div class="hmon-r"><span class="rlbl rs">resistir a</span>${dl}</div></div>`;
+    +`<div class="hmon-r"><span class="rlbl wk">fraco a</span>${wk}</div>`
+    +`<div class="hmon-r"><span class="rlbl rs">dano</span>${dl}</div></div>`;
 }
 function huntCard(h,qq,open){
   const dot=el=>`<i class="edot e-${el}"></i>`;
