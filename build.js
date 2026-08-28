@@ -52,23 +52,60 @@ function diff(oldD, newD) {
   console.log("bundle:", bm[0]);
   const src = await (await fetch("https://baiakidle.com" + bm[0], { headers: UA })).text();
 
-  const anchor = src.indexOf('{troll:{name:"Troll"');
-  if (anchor < 0) throw new Error("catalogo de monstros nao encontrado (jogo mudou?)");
-  const mons = (0, eval)("(" + matchBalanced(src, anchor) + ")");
+  // acha o container `VAR={...}` que engloba a ancora (objeto do bundle)
+  function extractByContainer(anchorStr) {
+    const a = src.indexOf(anchorStr);
+    if (a < 0) throw new Error("nao achei no bundle: " + anchorStr + " (jogo mudou?)");
+    for (let i = a; i >= 0; i--) {
+      if (src[i] === "{" && src[i - 1] === "=") {
+        const blk = matchBalanced(src, i);
+        if (i + blk.length > a) return (0, eval)("(" + blk + ")");
+      }
+    }
+    throw new Error("container nao encontrado pra " + anchorStr);
+  }
+
+  // Dois catalogos: o de LOOT (name/exp/loot, chave underscore) e o de COMBATE
+  // (hp/dmg/armor/resist/abilities, chave com espaco). Junta pelo nome.
+  const lootCat = extractByContainer('{troll:{name:"Troll"');
+  const combatCat = extractByContainer('"infernal demon":{hp:');
+  const norm = s => String(s).replace(/[_-]/g, " ").toLowerCase().trim();
+
+  const merged = {};  // nome-normalizado -> registro
+  const put = (k) => (merged[k] = merged[k] || { l: [] });
+  for (const id in lootCat) {
+    const m = lootCat[id]; if (!m || !m.hp) continue;
+    const r = put(norm(m.name || id));
+    r.n = m.name || id; r.exp = m.exp || 0; r.sp = m.speed || 0; r.hp = m.hp;
+    if (m.loot && m.loot.length) r.l = m.loot.map(x => [x.name, x.chance, x.max || 1]);
+    if (m.resist && !r.r) r.r = m.resist;               // fallback
+    if (m.abilities && !r.a) r.a = m.abilities;
+    if (m.dmg && !r.dm) r.dm = m.dmg;
+    if (m.armor && !r.arm) r.arm = m.armor;
+  }
+  for (const key in combatCat) {                          // combate = autoritativo
+    const m = combatCat[key]; if (!m) continue;
+    const r = put(norm(key));
+    if (!r.n) r.n = key.replace(/\b\w/g, c => c.toUpperCase());
+    if (m.hp) r.hp = m.hp;
+    if (m.dmg) r.dm = m.dmg;
+    if (m.armor) r.arm = m.armor;
+    if (m.resist) r.r = m.resist;
+    if (m.abilities) r.a = m.abilities;
+  }
+
   const data = [];
-  for (const id in mons) {
-    const m = mons[id];
-    if (!m || !m.hp) continue;                  // so criaturas de verdade
-    const hasLoot = m.loot && m.loot.length;
-    const hasCombat = m.resist || (m.abilities && m.abilities.length) || m.dmg;
-    if (!hasLoot && !hasCombat) continue;       // pula dummies sem nada util
+  for (const k in merged) {
+    const r = merged[k];
+    if (!r.hp) continue;
+    const hasCombat = r.r || (r.a && r.a.length) || r.dm;
+    if (!r.l.length && !hasCombat) continue;              // pula dummy vazio
     data.push({
-      n: m.name || id, hp: m.hp || 0, exp: m.exp || 0,
-      arm: m.armor || 0, sp: m.speed || 0, dm: m.dmg || null,
-      r: m.resist || null,   // {elemento: %}  (negativo = fraqueza)
-      a: (m.abilities || []).map(x => ({ el: x.element, mn: x.min, mx: x.max,
+      n: r.n, hp: r.hp || 0, exp: r.exp || 0, arm: r.arm || 0, sp: r.sp || 0,
+      dm: r.dm || null, r: r.r || null,
+      a: (r.a || []).map(x => ({ el: x.element, mn: x.min, mx: x.max,
         ch: x.chance, ra: x.radius || 0, tg: x.target ? 1 : 0 })),
-      l: hasLoot ? m.loot.map(x => [x.name, x.chance, x.max || 1]) : [],
+      l: r.l,
     });
   }
   data.sort((a, b) => a.n.localeCompare(b.n));
