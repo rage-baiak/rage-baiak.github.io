@@ -59,8 +59,14 @@ function diff(oldD, newD) {
   for (const id in mons) {
     const m = mons[id];
     if (!m || !m.loot || !m.loot.length) continue;
-    data.push({ n: m.name || id, hp: m.hp || 0, exp: m.exp || 0,
-      l: m.loot.map(x => [x.name, x.chance, x.max || 1]) });
+    data.push({
+      n: m.name || id, hp: m.hp || 0, exp: m.exp || 0,
+      arm: m.armor || 0, sp: m.speed || 0, dm: m.dmg || null,
+      r: m.resist || null,   // {elemento: %}  (negativo = fraqueza)
+      a: (m.abilities || []).map(x => ({ el: x.element, mn: x.min, mx: x.max,
+        ch: x.chance, ra: x.radius || 0, tg: x.target ? 1 : 0 })),
+      l: m.loot.map(x => [x.name, x.chance, x.max || 1]),
+    });
   }
   data.sort((a, b) => a.n.localeCompare(b.n));
   console.log("monstros com loot:", data.length);

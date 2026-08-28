@@ -126,6 +126,22 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .chist summary::-webkit-details-marker{display:none}
 .hrow{font-size:12.5px;color:var(--muted);padding:5px 0;font-variant-numeric:tabular-nums}
 .hrow b{color:var(--ink)}
+
+/* bloco de combate no detalhe do monstro */
+.combat{padding:2px 8px 0}
+.stats{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--muted);padding:8px 0 10px}
+.stats b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+.rline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0}
+.rlbl{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.rlbl.wk{color:var(--rc)} .rlbl.rs{color:var(--rr)}
+.rchip,.atk{font-size:12px;border-radius:7px;padding:3px 9px;border:1px solid var(--line);white-space:nowrap}
+.rchip.wk{color:var(--rc);border-color:color-mix(in srgb,var(--rc) 45%,transparent);background:color-mix(in srgb,var(--rc) 9%,transparent);font-weight:600}
+.rchip.rs{color:var(--muted)}
+.rchip.im{color:var(--rr);border-color:color-mix(in srgb,var(--rr) 45%,transparent);font-weight:600}
+.atk{color:var(--ink)}
+.atk em{color:var(--muted);font-style:normal;font-size:11px;margin-left:5px}
+.atk.heal{color:var(--rc)}
+.lootlbl{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:12px 8px 0;padding-top:9px;border-top:1px solid var(--line2)}
 </style>
 
 <div class="wrap">
@@ -196,6 +212,34 @@ let mode="mon";
 const q=document.getElementById("q"), list=document.getElementById("list"), count=document.getElementById("count");
 const mMon=document.getElementById("mMon"), mItem=document.getElementById("mItem"), legend=document.getElementById("legend");
 
+const ELPT={physical:"Físico",fire:"Fogo",ice:"Gelo",earth:"Terra",energy:"Energia",holy:"Sagrado",death:"Morte",healing:"Cura"};
+function monStats(m){
+  let h='<div class="combat">';
+  const st=[`HP <b>${m.hp.toLocaleString("pt-BR")}</b>`, `EXP <b>${m.exp.toLocaleString("pt-BR")}</b>`];
+  if(m.arm) st.push(`Armor <b>${m.arm}</b>`);
+  if(m.sp) st.push(`Vel <b>${m.sp}</b>`);
+  if(m.dm) st.push(`Dano <b>${m.dm[0]}–${m.dm[1]}</b>`);
+  h+=`<div class="stats">${st.map(x=>`<span>${x}</span>`).join("")}</div>`;
+  if(m.r){
+    const weak=[],res=[];
+    for(const el in m.r){const v=m.r[el]; if(v<0)weak.push([el,v]); else if(v>0)res.push([el,v]);}
+    weak.sort((a,b)=>a[1]-b[1]); res.sort((a,b)=>b[1]-a[1]);
+    if(weak.length) h+=`<div class="rline"><span class="rlbl wk">▲ fraco a</span>`
+      +weak.map(([el,v])=>`<span class="rchip wk">${ELPT[el]||el} +${Math.abs(v)}%</span>`).join("")+`</div>`;
+    if(res.length) h+=`<div class="rline"><span class="rlbl rs">▼ resiste</span>`
+      +res.map(([el,v])=>`<span class="rchip ${v>=100?"im":"rs"}">${ELPT[el]||el} ${v>=100?"imune":"−"+v+"%"}</span>`).join("")+`</div>`;
+  }
+  if(m.a&&m.a.length){
+    h+=`<div class="rline"><span class="rlbl">ataques</span>`+m.a.map(x=>{
+      const heal=x.el==="healing", tags=[];
+      if(x.ra>1)tags.push("área"); if(!x.tg&&!heal)tags.push("onda");
+      return `<span class="atk ${heal?"heal":""}">${heal?"Cura":(ELPT[x.el]||x.el)} ${x.mn}–${x.mx}`
+        +`<em>${x.ch}%${tags.length?" · "+tags.join(" "):""}</em></span>`;
+    }).join("")+`</div>`;
+  }
+  return h+`<div class="lootlbl">Loot</div></div>`;
+}
+
 function lootRows(loot,qq){
   return loot.slice().sort((a,b)=>b[1]-a[1]).map(([nm,ch,mx])=>
     `<tr><td class="pct ${band(ch)}">${pct(ch)}%</td><td class="it">${hl(nm,qq)}</td><td class="qty">${qty(mx)}</td></tr>`
@@ -219,7 +263,7 @@ function render(){
       const open = raw && res.length<=6 ? " open":"";
       html+=`<details${open}><summary><span class="name">${hl(m.n,qq)}</span>`
         +`<span class="meta"><span class="chip">${m.l.length}</span> drops · hp ${m.hp.toLocaleString("pt-BR")} · exp ${m.exp.toLocaleString("pt-BR")}</span></summary>`
-        +`<div class="body"><table>${lootRows(m.l,"")}</table></div></details>`;
+        +`<div class="body">${monStats(m)}<table>${lootRows(m.l,"")}</table></div></details>`;
     }
     count.textContent = n? `${n} monstro${n>1?"s":""}${n>CAP?` · mostrando ${CAP}`:""}` : "";
   } else {
