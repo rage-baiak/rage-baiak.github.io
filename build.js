@@ -103,8 +103,16 @@ function diff(oldD, newD) {
     data.push({
       n: r.n, hp: r.hp || 0, exp: r.exp || 0, arm: r.arm || 0, sp: r.sp || 0,
       dm: r.dm || null, r: r.r || null,
-      a: (r.a || []).map(x => ({ el: x.element, mn: x.min, mx: x.max,
-        ch: x.chance, ra: x.radius || 0, tg: x.target ? 1 : 0 })),
+      a: (r.a || []).map(x => ({
+        el: x.element, mn: x.min, mx: x.max, ch: x.chance,
+        // tipo do ataque, pra ficar claro o que e cada um
+        ty: x.element === "healing" ? "cura"
+          : x.length ? "onda"
+          : x.radius ? "área"
+          : x.missile != null ? "distância"
+          : x.target ? "direto"
+          : "corpo a corpo",
+      })),
       l: r.l,
     });
   }

@@ -141,6 +141,20 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .atk{color:var(--ink)}
 .atk em{color:var(--muted);font-style:normal;font-size:11px;margin-left:5px}
 .atk.heal{color:var(--rc)}
+.atksec{padding:4px 0}
+.hint{font-weight:500;text-transform:none;letter-spacing:0;color:var(--muted);font-size:10.5px}
+.atks{display:flex;flex-direction:column;margin-top:5px}
+.atk2{display:grid;grid-template-columns:88px 1fr auto;gap:10px;align-items:baseline;
+  padding:6px 0;border-top:1px solid var(--line2);font-size:13px}
+.aty{font-size:10.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.ael{color:var(--ink)}
+.ael b{font-weight:700;font-variant-numeric:tabular-nums}
+.ach{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:12px;color:var(--muted);
+  text-align:right;font-variant-numeric:tabular-nums}
+.edot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.e-fire{background:#e0642e} .e-ice{background:#35a3cf} .e-earth{background:#6a9a3a}
+.e-energy{background:#9b63e0} .e-holy{background:#d3a52a} .e-death{background:#a86fb5}
+.e-physical{background:var(--muted)} .e-healing{background:var(--rc)}
 .lootlbl{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:12px 8px 0;padding-top:9px;border-top:1px solid var(--line2)}
 </style>
 
@@ -230,12 +244,13 @@ function monStats(m){
   if(!weak.length && !res.length)
     h+=`<div class="rline"><span class="rlbl">defesa</span><span class="rchip rs">dano normal · sem fraqueza/resistência</span></div>`;
   if(m.a&&m.a.length){
-    h+=`<div class="rline"><span class="rlbl">ataques</span>`+m.a.map(x=>{
-      const heal=x.el==="healing", tags=[];
-      if(x.ra>1)tags.push("área"); if(!x.tg&&!heal)tags.push("onda");
-      return `<span class="atk ${heal?"heal":""}">${heal?"Cura":(ELPT[x.el]||x.el)} ${x.mn}–${x.mx}`
-        +`<em>${x.ch}%${tags.length?" · "+tags.join(" "):""}</em></span>`;
-    }).join("")+`</div>`;
+    h+=`<div class="atksec"><div class="rlbl">ataques <span class="hint">· % = chance de sair</span></div><div class="atks">`
+      +m.a.map(x=>{
+        const heal=x.el==="healing", nm=heal?"Cura":(ELPT[x.el]||x.el);
+        return `<div class="atk2"><span class="aty">${x.ty||""}</span>`
+          +`<span class="ael"><i class="edot e-${x.el}"></i>${nm} <b>${x.mn}–${x.mx}</b></span>`
+          +`<span class="ach">${x.ch}%</span></div>`;
+      }).join("")+`</div></div>`;
   } else {
     h+=`<div class="rline"><span class="rlbl">ataques</span><span class="atk">Só corpo a corpo</span></div>`;
   }
