@@ -112,6 +112,10 @@ function diff(oldD, newD) {
           : x.missile != null ? "distância"
           : x.target ? "direto"
           : "corpo a corpo",
+        // tamanho: raio (area), comprimento x largura (onda), ou alcance
+        sz: x.radius ? ("raio " + x.radius)
+          : x.length ? (x.length + (x.spread ? "×" + x.spread : "") + " tiles")
+          : x.range ? ("alcance " + x.range) : "",
       })),
       l: r.l,
     });
