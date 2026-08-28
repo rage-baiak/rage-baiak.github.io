@@ -220,15 +220,15 @@ function monStats(m){
   if(m.sp) st.push(`Vel <b>${m.sp}</b>`);
   if(m.dm) st.push(`Dano <b>${m.dm[0]}–${m.dm[1]}</b>`);
   h+=`<div class="stats">${st.map(x=>`<span>${x}</span>`).join("")}</div>`;
-  if(m.r){
-    const weak=[],res=[];
-    for(const el in m.r){const v=m.r[el]; if(v<0)weak.push([el,v]); else if(v>0)res.push([el,v]);}
-    weak.sort((a,b)=>a[1]-b[1]); res.sort((a,b)=>b[1]-a[1]);
-    if(weak.length) h+=`<div class="rline"><span class="rlbl wk">▲ fraco a</span>`
-      +weak.map(([el,v])=>`<span class="rchip wk">${ELPT[el]||el} +${Math.abs(v)}%</span>`).join("")+`</div>`;
-    if(res.length) h+=`<div class="rline"><span class="rlbl rs">▼ resiste</span>`
-      +res.map(([el,v])=>`<span class="rchip ${v>=100?"im":"rs"}">${ELPT[el]||el} ${v>=100?"imune":"−"+v+"%"}</span>`).join("")+`</div>`;
-  }
+  const weak=[],res=[];
+  if(m.r) for(const el in m.r){const v=m.r[el]; if(v<0)weak.push([el,v]); else if(v>0)res.push([el,v]);}
+  weak.sort((a,b)=>a[1]-b[1]); res.sort((a,b)=>b[1]-a[1]);
+  if(weak.length) h+=`<div class="rline"><span class="rlbl wk">▲ fraco a</span>`
+    +weak.map(([el,v])=>`<span class="rchip wk">${ELPT[el]||el} +${Math.abs(v)}%</span>`).join("")+`</div>`;
+  if(res.length) h+=`<div class="rline"><span class="rlbl rs">▼ resiste</span>`
+    +res.map(([el,v])=>`<span class="rchip ${v>=100?"im":"rs"}">${ELPT[el]||el} ${v>=100?"imune":"−"+v+"%"}</span>`).join("")+`</div>`;
+  if(!weak.length && !res.length)
+    h+=`<div class="rline"><span class="rlbl">defesa</span><span class="rchip rs">dano normal · sem fraqueza/resistência</span></div>`;
   if(m.a&&m.a.length){
     h+=`<div class="rline"><span class="rlbl">ataques</span>`+m.a.map(x=>{
       const heal=x.el==="healing", tags=[];
@@ -236,8 +236,10 @@ function monStats(m){
       return `<span class="atk ${heal?"heal":""}">${heal?"Cura":(ELPT[x.el]||x.el)} ${x.mn}–${x.mx}`
         +`<em>${x.ch}%${tags.length?" · "+tags.join(" "):""}</em></span>`;
     }).join("")+`</div>`;
+  } else {
+    h+=`<div class="rline"><span class="rlbl">ataques</span><span class="atk">Só corpo a corpo</span></div>`;
   }
-  return h+`<div class="lootlbl">Loot</div></div>`;
+  return h + (m.l.length?`<div class="lootlbl">Loot</div>`:`<div class="lootlbl">Sem loot registrado</div>`) + `</div>`;
 }
 
 function lootRows(loot,qq){
@@ -261,9 +263,10 @@ function render(){
     n=res.length;
     for(const m of res){ if(shown>=CAP) break; shown++;
       const open = raw && res.length<=6 ? " open":"";
+      const dropMeta = m.l.length ? `<span class="chip">${m.l.length}</span> drops` : `sem loot`;
       html+=`<details${open}><summary><span class="name">${hl(m.n,qq)}</span>`
-        +`<span class="meta"><span class="chip">${m.l.length}</span> drops · hp ${m.hp.toLocaleString("pt-BR")} · exp ${m.exp.toLocaleString("pt-BR")}</span></summary>`
-        +`<div class="body">${monStats(m)}<table>${lootRows(m.l,"")}</table></div></details>`;
+        +`<span class="meta">${dropMeta} · hp ${m.hp.toLocaleString("pt-BR")} · exp ${m.exp.toLocaleString("pt-BR")}</span></summary>`
+        +`<div class="body">${monStats(m)}${m.l.length?`<table>${lootRows(m.l,"")}</table>`:""}</div></details>`;
     }
     count.textContent = n? `${n} monstro${n>1?"s":""}${n>CAP?` · mostrando ${CAP}`:""}` : "";
   } else {
