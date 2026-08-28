@@ -98,6 +98,34 @@ td.monx{color:var(--muted);font-size:12.5px;text-align:right;white-space:nowrap;
 .legend span{display:inline-flex;align-items:center;gap:6px}
 footer{text-align:center;color:var(--muted);font-size:12px;margin-top:34px;line-height:1.7}
 mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px}
+
+/* painel de mudancas (nerf/buff) */
+.changes{margin:18px 0 4px}
+.mon-note{color:var(--muted);font-size:13px;text-align:center;padding:10px}
+.cbox{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.chead{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.ctitle{font-family:"Cinzel",Georgia,serif;font-weight:600;font-size:15px;letter-spacing:.02em}
+.cdate{color:var(--muted);font-size:12.5px;font-variant-numeric:tabular-nums}
+.cchips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0 4px}
+.cchip{font-size:12px;font-weight:600;border-radius:999px;padding:3px 10px;border:1px solid var(--line)}
+.cchip.nf{color:var(--rr);border-color:color-mix(in srgb,var(--rr) 35%,transparent)}
+.cchip.bf{color:var(--rc);border-color:color-mix(in srgb,var(--rc) 35%,transparent)}
+.cchip.mut{color:var(--muted)}
+.clist{display:flex;flex-direction:column;margin-top:6px}
+.chg{display:grid;grid-template-columns:16px 1fr auto;gap:8px;align-items:baseline;
+  padding:7px 0;border-top:1px solid var(--line2);font-size:13.5px}
+.chg .cico{font-size:11px;text-align:center}
+.chg .cit{text-transform:capitalize;font-weight:600}
+.chg .cmon{color:var(--muted);font-size:12px;grid-column:2;margin-top:-2px}
+.chg .cval{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:12.5px;
+  white-space:nowrap;font-variant-numeric:tabular-nums;grid-row:1;grid-column:3}
+.nf{color:var(--rr)} .bf{color:var(--rc)} .mut{color:var(--muted)}
+.cmore{color:var(--muted);font-size:12.5px;padding:8px 0 2px}
+.chist{margin-top:10px;border-top:1px solid var(--line2);padding-top:8px}
+.chist summary{list-style:none;cursor:pointer;color:var(--accent);font-size:12.5px;font-weight:600}
+.chist summary::-webkit-details-marker{display:none}
+.hrow{font-size:12.5px;color:var(--muted);padding:5px 0;font-variant-numeric:tabular-nums}
+.hrow b{color:var(--ink)}
 </style>
 
 <div class="wrap">
@@ -105,6 +133,8 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     <h1>Drops do <span class="g">Baiak</span></h1>
     <p class="sub">Taxa de drop de <b>359</b> monstros e bosses. Busque por bicho pra ver o loot, ou por item pra saber <b>onde farmar</b>.</p>
   </header>
+
+  <div class="changes" id="changes"></div>
 
   <div class="tools">
     <label class="search">
@@ -136,6 +166,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 
 <script>
 const M = __DATA__;
+const CHANGES = __CHANGES__;
 
 // indice reverso: item -> [{mon, chance, max}]
 const ITEM = new Map();
@@ -219,4 +250,40 @@ mMon.onclick=()=>setMode("mon");
 mItem.onclick=()=>setMode("item");
 q.addEventListener("input",render);
 setMode("mon");
+
+// painel de mudancas (nerf/buff) — abaixo do titulo
+function br(d){ return d.split("-").reverse().join("/").slice(0,5); }
+function renderChanges(){
+  const box=document.getElementById("changes");
+  if(!CHANGES.length){
+    box.innerHTML=`<div class="mon-note">🟢 Monitorando os drops — nenhuma mudança detectada ainda.</div>`; return;
+  }
+  const e=CHANGES[0];
+  const chip=(n,cls,lbl)=> n?`<span class="cchip ${cls}">${lbl} ${n}</span>`:"";
+  const row=([mon,it,o,n],cls,ico)=>
+    `<div class="chg"><span class="cico ${cls}">${ico}</span>`
+    +`<span class="cit">${esc(it)}</span><span class="cmon">${esc(mon)}</span>`
+    +`<span class="cval ${cls}">${pct(o)}% → ${pct(n)}%</span></div>`;
+  let lines="";
+  e.nerf.slice(0,7).forEach(x=>lines+=row(x,"nf","▼"));
+  e.buff.slice(0,7).forEach(x=>lines+=row(x,"bf","▲"));
+  const extra=Math.max(0,e.nerf.length-7)+Math.max(0,e.buff.length-7);
+  let hist="";
+  for(const c of CHANGES){
+    hist+=`<div class="hrow"><b>${br(c.d)}</b> `
+      +(c.nerf.length?`<span class="nf">▼${c.nerf.length} nerf</span> `:"")
+      +(c.buff.length?`<span class="bf">▲${c.buff.length} buff</span> `:"")
+      +(c.add.length?`<span class="mut">➕${c.add.length}</span> `:"")
+      +(c.rem.length?`<span class="mut">➖${c.rem.length}</span> `:"")
+      +(c.newmon&&c.newmon.length?`<span class="mut">${c.newmon.length} bicho novo</span>`:"")
+      +`</div>`;
+  }
+  box.innerHTML=`<div class="cbox">`
+    +`<div class="chead"><span class="ctitle">Mudanças de drop</span><span class="cdate">${br(e.d)}</span></div>`
+    +`<div class="cchips">${chip(e.nerf.length,"nf","▼ nerf")}${chip(e.buff.length,"bf","▲ buff")}${chip(e.add.length,"mut","➕ novos")}${chip(e.rem.length,"mut","➖ tirados")}</div>`
+    +(lines?`<div class="clist">${lines}${extra?`<div class="cmore">+${extra} outras mudanças de %</div>`:""}</div>`:"")
+    +`<details class="chist"><summary>Histórico completo</summary>${hist}</details>`
+    +`</div>`;
+}
+renderChanges();
 </script>
