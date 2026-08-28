@@ -1,0 +1,35 @@
+name: Atualizar drops
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # toda segunda ~03h BRT: regenera do bundle atual do jogo
+  workflow_dispatch: {}    # botao "Run workflow" pra atualizar na hora
+
+permissions:
+  contents: write
+
+concurrency:
+  group: drops-refresh
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Regenerar index.html do bundle do jogo
+        run: node build.js
+      - name: Commitar se mudou
+        run: |
+          git config user.name  "drops-bot"
+          git config user.email "drops-bot@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: atualiza drops $(date -u +%Y-%m-%d)"
+            git push
+          else
+            echo "Sem mudanca nos drops."
+          fi
