@@ -52,75 +52,34 @@ function diff(oldD, newD) {
   console.log("bundle:", bm[0]);
   const src = await (await fetch("https://baiakidle.com" + bm[0], { headers: UA })).text();
 
-  // acha o container `VAR={...}` que engloba a ancora (objeto do bundle)
-  function extractByContainer(anchorStr) {
-    const a = src.indexOf(anchorStr);
-    if (a < 0) throw new Error("nao achei no bundle: " + anchorStr + " (jogo mudou?)");
-    for (let i = a; i >= 0; i--) {
-      if (src[i] === "{" && src[i - 1] === "=") {
-        const blk = matchBalanced(src, i);
-        if (i + blk.length > a) return (0, eval)("(" + blk + ")");
-      }
-    }
-    throw new Error("container nao encontrado pra " + anchorStr);
-  }
+  // ---- catalogo final do jogo (It): base ix + Db override + gde (escala hp/dmg/abil) + exp x yde ----
+  // Replica exatamente o assembler do bundle. `Yne=It` e o catalogo que a UI mostra.
+  const bal = (anchor, ch) => { const i = src.indexOf(anchor); if (i < 0) throw new Error("nao achei " + anchor + " (jogo mudou?)"); return matchBalanced(src, src.indexOf(ch, i)); };
+  const G = new Function(`
+    const ix=${bal("ix={", "{")}, Db=${bal("Db={", "{")};
+    ${src.slice(src.indexOf("function At(e,t)"), src.indexOf("const gde="))}
+    const gde=${bal("const gde=", "{")};
+    const IG=${bal("IG=[", "[")}, NG=${bal("NG={", "{")}, yde=${bal("yde={", "{")};
+    const wde=Object.fromEntries(IG.map(e=>[e,yde[NG[e]??""]??1]));
+    return {ix,Db,gde,wde};
+  `)();
 
-  // Dois catalogos: o de LOOT (name/exp/loot, chave underscore) e o de COMBATE
-  // (hp/dmg/armor/resist/abilities, chave com espaco). Junta pelo nome.
-  const lootCat = extractByContainer('{troll:{name:"Troll"');
-  const combatCat = extractByContainer('"infernal demon":{hp:');
   const norm = s => String(s).replace(/[_-]/g, " ").toLowerCase().trim();
-
-  const merged = {};  // nome-normalizado -> registro
-  const put = (k) => (merged[k] = merged[k] || { l: [] });
-  for (const id in lootCat) {
-    const m = lootCat[id]; if (!m || !m.hp) continue;
-    const r = put(norm(m.name || id));
-    r.n = m.name || id; r.exp = m.exp || 0; r.sp = m.speed || 0; r.hp = m.hp;
-    if (m.loot && m.loot.length) r.l = m.loot.map(x => [x.name, x.chance, x.max || 1]);
-    if (m.resist && !r.r) r.r = m.resist;               // fallback
-    if (m.abilities && !r.a) r.a = m.abilities;
-    if (m.dmg && !r.dm) r.dm = m.dmg;
-    if (m.armor && !r.arm) r.arm = m.armor;
-  }
-  for (const key in combatCat) {                          // combate = autoritativo
-    const m = combatCat[key]; if (!m) continue;
-    const r = put(norm(key));
-    if (!r.n) r.n = key.replace(/\b\w/g, c => c.toUpperCase());
-    if (m.hp) r.hp = m.hp;
-    if (m.dmg) r.dm = m.dmg;
-    if (m.armor) r.arm = m.armor;
-    if (m.resist) r.r = m.resist;
-    if (m.abilities) r.a = m.abilities;
+  const It = {};   // chave underscore (a mesma do ix e das hunts)
+  for (const [k, t] of Object.entries(G.ix)) {
+    if (!t || !t.hp) continue;
+    const a = G.Db[t.name.toLowerCase()] || {}, n = G.gde[k] || {}, o = G.wde[k] ?? 1;
+    It[k] = { ...t, ...a, ...n, ...(o !== 1 ? { exp: Math.round(t.exp * o) } : {}) };
   }
 
-  const data = [];
-  for (const k in merged) {
-    const r = merged[k];
-    if (!r.hp) continue;
-    const hasCombat = r.r || (r.a && r.a.length) || r.dm;
-    if (!r.l.length && !hasCombat) continue;              // pula dummy vazio
-    data.push({
-      n: r.n, hp: r.hp || 0, exp: r.exp || 0, arm: r.arm || 0, sp: r.sp || 0,
-      dm: r.dm || null, r: r.r || null,
-      a: (r.a || []).map(x => ({
-        el: x.element, mn: x.min, mx: x.max, ch: x.chance,
-        // tipo do ataque, pra ficar claro o que e cada um
-        ty: x.element === "healing" ? "cura"
-          : x.length ? "onda"
-          : x.radius ? "área"
-          : x.missile != null ? "distância"
-          : x.target ? "direto"
-          : "corpo a corpo",
-        // tamanho: raio (area), comprimento x largura (onda), ou alcance
-        sz: x.radius ? ("raio " + x.radius)
-          : x.length ? (x.length + (x.spread ? "×" + x.spread : "") + " tiles")
-          : x.range ? ("alcance " + x.range) : "",
-      })),
-      l: r.l,
-    });
-  }
-  data.sort((a, b) => a.n.localeCompare(b.n));
+  // rate do servidor (config publica de admin): hp/exp/atk/def por categoria, igual pra todos
+  let rate = null;
+  try {
+    const rr = await fetch("https://baiakidle.com/api/trpc/adminConfig.monsterMult?batch=1&input=%7B%220%22%3A%7B%7D%7D", { headers: UA });
+    rate = (await rr.json())[0].result.data.config;
+    console.log("rate servidor: monster", JSON.stringify(rate.monster), "| boss", JSON.stringify(rate.boss));
+  } catch (e) { console.log("rate do servidor indisponivel, usando base 100%:", e.message); }
+  const mul = (v, cat, kind) => rate && rate[cat] ? Math.round(v * (rate[cat][kind] ?? 100) / 100) : v;
 
   // ---- hunts + recomendacao de arma (ataque) e defesa ----
   let huntsRaw = null;
@@ -134,19 +93,19 @@ function diff(oldD, newD) {
   const inHunt = new Set();
   const hunts = [];
   for (const h of huntsRaw || []) {
-    (h.monsters || []).forEach(k => inHunt.add(norm(k)));
-    const mons = (h.monsters || []).map(k => merged[norm(k)]).filter(Boolean);
+    (h.monsters || []).forEach(k => inHunt.add(k));
+    const mons = (h.monsters || []).map(k => It[k]).filter(Boolean);
     // ataque: elemento que os bichos mais TOMAM (menor resist medio)
     const off = ELS.map(el => {
       let s = 0, c = 0;
-      for (const m of mons) if (m.r && el in m.r) { s += m.r[el]; c++; }
+      for (const m of mons) if (m.resist && el in m.resist) { s += m.resist[el]; c++; }
       return c ? { el, avg: s / c } : null;
     }).filter(Boolean).sort((a, b) => a.avg - b.avg);
     // defesa: elemento que os bichos mais CAUSAM (melee fisico + abilities)
     const th = {};
     for (const m of mons) {
-      if (m.dm) th.physical = (th.physical || 0) + (m.dm[1] || 0);
-      for (const ab of (m.a || [])) {
+      if (m.dmg) th.physical = (th.physical || 0) + (m.dmg[1] || 0);
+      for (const ab of (m.abilities || [])) {
         if (!ab.element || ab.element === "healing") continue;
         th[ab.element] = (th[ab.element] || 0) + (ab.chance || 0) * (((ab.min || 0) + (ab.max || 0)) / 2) / 100;
       }
@@ -157,14 +116,46 @@ function diff(oldD, newD) {
       .filter(x => x.pct > 0).slice(0, 5);
     hunts.push({
       id: h.id, name: h.name, lv: h.minLevel || 0,
-      mons: mons.map(m => m.n),
+      mons: mons.map(m => m.name),
       off: off.slice(0, 3).map(x => x.el),
       ofw: off.length && off[0].avg < 0,          // true = fraqueza real (toma dano extra)
       def,                                         // [{el, pct}] ameaca agregada da hunt
     });
   }
   hunts.sort((a, b) => a.lv - b.lv);
-  for (const m of data) m.boss = inHunt.has(norm(m.n)) ? 0 : 1;   // fora de hunt = boss
+
+  // ---- data: aplica o rate por categoria (in-hunt = "monster", senao = "boss") ----
+  const data = [];
+  for (const [k, m] of Object.entries(It)) {
+    const hasCombat = m.resist || (m.abilities && m.abilities.length) || m.dmg;
+    const hasLoot = m.loot && m.loot.length;
+    if (!hasLoot && !hasCombat) continue;                 // pula dummy vazio
+    const boss = inHunt.has(k) ? 0 : 1;
+    const cat = boss ? "boss" : "monster";
+    data.push({
+      n: m.name || k, boss,
+      hp: mul(m.hp || 0, cat, "hp"),
+      exp: mul(m.exp || 0, cat, "exp"),
+      arm: m.armor || 0, sp: m.speed || 0,
+      dm: m.dmg || null, r: m.resist || null,
+      a: (m.abilities || []).map(x => ({
+        el: x.element, mn: x.min, mx: x.max, ch: x.chance,
+        // tipo do ataque, pra ficar claro o que e cada um
+        ty: x.element === "healing" ? "cura"
+          : x.length ? "onda"
+          : x.radius ? "área"
+          : x.missile != null ? "distância"
+          : x.target ? "direto"
+          : "corpo a corpo",
+        // tamanho: raio (area), comprimento x largura (onda), ou alcance
+        sz: x.radius ? ("raio " + x.radius)
+          : x.length ? (x.length + (x.spread ? "×" + x.spread : "") + " tiles")
+          : x.range ? ("alcance " + x.range) : "",
+      })),
+      l: (m.loot || []).map(x => [x.name, x.chance, x.max || 1]),
+    });
+  }
+  data.sort((a, b) => a.n.localeCompare(b.n));
   console.log("monstros:", data.length, "| bosses:", data.filter(m => m.boss).length, "| hunts:", hunts.length);
 
   // diff vs snapshot anterior
