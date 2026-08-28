@@ -166,6 +166,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hchip{display:inline-flex;align-items:center;font-size:12.5px;border-radius:7px;padding:3px 10px;border:1px solid var(--line);white-space:nowrap;font-weight:600}
 .hchip.arma{color:var(--rc);border-color:color-mix(in srgb,var(--rc) 45%,transparent);background:color-mix(in srgb,var(--rc) 9%,transparent)}
 .hchip.def{color:var(--rr);border-color:color-mix(in srgb,var(--rr) 45%,transparent);background:color-mix(in srgb,var(--rr) 9%,transparent)}
+.hchip b{font-weight:800;font-variant-numeric:tabular-nums}
 .hnote{font-size:11px;color:var(--muted);font-weight:500}
 .recnote{font-size:11px;color:var(--muted);font-weight:500;padding-top:2px}
 .hmons2{padding:10px 0 0;margin-top:8px;border-top:1px solid var(--line2)}
@@ -338,7 +339,7 @@ function huntCard(h,qq,open){
       +`<span class="hnote">${h.ofw?"fraqueza real":"menos resistido"}</span>`
     : `<span class="hnote">sem dado de resistência</span>`;
   const def = h.def.length
-    ? h.def.map(el=>`<span class="hchip def">${dot(el)}${ELPT[el]||el}</span>`).join("")
+    ? h.def.map(d=>`<span class="hchip def">${dot(d.el)}${ELPT[d.el]||d.el} <b>${d.pct}%</b></span>`).join("")
     : `<span class="hnote">sem dado</span>`;
   const mons = h.mons.map(huntMon).join("");
   return `<details${open}><summary><span class="name">${hl(h.name,qq)}</span>`

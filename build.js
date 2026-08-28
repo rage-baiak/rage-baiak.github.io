@@ -151,13 +151,16 @@ function diff(oldD, newD) {
         th[ab.element] = (th[ab.element] || 0) + (ab.chance || 0) * (((ab.min || 0) + (ab.max || 0)) / 2) / 100;
       }
     }
-    const def = Object.entries(th).map(([el, v]) => ({ el, v })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
+    const defRaw = Object.entries(th).map(([el, v]) => ({ el, v })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
+    const defTot = defRaw.reduce((s, x) => s + x.v, 0);
+    const def = defRaw.map(x => ({ el: x.el, pct: defTot ? Math.round(x.v / defTot * 100) : 0 }))
+      .filter(x => x.pct > 0).slice(0, 5);
     hunts.push({
       id: h.id, name: h.name, lv: h.minLevel || 0,
       mons: mons.map(m => m.n),
       off: off.slice(0, 3).map(x => x.el),
       ofw: off.length && off[0].avg < 0,          // true = fraqueza real (toma dano extra)
-      def: def.slice(0, 3).map(x => x.el),
+      def,                                         // [{el, pct}] ameaca agregada da hunt
     });
   }
   hunts.sort((a, b) => a.lv - b.lv);
