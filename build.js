@@ -121,7 +121,48 @@ function diff(oldD, newD) {
     });
   }
   data.sort((a, b) => a.n.localeCompare(b.n));
-  console.log("monstros:", data.length);
+
+  // ---- hunts + recomendacao de arma (ataque) e defesa ----
+  let huntsRaw = null;
+  for (let i = src.indexOf('[{id:"'); i >= 0; i = src.indexOf('[{id:"', i + 1)) {
+    try {
+      const arr = (0, eval)("(" + matchBalanced(src, i) + ")");
+      if (Array.isArray(arr) && arr[0] && arr[0].minLevel != null && Array.isArray(arr[0].monsters)) { huntsRaw = arr; break; }
+    } catch (e) { /* segue procurando */ }
+  }
+  const ELS = ["fire", "ice", "earth", "energy", "holy", "death"];  // elementais de arma
+  const inHunt = new Set();
+  const hunts = [];
+  for (const h of huntsRaw || []) {
+    (h.monsters || []).forEach(k => inHunt.add(norm(k)));
+    const mons = (h.monsters || []).map(k => merged[norm(k)]).filter(Boolean);
+    // ataque: elemento que os bichos mais TOMAM (menor resist medio)
+    const off = ELS.map(el => {
+      let s = 0, c = 0;
+      for (const m of mons) if (m.r && el in m.r) { s += m.r[el]; c++; }
+      return c ? { el, avg: s / c } : null;
+    }).filter(Boolean).sort((a, b) => a.avg - b.avg);
+    // defesa: elemento que os bichos mais CAUSAM (melee fisico + abilities)
+    const th = {};
+    for (const m of mons) {
+      if (m.dm) th.physical = (th.physical || 0) + (m.dm[1] || 0);
+      for (const ab of (m.a || [])) {
+        if (!ab.element || ab.element === "healing") continue;
+        th[ab.element] = (th[ab.element] || 0) + (ab.chance || 0) * (((ab.min || 0) + (ab.max || 0)) / 2) / 100;
+      }
+    }
+    const def = Object.entries(th).map(([el, v]) => ({ el, v })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
+    hunts.push({
+      id: h.id, name: h.name, lv: h.minLevel || 0,
+      mons: mons.map(m => m.n),
+      off: off.slice(0, 3).map(x => x.el),
+      ofw: off.length && off[0].avg < 0,          // true = fraqueza real (toma dano extra)
+      def: def.slice(0, 3).map(x => x.el),
+    });
+  }
+  hunts.sort((a, b) => a.lv - b.lv);
+  for (const m of data) m.boss = inHunt.has(norm(m.n)) ? 0 : 1;   // fora de hunt = boss
+  console.log("monstros:", data.length, "| bosses:", data.filter(m => m.boss).length, "| hunts:", hunts.length);
 
   // diff vs snapshot anterior
   const prev = readJSON("data.json", null);
@@ -149,6 +190,7 @@ function diff(oldD, newD) {
   let tpl = fs.readFileSync(HERE + "/template.html", "utf8");
   tpl = tpl.replace("const M = __DATA__;", "const M = " + JSON.stringify(data) + ";");
   tpl = tpl.replace("const CHANGES = __CHANGES__;", "const CHANGES = " + JSON.stringify(changes) + ";");
+  tpl = tpl.replace("const HUNTS = __HUNTS__;", "const HUNTS = " + JSON.stringify(hunts) + ";");
   tpl = tpl.replace(/Taxa de drop de <b>\d+<\/b>/, `Taxa de drop de <b>${data.length}</b>`);
   fs.writeFileSync(HERE + "/index.html", tpl);
   console.log("index.html gerado:", fs.statSync(HERE + "/index.html").size, "bytes");

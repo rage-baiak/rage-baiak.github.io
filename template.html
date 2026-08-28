@@ -157,6 +157,20 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .e-energy{background:#9b63e0} .e-holy{background:#d3a52a} .e-death{background:#a86fb5}
 .e-physical{background:var(--muted)} .e-healing{background:var(--rc)}
 .lootlbl{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:12px 8px 0;padding-top:9px;border-top:1px solid var(--line2)}
+/* hunt: recomendacao de arma/defesa */
+.hbody{padding:2px 8px 12px}
+.rec{display:flex;flex-direction:column;gap:8px;padding:6px 0}
+.recrow{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.recrow .rlbl{min-width:74px;margin:0;font-size:11px}
+.recrow .rlbl.wk{color:var(--rc)} .recrow .rlbl.rs{color:var(--rr)}
+.hchip{display:inline-flex;align-items:center;font-size:12.5px;border-radius:7px;padding:3px 10px;border:1px solid var(--line);white-space:nowrap;font-weight:600}
+.hchip.arma{color:var(--rc);border-color:color-mix(in srgb,var(--rc) 45%,transparent);background:color-mix(in srgb,var(--rc) 9%,transparent)}
+.hchip.def{color:var(--rr);border-color:color-mix(in srgb,var(--rr) 45%,transparent);background:color-mix(in srgb,var(--rr) 9%,transparent)}
+.hnote{font-size:11px;color:var(--muted);font-weight:500}
+.hmons{font-size:12.5px;color:var(--muted);line-height:1.9;padding:9px 0 0;margin-top:6px;border-top:1px solid var(--line2)}
+.hmons b{color:var(--ink);font-weight:700;font-size:10.5px;letter-spacing:.05em;text-transform:uppercase}
+.mlink{color:var(--accent);cursor:pointer;border-bottom:1px dotted color-mix(in srgb,var(--accent) 50%,transparent)}
+.mlink:hover{color:var(--ink)}
 </style>
 
 <div class="wrap">
@@ -173,8 +187,10 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
       <input id="q" type="search" placeholder="Buscar…" autocomplete="off" spellcheck="false" aria-label="Buscar">
     </label>
     <div class="modes" role="group" aria-label="Modo de busca">
-      <button class="mode" id="mMon" aria-pressed="true">Por monstro</button>
-      <button class="mode" id="mItem" aria-pressed="false">Por item</button>
+      <button class="mode" id="mMon" aria-pressed="true">Monstros</button>
+      <button class="mode" id="mBoss" aria-pressed="false">Bosses</button>
+      <button class="mode" id="mHunt" aria-pressed="false">Hunts</button>
+      <button class="mode" id="mItem" aria-pressed="false">Item</button>
     </div>
   </div>
 
@@ -198,6 +214,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 <script>
 const M = __DATA__;
 const CHANGES = __CHANGES__;
+const HUNTS = __HUNTS__;
 
 // indice reverso: item -> [{mon, chance, max}]
 const ITEM = new Map();
@@ -225,7 +242,7 @@ const qty = mx => mx>1 ? "1–"+mx : "";
 
 let mode="mon";
 const q=document.getElementById("q"), list=document.getElementById("list"), count=document.getElementById("count");
-const mMon=document.getElementById("mMon"), mItem=document.getElementById("mItem"), legend=document.getElementById("legend");
+const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mItem=document.getElementById("mItem"), legend=document.getElementById("legend");
 
 const ELPT={physical:"Físico",fire:"Fogo",ice:"Gelo",earth:"Terra",energy:"Energia",holy:"Sagrado",death:"Morte",healing:"Cura"};
 function monStats(m){
@@ -270,48 +287,83 @@ function monRows(arr,qq){
   ).join("");
 }
 
+function monCard(m,qq,open){
+  const dropMeta = m.l.length ? `<span class="chip">${m.l.length}</span> drops` : `sem loot`;
+  return `<details${open}><summary><span class="name">${hl(m.n,qq)}</span>`
+    +`<span class="meta">${dropMeta} · hp ${m.hp.toLocaleString("pt-BR")} · exp ${m.exp.toLocaleString("pt-BR")}</span></summary>`
+    +`<div class="body">${monStats(m)}${m.l.length?`<table>${lootRows(m.l,"")}</table>`:""}</div></details>`;
+}
+function huntCard(h,qq,open){
+  const dot=el=>`<i class="edot e-${el}"></i>`;
+  const arma = h.off.length
+    ? h.off.map(el=>`<span class="hchip arma">${dot(el)}${ELPT[el]||el}</span>`).join("")
+      +`<span class="hnote">${h.ofw?"fraqueza real":"menos resistido"}</span>`
+    : `<span class="hnote">sem dado de resistência</span>`;
+  const def = h.def.length
+    ? h.def.map(el=>`<span class="hchip def">${dot(el)}${ELPT[el]||el}</span>`).join("")
+    : `<span class="hnote">sem dado</span>`;
+  const mons = h.mons.map(nm=>`<span class="mlink" data-mon="${esc(nm)}">${esc(nm)}</span>`).join(", ");
+  return `<details${open}><summary><span class="name">${hl(h.name,qq)}</span>`
+    +`<span class="meta">lv ${h.lv}+ · <span class="chip">${h.mons.length}</span> bichos</span></summary>`
+    +`<div class="body hbody"><div class="rec">`
+    +`<div class="recrow"><span class="rlbl wk">⚔ arma</span>${arma}</div>`
+    +`<div class="recrow"><span class="rlbl rs">🛡 defesa</span>${def}</div></div>`
+    +`<div class="hmons"><b>Monstros:</b> ${mons}</div></div></details>`;
+}
+
 function render(){
   const raw=q.value.trim(), qq=norm(raw);
   let html="", n=0, shown=0, CAP=60;
-  legend.style.display = mode==="mon" || raw ? "flex":"flex";
+  legend.style.display = (mode==="hunt"||mode==="item") ? "none":"flex";
 
-  if(mode==="mon"){
-    const res = M.filter(m=>!qq || norm(m.n).includes(qq));
+  if(mode==="mon" || mode==="boss"){
+    const wantBoss = mode==="boss";
+    const res = M.filter(m=>(!!m.boss===wantBoss) && (!qq || norm(m.n).includes(qq)));
     n=res.length;
     for(const m of res){ if(shown>=CAP) break; shown++;
-      const open = raw && res.length<=6 ? " open":"";
-      const dropMeta = m.l.length ? `<span class="chip">${m.l.length}</span> drops` : `sem loot`;
-      html+=`<details${open}><summary><span class="name">${hl(m.n,qq)}</span>`
-        +`<span class="meta">${dropMeta} · hp ${m.hp.toLocaleString("pt-BR")} · exp ${m.exp.toLocaleString("pt-BR")}</span></summary>`
-        +`<div class="body">${monStats(m)}${m.l.length?`<table>${lootRows(m.l,"")}</table>`:""}</div></details>`;
-    }
-    count.textContent = n? `${n} monstro${n>1?"s":""}${n>CAP?` · mostrando ${CAP}`:""}` : "";
+      html+=monCard(m,qq, raw && res.length<=6 ? " open":""); }
+    const noun = wantBoss ? (n>1?"bosses":"boss") : (n>1?"monstros":"monstro");
+    count.textContent = n? `${n} ${noun}${n>CAP?` · mostrando ${CAP}`:""}` : "";
+  } else if(mode==="hunt"){
+    const res = HUNTS.filter(h=>!qq || norm(h.name).includes(qq) || h.mons.some(x=>norm(x).includes(qq)));
+    n=res.length;
+    for(const h of res){ if(shown>=CAP) break; shown++;
+      html+=huntCard(h,qq, raw && res.length<=8 ? " open":""); }
+    count.textContent = n? `${n} hunt${n>1?"s":""}${n>CAP?` · mostrando ${CAP}`:""}` : "";
   } else {
     const res = ITEMS.filter(it=>!qq || norm(it).includes(qq));
     n=res.length;
     for(const it of res){ if(shown>=CAP) break; shown++;
-      const drops=ITEM.get(it);
-      const open = raw && res.length<=6 ? " open":"";
-      const best=drops[0];
-      html+=`<details${open}><summary><span class="name item">${hl(it,qq)}</span>`
+      const drops=ITEM.get(it), best=drops[0];
+      html+=`<details${raw && res.length<=6?" open":""}><summary><span class="name item">${hl(it,qq)}</span>`
         +`<span class="meta">dropa de <span class="chip">${drops.length}</span> · melhor <span class="${band(best.ch)}">${pct(best.ch)}%</span></span></summary>`
         +`<div class="body"><table>${monRows(drops,"")}</table></div></details>`;
     }
     count.textContent = n? `${n} ${n>1?"itens":"item"}${n>CAP?` · mostrando ${CAP}`:""}` : "";
   }
-
   list.innerHTML = html || `<div class="empty">Nada encontrado pra “${esc(raw)}”.</div>`;
 }
 
 function setMode(m){
   mode=m;
-  mMon.setAttribute("aria-pressed", m==="mon");
-  mItem.setAttribute("aria-pressed", m==="item");
-  q.placeholder = m==="mon" ? "Buscar monstro (ex: dragon, deathstrike)…" : "Buscar item (ex: green dragon scale, crossbow)…";
+  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["item",mItem]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
+  q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
+    : m==="item" ? "Buscar item (ex: crystal coin, crossbow)…"
+    : m==="boss" ? "Buscar boss (ex: deathstrike, ferumbras)…"
+    : "Buscar monstro (ex: dragon, demon)…";
   render();
 }
 mMon.onclick=()=>setMode("mon");
+mBoss.onclick=()=>setMode("boss");
+mHunt.onclick=()=>setMode("hunt");
 mItem.onclick=()=>setMode("item");
+// clicar num monstro dentro da hunt -> abre o monstro
+list.addEventListener("click",ev=>{
+  const el=ev.target.closest(".mlink"); if(!el)return;
+  const nm=el.getAttribute("data-mon"), m=M.find(x=>x.n===nm); if(!m)return;
+  q.value=nm; setMode(m.boss?"boss":"mon");
+  window.scrollTo({top:0,behavior:"smooth"});
+});
 q.addEventListener("input",render);
 setMode("mon");
 
