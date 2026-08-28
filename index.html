@@ -225,7 +225,7 @@ function monStats(m){
   weak.sort((a,b)=>a[1]-b[1]); res.sort((a,b)=>b[1]-a[1]);
   if(weak.length) h+=`<div class="rline"><span class="rlbl wk">▲ fraco a</span>`
     +weak.map(([el,v])=>`<span class="rchip wk">${ELPT[el]||el} +${Math.abs(v)}%</span>`).join("")+`</div>`;
-  if(res.length) h+=`<div class="rline"><span class="rlbl rs">▼ resiste</span>`
+  if(res.length) h+=`<div class="rline"><span class="rlbl rs">▼ forte a</span>`
     +res.map(([el,v])=>`<span class="rchip ${v>=100?"im":"rs"}">${ELPT[el]||el} ${v>=100?"imune":"−"+v+"%"}</span>`).join("")+`</div>`;
   if(!weak.length && !res.length)
     h+=`<div class="rline"><span class="rlbl">defesa</span><span class="rchip rs">dano normal · sem fraqueza/resistência</span></div>`;
