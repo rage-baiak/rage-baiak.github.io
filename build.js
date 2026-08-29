@@ -36,11 +36,13 @@ function extractEquip(src) {
   }
   if (!blk) throw new Error("container do catalogo de equip nao delimitado");
   const oa = (0, eval)("(" + blk + ")");
+  const idByName = {};
+  for (const [name, it] of Object.entries(oa)) if (it && typeof it === "object" && it.id) idByName[name.replace(/[_-]/g, " ").toLowerCase().trim()] = it.id;
   const out = [];
   for (const [name, it] of Object.entries(oa)) {
     if (!it || typeof it !== "object" || !EQUIP_SLOTS[it.slot]) continue;
     out.push({
-      n: name, slot: it.slot, lv: it.level || 0, voc: it.vocs || null,
+      n: name, id: it.id || 0, slot: it.slot, lv: it.level || 0, voc: it.vocs || null,
       atk: it.atk || 0, def: it.def || 0, arm: it.arm || 0,
       wt: it.wt || null, two: it.twoHanded ? 1 : 0,
       el: it.elementType || null, elA: it.elementAtk || 0, range: it.range || 0,
@@ -51,7 +53,7 @@ function extractEquip(src) {
     });
   }
   out.sort((a, b) => a.slot.localeCompare(b.slot) || a.lv - b.lv || a.n.localeCompare(b.n));
-  return out;
+  return { equip: out, idByName };
 }
 
 // Monta o catalogo final `It` do jogo, descobrindo os nomes minificados por ESTRUTURA
@@ -234,10 +236,13 @@ function diff(oldD, newD) {
   data.sort((a, b) => a.n.localeCompare(b.n));
 
   // ---- equipamento (todo item com slot, dropando ou nao) ----
-  const equip = extractEquip(src);
+  const { equip, idByName } = extractEquip(src);
   const droppedNames = new Set();
   for (const m of data) for (const l of m.l) droppedNames.add(norm(l[0]));
   for (const e of equip) e.drop = droppedNames.has(norm(e.n)) ? 1 : 0;
+  // sprite id por nome, so pros itens que aparecem em loot (aba Item / loot dos monstros)
+  const ITEMID = {};
+  for (const nm of droppedNames) if (idByName[nm]) ITEMID[nm] = idByName[nm];
   const eBySlot = {}; for (const e of equip) eBySlot[e.slot] = (eBySlot[e.slot] || 0) + 1;
   console.log("monstros:", data.length, "| bosses:", data.filter(m => m.boss).length, "| hunts:", hunts.length);
   console.log("equip:", equip.length, "| dropam:", equip.filter(e => e.drop).length, "|", JSON.stringify(eBySlot));
@@ -271,6 +276,7 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const HUNTS = __HUNTS__;", "const HUNTS = " + JSON.stringify(hunts) + ";");
   tpl = tpl.replace("const CHARMS = __CHARMS__;", "const CHARMS = " + JSON.stringify(CHARMS) + ";");
   tpl = tpl.replace("const EQUIP = __EQUIP__;", "const EQUIP = " + JSON.stringify(equip) + ";");
+  tpl = tpl.replace("const ITEMID = __ITEMID__;", "const ITEMID = " + JSON.stringify(ITEMID) + ";");
   tpl = tpl.replace("__COUNT__", data.length);
   fs.writeFileSync(HERE + "/index.html", tpl);
   console.log("index.html gerado:", fs.statSync(HERE + "/index.html").size, "bytes");

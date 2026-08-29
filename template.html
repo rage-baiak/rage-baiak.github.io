@@ -74,6 +74,10 @@ summary{
 summary::-webkit-details-marker{display:none}
 .name{font-family:"Cinzel",Georgia,serif;font-weight:600;font-size:17px;letter-spacing:.01em}
 .name.item{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:0;text-transform:capitalize}
+.s-lead{display:flex;align-items:center;gap:9px;min-width:0}
+.spr{width:30px;height:30px;flex:none;image-rendering:pixelated;object-fit:contain;
+  background:color-mix(in srgb,var(--muted) 8%,transparent);border-radius:6px;padding:1px}
+.it .spr{width:20px;height:20px;vertical-align:middle;margin-right:7px;border-radius:4px;padding:0}
 .meta{color:var(--muted);font-size:12.5px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .meta .chip{color:var(--accent);font-weight:600}
 summary:hover .name{color:var(--accent)}
@@ -269,6 +273,10 @@ const CHANGES = __CHANGES__;
 const HUNTS = __HUNTS__;
 const CHARMS = __CHARMS__;
 const EQUIP = __EQUIP__;
+const ITEMID = __ITEMID__;
+// sprite do item por id (PNG 32x32 do jogo); some se falhar (item sem sprite)
+const spr = id => id ? `<img class="spr" src="https://baiakidle.com/api/things/object/${id}.png?v=2" loading="lazy" alt="" onerror="this.remove()">` : "";
+const itemSpr = name => spr(ITEMID[norm(name)] || 0);
 
 // indice reverso: item -> [{mon, chance, max}]
 const ITEM = new Map();
@@ -337,7 +345,7 @@ function monStats(m){
 
 function lootRows(loot,qq){
   return loot.slice().sort((a,b)=>b[1]-a[1]).map(([nm,ch,mx])=>
-    `<tr><td class="pct ${band(ch)}">${pct(ch)}%</td><td class="it"><span class="ilink" data-item="${esc(nm)}">${hl(nm,qq)}</span></td><td class="qty">${qty(mx)}</td></tr>`
+    `<tr><td class="pct ${band(ch)}">${pct(ch)}%</td><td class="it"><span class="ilink" data-item="${esc(nm)}">${itemSpr(nm)}${hl(nm,qq)}</span></td><td class="qty">${qty(mx)}</td></tr>`
   ).join("");
 }
 function monRows(arr,qq){
@@ -463,7 +471,7 @@ function equipCard(e,qq,open){
   if(!main.length&&!sk.length&&!res.length&&!mel.length&&!extra.length)
     body+=`<div class="rline"><span class="hnone">sem stats no catálogo (item base/cosmético ou stats definidos no servidor)</span></div>`;
   body+=`<div class="ebadges">${badges.join("")}</div></div>`;
-  return `<details${open}><summary><span class="name item">${hl(e.n,qq)}</span>`
+  return `<details${open}><summary><span class="s-lead">${spr(e.id)}<span class="name item">${hl(e.n,qq)}</span></span>`
     +`<span class="meta">${meta.join(" · ")}</span></summary>`
     +`<div class="body">${body}</div></details>`;
 }
@@ -505,7 +513,7 @@ function render(){
     const res = ITEMS.filter(it=>!qq || norm(it).includes(qq));
     open = raw && res.length<=6 ? " open":"";
     cards = res.map(it=>()=>{ const drops=ITEM.get(it), best=drops[0];
-      return `<details${open}><summary><span class="name item">${hl(it,qq)}</span>`
+      return `<details${open}><summary><span class="s-lead">${itemSpr(it)}<span class="name item">${hl(it,qq)}</span></span>`
         +`<span class="meta">dropa de <span class="chip">${drops.length}</span> · melhor <span class="${band(best.ch)}">${pct(best.ch)}%</span></span></summary>`
         +`<div class="body"><table>${monRows(drops,"")}</table></div></details>`; });
     noun = res.length===1?"item":"itens";
