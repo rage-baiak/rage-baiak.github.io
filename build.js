@@ -105,8 +105,14 @@ function diff(oldD, newD) {
   const elemCharm = {};
   for (const m of src.matchAll(/key:"\w+",name:"([^"]+)",category:"\w+",kind:"offensive",element:"(\w+)"/g)) elemCharm[m[2]] = m[1];
   const opm = /key:"overpower",name:"([^"]+)"/.exec(src);
-  const CHARMS = { elem: elemCharm, pure: opm ? opm[1] : "Overpower" };
-  console.log("charms:", Object.keys(elemCharm).length, "elementais +", CHARMS.pure, "(puro)");
+  const sbm = /key:"savage[_a-z]*",name:"([^"]+)"/.exec(src);
+  const fhm = /key:"fatal[_a-z]*",name:"([^"]+)"/.exec(src);
+  const CHARMS = {
+    elem: elemCharm,
+    pure: opm ? opm[1] : "Overpower",
+    boss: [sbm ? sbm[1] : "Savage Blow", fhm ? fhm[1] : "Fatal Hold"],  // crit no boss da hunt
+  };
+  console.log("charms:", Object.keys(elemCharm).length, "elementais +", CHARMS.pure, "+ boss", CHARMS.boss.join("/"));
 
   // rate do servidor (config publica de admin): hp/exp/atk/def por categoria, igual pra todos
   let rate = null;
@@ -153,6 +159,7 @@ function diff(oldD, newD) {
     hunts.push({
       id: h.id, name: h.name, lv: h.minLevel || 0,
       mons: mons.map(m => m.name),
+      boss: h.bossKey ? (It[h.bossKey] || {}).name || null : null,   // boss da hunt (Savage Blow + Fatal Hold)
       off: off.slice(0, 3).map(x => x.el),
       ofw: off.length && off[0].avg < 0,          // true = fraqueza real (toma dano extra)
       def,                                         // [{el, pct}] ameaca agregada da hunt

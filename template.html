@@ -172,6 +172,12 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .recrow .rlbl.ch{color:var(--accent)}
 .charmchip{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;color:var(--accent);
   border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:7px;padding:2px 8px;white-space:nowrap}
+.charmchip.boss{color:var(--rx);border-color:color-mix(in srgb,var(--rx) 45%,transparent);background:color-mix(in srgb,var(--rx) 8%,transparent)}
+.hmon-lead{display:inline-flex;align-items:center;gap:8px}
+.bosstag{font-size:10px;font-weight:700;letter-spacing:.03em;color:var(--rx);
+  border:1px solid color-mix(in srgb,var(--rx) 45%,transparent);border-radius:6px;padding:1px 6px;white-space:nowrap}
+.hmon.boss{background:color-mix(in srgb,var(--rx) 5%,transparent);border-radius:8px;margin:0 -6px;padding-left:6px;padding-right:6px}
+.bossname{font-weight:700}
 .hnote{font-size:11px;color:var(--muted);font-weight:500}
 .recnote{font-size:11px;color:var(--muted);font-weight:500;padding-top:2px}
 .hmons2{padding:10px 0 0;margin-top:8px;border-top:1px solid var(--line2)}
@@ -338,7 +344,27 @@ function monCard(m,qq,open){
     +`<span class="meta">${dropMeta} · hp ${m.hp.toLocaleString("pt-BR")} · exp ${m.exp.toLocaleString("pt-BR")}</span></summary>`
     +`<div class="body">${huntLine}${monStats(m)}${m.l.length?`<table>${lootRows(m.l,"")}</table>`:""}</div></details>`;
 }
-function huntMon(name){
+// alocação de charm por hunt: cada charm elemental vai no bicho MAIS fraco àquele
+// elemento (empate: mais HP), e vale pra 1 bicho só. Boss leva Savage Blow + Fatal Hold.
+const ELORDER=["fire","ice","earth","energy","death","holy","physical"];
+function assignCharms(h){
+  const mons=h.mons.map(n=>({name:n,m:byName[norm(n)]})).filter(x=>x.m);
+  const assign={};
+  const add=(name,c)=>{ (assign[name]=assign[name]||[]); if(!assign[name].includes(c)) assign[name].push(c); };
+  for(const el of ELORDER){
+    let best=null;
+    for(const {name,m} of mons){
+      const v=(m.r&&m.r[el]!=null)?m.r[el]:0;
+      if(v>=0) continue;                       // só interessa fraqueza (resist negativo)
+      if(!best||v<best.v||(v===best.v&&m.hp>best.hp)) best={name,v,hp:m.hp};
+    }
+    if(best) add(best.name, charmFor(el));
+  }
+  if(h.boss) for(const c of CHARMS.boss) add(h.boss, c);
+  return assign;
+}
+
+function huntMon(name, charms, isBoss){
   const m=byName[norm(name)];
   if(!m) return `<div class="hmon"><div class="hmon-h"><span class="mlink" data-mon="${esc(name)}">${esc(name)}</span></div></div>`;
   const dot=el=>`<i class="edot e-${el}"></i>`;
@@ -349,18 +375,20 @@ function huntMon(name){
   for(const ab of m.a||[]) if(ab.el&&ab.el!=="healing") th[ab.el]=(th[ab.el]||0)+(ab.ch||0)*(((ab.mn||0)+(ab.mx||0))/2)/100;
   const tot=Object.values(th).reduce((a,b)=>a+b,0);
   const dmg=Object.entries(th).map(([el,v])=>({el,pct:tot?Math.round(v/tot*100):0})).filter(d=>d.pct>0).sort((a,b)=>b.pct-a.pct);
-  const charm = weak.length ? charmFor(weak[0][0]) : CHARMS.pure;   // charm do maior ponto fraco
   const wk = weak.length
     ? weak.map(([el,v])=>`<span class="rchip wk">${dot(el)}${ELPT[el]||el} +${Math.abs(v)}%</span>`).join("")
-    : `<span class="hnone">sem fraqueza · charm de dano puro</span>`;
+    : `<span class="hnone">sem fraqueza elemental</span>`;
   const dl = dmg.length
     ? dmg.map(d=>`<span class="dchip">${dot(d.el)}${ELPT[d.el]||d.el} <b>${d.pct}%</b></span>`).join("")
     : `<span class="hnone">só corpo a corpo</span>`;
-  return `<div class="hmon"><div class="hmon-h">`
-    +`<span class="mlink" data-mon="${esc(m.n)}">${esc(m.n)}</span>`
+  const list = charms&&charms.length ? charms : [CHARMS.pure];
+  const ch = list.map(c=>`<span class="charmchip${CHARMS.boss.includes(c)?" boss":""}">${esc(c)}</span>`).join("");
+  return `<div class="hmon${isBoss?" boss":""}"><div class="hmon-h">`
+    +`<span class="hmon-lead"><span class="mlink" data-mon="${esc(m.n)}">${esc(m.n)}</span>${isBoss?'<span class="bosstag">👑 boss</span>':""}</span>`
     +`<span class="hmon-hp">HP ${m.hp.toLocaleString("pt-BR")}</span></div>`
-    +`<div class="hmon-r"><span class="rlbl wk">fraco a</span>${wk}<span class="charmchip">🔮 ${esc(charm)}</span></div>`
-    +`<div class="hmon-r"><span class="rlbl rs">dano</span>${dl}</div></div>`;
+    +`<div class="hmon-r"><span class="rlbl wk">fraco a</span>${wk}</div>`
+    +`<div class="hmon-r"><span class="rlbl rs">dano</span>${dl}</div>`
+    +`<div class="hmon-r"><span class="rlbl ch">🔮 charm</span>${ch}</div></div>`;
 }
 function huntCard(h,qq,open){
   const dot=el=>`<i class="edot e-${el}"></i>`;
@@ -371,17 +399,25 @@ function huntCard(h,qq,open){
   const def = h.def.length
     ? h.def.map(d=>`<span class="hchip def">${dot(d.el)}${ELPT[d.el]||d.el} <b>${d.pct}%</b></span>`).join("")
     : `<span class="hnote">sem dado</span>`;
-  const chList = h.off.length ? [...new Set(h.off.map(charmFor))] : [CHARMS.pure];
-  const charm = chList.map(c=>`<span class="hchip charm">🔮 ${esc(c)}</span>`).join("")
-    +(h.off.length?"":`<span class="hnote">bichos sem fraqueza</span>`);
-  const mons = h.mons.map(huntMon).join("");
+  const assign = assignCharms(h);
+  const usedElem = [...new Set(Object.values(assign).flat().filter(c=>!CHARMS.boss.includes(c)&&c!==CHARMS.pure))];
+  const charm = usedElem.length
+    ? usedElem.map(c=>`<span class="hchip charm">🔮 ${esc(c)}</span>`).join("")
+    : `<span class="hnote">bichos sem fraqueza</span>`;
+  const bossRow = h.boss
+    ? `<div class="recrow"><span class="rlbl ch">👑 boss</span>`
+      +`<span class="mlink bossname" data-mon="${esc(h.boss)}">${esc(h.boss)}</span>`
+      +CHARMS.boss.map(c=>`<span class="hchip charm">🔮 ${esc(c)}</span>`).join("")+`</div>`
+    : "";
+  const mons = h.mons.map(n=>huntMon(n, assign[n], n===h.boss)).join("");
   return `<details${open}><summary><span class="name">${hl(h.name,qq)}</span>`
     +`<span class="meta">lv ${h.lv}+ · <span class="chip">${h.mons.length}</span> bichos</span></summary>`
     +`<div class="body hbody"><div class="rec">`
     +`<div class="recrow"><span class="rlbl wk">⚔ arma / imbu</span>${arma}</div>`
     +`<div class="recrow"><span class="rlbl rs">🛡 proteção</span>${def}</div>`
     +`<div class="recrow"><span class="rlbl ch">🔮 charm</span>${charm}</div>`
-    +`<div class="recnote">Charm por fraqueza. Cada monstro abaixo tem o charm ideal dele.</div></div>`
+    +bossRow
+    +`<div class="recnote">Cada charm elemental vai no bicho mais fraco a ele (um por bicho). O boss leva ${esc(CHARMS.boss.join(" + "))} pra acelerar a run.</div></div>`
     +`<div class="hmons2"><div class="lootlbl" style="margin-top:0;border:0;padding-top:0">Monstros</div>${mons}</div></div></details>`;
 }
 
