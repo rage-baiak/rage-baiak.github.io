@@ -205,7 +205,8 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .huntof .rlbl{margin:0;font-size:10px}
 .huntof .hlink{font-weight:600;font-size:13px}
 /* filtro de nível da aba Hunts */
-.lvfilter{display:none;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 0 0}
+.lvfilter{display:none;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin:10px 0 0}
+.lvlbl{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px}
 .lvb{font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--muted);
   background:transparent;border:1px solid var(--line);border-radius:999px;padding:5px 13px;transition:.15s}
 .lvb:hover{border-color:var(--accent);color:var(--ink)}
@@ -250,6 +251,8 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 
   <div class="lvfilter" id="lvfilter"></div>
   <div class="lvfilter" id="slotfilter"></div>
+  <div class="lvfilter" id="vocfilter"></div>
+  <div class="lvfilter" id="eqlvfilter"></div>
   <div class="count" id="count"></div>
   <div class="list" id="list"></div>
 
@@ -483,6 +486,12 @@ let huntLv=0;
 // filtro de slot da aba Equip: [rótulo, slot|null]
 const EQSLOT=[["Todos",null],["Armas","weapon"],["Armaduras","armor"],["Elmos","helmet"],["Escudos","shield"],["Pernas","legs"],["Botas","boots"],["Anéis","ring"],["Amuletos","amulet"]];
 let equipSlot=0;
+// filtro de level da aba Equip: [rótulo, min, max]
+const EQLV=[["Todos",0,Infinity],["sem req",0,0],["1-50",1,50],["51-100",51,100],["101-200",101,200],["201-400",201,400],["401-800",401,799],["800+",800,Infinity]];
+let equipLv=0;
+// filtro de vocação da aba Equip: [rótulo, voc-key | null=todos | "none"=sem restrição]
+const EQVOC=[["Todos",null],["Knight","knight"],["Pala","paladin"],["Sorc","sorcerer"],["Druid","druid"],["Monk","monk"],["Sem voc","none"]];
+let equipVoc=0;
 
 function render(){
   const raw=q.value.trim(), qq=norm(raw);
@@ -502,10 +511,14 @@ function render(){
     noun = res.length===1?"hunt":"hunts";
   } else if(mode==="equip"){
     const slot = EQSLOT[equipSlot][1];
-    const res = EQUIP.filter(e=>(!slot||e.slot===slot) && (!qq
-      || norm(e.n).includes(qq)
-      || norm(SLOTPT[e.slot]||"").includes(qq)
-      || (e.voc&&e.voc.some(v=>norm(VOCPT[v]||v).includes(qq)||norm(v).includes(qq)))));
+    const [,lo,hiv] = EQLV[equipLv];
+    const vk = EQVOC[equipVoc][1];
+    const res = EQUIP.filter(e=>
+      (!slot||e.slot===slot) &&
+      (e.lv>=lo&&e.lv<=hiv) &&
+      (!vk ? true : vk==="none" ? !(e.voc&&e.voc.length) : (e.voc&&e.voc.includes(vk))) &&
+      (!qq || norm(e.n).includes(qq) || norm(SLOTPT[e.slot]||"").includes(qq)
+        || (e.voc&&e.voc.some(v=>norm(VOCPT[v]||v).includes(qq)||norm(v).includes(qq)))));
     open = raw && res.length<=6 ? " open":"";
     cards = res.map(e=>()=>equipCard(e,qq,open));
     noun = res.length===1?"equip":"equips";
@@ -534,16 +547,24 @@ lvfilter.innerHTML=LVB.map((b,i)=>`<button class="lvb" data-lv="${i}" aria-press
 function setLv(i){ huntLv=i; [...lvfilter.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i)); }
 lvfilter.addEventListener("click",ev=>{ const b=ev.target.closest(".lvb"); if(!b)return; setLv(+b.getAttribute("data-lv")); limit=CHUNK; render(); });
 
+function wireFilter(el, opts, lbl, setState){
+  el.innerHTML=`<span class="lvlbl">${lbl}</span>`+opts.map((b,i)=>`<button class="lvb" data-i="${i}" aria-pressed="${i===0}">${b[0]}</button>`).join("");
+  el.addEventListener("click",ev=>{ const b=ev.target.closest(".lvb"); if(!b)return;
+    const i=+b.getAttribute("data-i"); setState(i);
+    [...el.querySelectorAll(".lvb")].forEach((c,j)=>c.setAttribute("aria-pressed",j===i)); limit=CHUNK; render(); });
+}
 const slotfilter=document.getElementById("slotfilter");
-slotfilter.innerHTML=EQSLOT.map((b,i)=>`<button class="lvb" data-slot="${i}" aria-pressed="${i===0}">${b[0]}</button>`).join("");
-function setSlot(i){ equipSlot=i; [...slotfilter.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i)); }
-slotfilter.addEventListener("click",ev=>{ const b=ev.target.closest(".lvb"); if(!b)return; setSlot(+b.getAttribute("data-slot")); limit=CHUNK; render(); });
+const vocfilter=document.getElementById("vocfilter");
+const eqlvfilter=document.getElementById("eqlvfilter");
+wireFilter(slotfilter, EQSLOT, "slot", i=>equipSlot=i);
+wireFilter(vocfilter, EQVOC, "voc", i=>equipVoc=i);
+wireFilter(eqlvfilter, EQLV, "level", i=>equipLv=i);
 
 function setMode(m){
   mode=m; limit=CHUNK;
   [["mon",mMon],["boss",mBoss],["hunt",mHunt],["equip",mEquip],["item",mItem]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   lvfilter.style.display = m==="hunt" ? "flex" : "none";
-  slotfilter.style.display = m==="equip" ? "flex" : "none";
+  slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = m==="equip" ? "flex" : "none";
   legend.style.display = (m==="hunt"||m==="equip") ? "none" : "flex";
   q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
     : m==="equip" ? "Buscar equip (nome, voc: knight, sorc…)…"
