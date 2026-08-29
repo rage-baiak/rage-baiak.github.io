@@ -181,8 +181,21 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .dchip{display:inline-flex;align-items:center;gap:5px;font-size:12px;border-radius:7px;padding:2px 9px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
 .dchip b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
 .hnone{font-size:11.5px;color:var(--muted);font-style:italic}
-.mlink{color:var(--accent);cursor:pointer;border-bottom:1px dotted color-mix(in srgb,var(--accent) 50%,transparent)}
-.mlink:hover{color:var(--ink)}
+.mlink,.ilink,.hlink{color:var(--accent);cursor:pointer;border-bottom:1px dotted color-mix(in srgb,var(--accent) 50%,transparent)}
+.mlink:hover,.ilink:hover,.hlink:hover{color:var(--ink)}
+/* linha "hunt: X" no card do monstro */
+.huntof{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 8px 4px}
+.huntof .rlbl{margin:0;font-size:10px}
+.huntof .hlink{font-weight:600;font-size:13px}
+/* filtro de nível da aba Hunts */
+.lvfilter{display:none;flex-wrap:wrap;gap:6px;justify-content:center;margin:12px 0 0}
+.lvb{font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--muted);
+  background:transparent;border:1px solid var(--line);border-radius:999px;padding:5px 13px;transition:.15s}
+.lvb:hover{border-color:var(--accent);color:var(--ink)}
+.lvb[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#1a1d24}
+:root[data-theme="dark"] .lvb[aria-pressed="true"]{color:#161821}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lvb[aria-pressed="true"]{color:#161821}}
+.lvb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .more{display:block;width:100%;margin:12px 0 4px;padding:11px;font:inherit;font-size:13px;font-weight:600;
   color:var(--accent);background:transparent;border:1px solid var(--line);border-radius:9px;cursor:pointer}
 .more:hover{background:color-mix(in srgb,var(--accent) 8%,transparent);border-color:var(--accent)}
@@ -210,6 +223,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     </div>
   </div>
 
+  <div class="lvfilter" id="lvfilter"></div>
   <div class="count" id="count"></div>
   <div class="list" id="list"></div>
 
@@ -262,6 +276,8 @@ const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss
 
 const ELPT={physical:"Físico",fire:"Fogo",ice:"Gelo",earth:"Terra",energy:"Energia",holy:"Sagrado",death:"Morte",healing:"Cura"};
 const byName={}; for(const m of M) byName[norm(m.n)]=m;
+// monstro -> hunts em que aparece (pra linkar do card do monstro)
+const monHunts={}; for(const h of HUNTS) for(const nm of h.mons){ const k=norm(nm); (monHunts[k]=monHunts[k]||[]).push(h.name); }
 function monStats(m){
   let h='<div class="combat">';
   const st=[`HP <b>${m.hp.toLocaleString("pt-BR")}</b>`, `EXP <b>${m.exp.toLocaleString("pt-BR")}</b>`];
@@ -295,20 +311,25 @@ function monStats(m){
 
 function lootRows(loot,qq){
   return loot.slice().sort((a,b)=>b[1]-a[1]).map(([nm,ch,mx])=>
-    `<tr><td class="pct ${band(ch)}">${pct(ch)}%</td><td class="it">${hl(nm,qq)}</td><td class="qty">${qty(mx)}</td></tr>`
+    `<tr><td class="pct ${band(ch)}">${pct(ch)}%</td><td class="it"><span class="ilink" data-item="${esc(nm)}">${hl(nm,qq)}</span></td><td class="qty">${qty(mx)}</td></tr>`
   ).join("");
 }
 function monRows(arr,qq){
   return arr.map(d=>
-    `<tr><td class="pct ${band(d.ch)}">${pct(d.ch)}%</td><td class="mon">${hl(d.mon,qq)}</td><td class="monx">${qty(d.mx)}</td></tr>`
+    `<tr><td class="pct ${band(d.ch)}">${pct(d.ch)}%</td><td class="mon"><span class="mlink" data-mon="${esc(d.mon)}">${hl(d.mon,qq)}</span></td><td class="monx">${qty(d.mx)}</td></tr>`
   ).join("");
 }
 
 function monCard(m,qq,open){
   const dropMeta = m.l.length ? `<span class="chip">${m.l.length}</span> drops` : `sem loot`;
+  const hs = monHunts[norm(m.n)]||[];
+  const huntLine = hs.length
+    ? `<div class="huntof"><span class="rlbl">${hs.length>1?"hunts":"hunt"}</span>`
+      +hs.map(hn=>`<span class="hlink" data-hunt="${esc(hn)}">${esc(hn)}</span>`).join("")+`</div>`
+    : "";
   return `<details${open}><summary><span class="name">${hl(m.n,qq)}</span>`
     +`<span class="meta">${dropMeta} · hp ${m.hp.toLocaleString("pt-BR")} · exp ${m.exp.toLocaleString("pt-BR")}</span></summary>`
-    +`<div class="body">${monStats(m)}${m.l.length?`<table>${lootRows(m.l,"")}</table>`:""}</div></details>`;
+    +`<div class="body">${huntLine}${monStats(m)}${m.l.length?`<table>${lootRows(m.l,"")}</table>`:""}</div></details>`;
 }
 function huntMon(name){
   const m=byName[norm(name)];
@@ -353,6 +374,9 @@ function huntCard(h,qq,open){
 }
 
 const CHUNK=60; let limit=CHUNK;
+// filtros de nível da aba Hunts: [rótulo, min, max]
+const LVB=[["Todos",0,Infinity],["1-100",1,100],["101-300",101,300],["301-500",301,500],["501-800",501,799],["800+",800,Infinity]];
+let huntLv=0;
 
 function render(){
   const raw=q.value.trim(), qq=norm(raw);
@@ -365,7 +389,8 @@ function render(){
     cards = res.map(m=>()=>monCard(m,qq,open));
     noun = wantBoss ? (res.length===1?"boss":"bosses") : (res.length===1?"monstro":"monstros");
   } else if(mode==="hunt"){
-    const res = HUNTS.filter(h=>!qq || norm(h.name).includes(qq) || h.mons.some(x=>norm(x).includes(qq)));
+    const [,lo,hiv]=LVB[huntLv];
+    const res = HUNTS.filter(h=>(h.lv>=lo&&h.lv<=hiv) && (!qq || norm(h.name).includes(qq) || h.mons.some(x=>norm(x).includes(qq))));
     open = raw && res.length<=8 ? " open":"";
     cards = res.map(h=>()=>huntCard(h,qq,open));
     noun = res.length===1?"hunt":"hunts";
@@ -389,9 +414,15 @@ function render(){
   if(mb) mb.onclick=()=>{ limit+=CHUNK; render(); };
 }
 
+const lvfilter=document.getElementById("lvfilter");
+lvfilter.innerHTML=LVB.map((b,i)=>`<button class="lvb" data-lv="${i}" aria-pressed="${i===0}">${b[0]}</button>`).join("");
+function setLv(i){ huntLv=i; [...lvfilter.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i)); }
+lvfilter.addEventListener("click",ev=>{ const b=ev.target.closest(".lvb"); if(!b)return; setLv(+b.getAttribute("data-lv")); limit=CHUNK; render(); });
+
 function setMode(m){
   mode=m; limit=CHUNK;
   [["mon",mMon],["boss",mBoss],["hunt",mHunt],["item",mItem]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
+  lvfilter.style.display = m==="hunt" ? "flex" : "none";
   q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
     : m==="item" ? "Buscar item (ex: crystal coin, crossbow)…"
     : m==="boss" ? "Buscar boss (ex: deathstrike, ferumbras)…"
@@ -402,11 +433,13 @@ mMon.onclick=()=>setMode("mon");
 mBoss.onclick=()=>setMode("boss");
 mHunt.onclick=()=>setMode("hunt");
 mItem.onclick=()=>setMode("item");
-// clicar num monstro dentro da hunt -> abre o monstro
+// links cruzados: monstro <-> item <-> hunt
 list.addEventListener("click",ev=>{
-  const el=ev.target.closest(".mlink"); if(!el)return;
-  const nm=el.getAttribute("data-mon"), m=M.find(x=>x.n===nm); if(!m)return;
-  q.value=nm; setMode(m.boss?"boss":"mon");
+  const ml=ev.target.closest(".mlink"), il=ev.target.closest(".ilink"), hk=ev.target.closest(".hlink");
+  if(ml){ const nm=ml.getAttribute("data-mon"), m=M.find(x=>x.n===nm); if(!m)return; q.value=nm; setMode(m.boss?"boss":"mon"); }
+  else if(il){ q.value=il.getAttribute("data-item"); setMode("item"); }
+  else if(hk){ q.value=hk.getAttribute("data-hunt"); setLv(0); setMode("hunt"); }
+  else return;
   window.scrollTo({top:0,behavior:"smooth"});
 });
 q.addEventListener("input",()=>{ limit=CHUNK; render(); });
