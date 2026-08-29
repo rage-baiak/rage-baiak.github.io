@@ -106,6 +106,26 @@ function chanceMap(data) {
   return map;
 }
 
+// Bosses de raid/world que vivem so no catalogo de combate (Db) e NAO estao no catalogo
+// ja montado (`haveNames`). Tem combate (hp/dmg/resist/ataques), sem loot.
+function extractRaidBosses(src, haveNames) {
+  const ixName = (/([A-Za-z_$][\w$]*)=\{troll:\{name:"Troll"/.exec(src) || [])[1];
+  if (!ixName) return [];
+  const DbName = (new RegExp("=" + ixName + "\\[\\w+\\],\\w+=([\\w$]+)\\[\\w+\\.name\\.toLowerCase").exec(src) || [])[1];
+  if (!DbName) return [];
+  const nrm = s => String(s).replace(/[_-]/g, " ").toLowerCase().trim();
+  const m0 = new RegExp("\\b" + DbName + "=\\{").exec(src);
+  const Db = (0, eval)("(" + matchBalanced(src, m0.index + DbName.length + 1) + ")");
+  const out = [];
+  for (const [key, m] of Object.entries(Db)) {
+    if (!m || !m.hp || haveNames.has(nrm(key))) continue;
+    if (!m.resist && !(m.abilities && m.abilities.length) && !m.dmg) continue;
+    out.push({ key, m });
+  }
+  return out;
+}
+const titleCase = s => s.replace(/(^|\s)\w/g, c => c.toUpperCase());
+
 function diff(oldD, newD) {
   const O = chanceMap(oldD), N = chanceMap(newD);
   const nerf = [], buff = [], add = [], rem = [], newmon = [], remmon = [];
@@ -233,6 +253,25 @@ function diff(oldD, newD) {
       l: (m.loot || []).map(x => [x.name, x.chance, x.max || 1]),
     });
   }
+
+  // raid/world bosses (so no catalogo de combate, sem loot) — categoria boss
+  const haveNames = new Set(data.map(m => norm(m.n)));
+  const raid = extractRaidBosses(src, haveNames);
+  for (const { key, m } of raid) {
+    data.push({
+      n: titleCase(key), boss: 1, raid: 1,
+      hp: mul(m.hp || 0, "boss", "hp"), exp: 0,
+      arm: m.armor || 0, sp: m.speed || 0,
+      dm: m.dmg || null, r: m.resist || null,
+      a: (m.abilities || []).map(x => ({
+        el: x.element, mn: x.min, mx: x.max, ch: x.chance,
+        ty: x.element === "healing" ? "cura" : x.length ? "onda" : x.radius ? "área" : x.missile != null ? "distância" : x.target ? "direto" : "corpo a corpo",
+        sz: x.radius ? ("raio " + x.radius) : x.length ? (x.length + (x.spread ? "×" + x.spread : "") + " tiles") : x.range ? ("alcance " + x.range) : "",
+      })),
+      l: [],
+    });
+  }
+  console.log("raid bosses adicionados:", raid.length);
   data.sort((a, b) => a.n.localeCompare(b.n));
 
   // ---- equipamento (todo item com slot, dropando ou nao) ----
