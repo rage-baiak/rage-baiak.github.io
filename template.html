@@ -74,7 +74,9 @@ summary{
 summary::-webkit-details-marker{display:none}
 .name{font-family:"Cinzel",Georgia,serif;font-weight:600;font-size:19px;letter-spacing:.01em}
 .name.item{font-family:"Manrope",sans-serif;font-weight:700;letter-spacing:0;text-transform:capitalize}
-.s-lead{display:flex;align-items:center;gap:9px;min-width:0}
+.s-lead{display:flex;align-items:center;gap:9px;min-width:0;flex-wrap:wrap}
+.soon{font-size:11px;font-weight:700;letter-spacing:.02em;color:var(--rx);white-space:nowrap;
+  border:1px solid color-mix(in srgb,var(--rx) 45%,transparent);background:color-mix(in srgb,var(--rx) 9%,transparent);border-radius:6px;padding:1px 7px}
 .spr{width:42px;height:42px;flex:none;image-rendering:pixelated;object-fit:contain;
   background:color-mix(in srgb,var(--muted) 8%,transparent);border-radius:7px;padding:2px}
 .it .spr{width:28px;height:28px;vertical-align:middle;margin-right:9px;border-radius:5px;padding:1px}
@@ -364,7 +366,7 @@ function monCard(m,qq,open){
     ? `<div class="huntof"><span class="rlbl">${hs.length>1?"hunts":"hunt"}</span>`
       +hs.map(hn=>`<span class="hlink" data-hunt="${esc(hn)}">${esc(hn)}</span>`).join("")+`</div>`
     : "";
-  return `<details${open}><summary><span class="name">${hl(m.n,qq)}</span>`
+  return `<details${open}><summary><span class="s-lead"><span class="name">${hl(m.n,qq)}</span>${m.soon?'<span class="soon">🔜 vindo aí</span>':""}</span>`
     +`<span class="meta">${dropMeta} · hp ${m.hp.toLocaleString("pt-BR")} · exp ${m.exp.toLocaleString("pt-BR")}</span></summary>`
     +`<div class="body">${huntLine}${monStats(m)}${m.l.length?`<table>${lootRows(m.l,"")}</table>`:""}</div></details>`;
 }
@@ -425,7 +427,7 @@ function huntCard(h,qq,open){
       +CHARMS.boss.map(c=>`<span class="hchip charm boss">🔮 ${esc(c)}</span>`).join("")+`</div>`
     : "";
   const mons = h.mons.map(n=>huntMon(n, n===h.boss)).join("");
-  return `<details${open}><summary><span class="name">${hl(h.name,qq)}</span>`
+  return `<details${open}><summary><span class="s-lead"><span class="name">${hl(h.name,qq)}</span>${h.soon?'<span class="soon">🔜 vindo aí</span>':""}</span>`
     +`<span class="meta">lv ${h.lv}+ · <span class="chip">${h.mons.length}</span> bichos</span></summary>`
     +`<div class="body hbody"><div class="rec">`
     +`<div class="recrow"><span class="rlbl wk">⚔ arma / imbu</span>${arma}</div>`
@@ -481,7 +483,7 @@ function equipCard(e,qq,open){
 
 const CHUNK=60; let limit=CHUNK;
 // filtros de nível da aba Hunts: [rótulo, min, max]
-const LVB=[["Todos",0,Infinity],["1-100",1,100],["101-300",101,300],["301-500",301,500],["501-800",501,799],["800+",800,Infinity]];
+const LVB=[["Todos",0,Infinity],["🔜 vindo aí","soon",0],["1-100",1,100],["101-300",101,300],["301-500",301,500],["501-800",501,799],["800+",800,Infinity]];
 let huntLv=0;
 // filtro de slot da aba Equip: [rótulo, slot|null]
 const EQSLOT=[["Todos",null],["Armas","weapon"],["Armaduras","armor"],["Elmos","helmet"],["Escudos","shield"],["Pernas","legs"],["Botas","boots"],["Anéis","ring"],["Amuletos","amulet"]];
@@ -505,7 +507,7 @@ function render(){
     noun = wantBoss ? (res.length===1?"boss":"bosses") : (res.length===1?"monstro":"monstros");
   } else if(mode==="hunt"){
     const [,lo,hiv]=LVB[huntLv];
-    const res = HUNTS.filter(h=>(h.lv>=lo&&h.lv<=hiv) && (!qq || norm(h.name).includes(qq) || h.mons.some(x=>norm(x).includes(qq))));
+    const res = HUNTS.filter(h=>(lo==="soon" ? h.soon : (h.lv>=lo&&h.lv<=hiv)) && (!qq || norm(h.name).includes(qq) || h.mons.some(x=>norm(x).includes(qq))));
     open = raw && res.length<=8 ? " open":"";
     cards = res.map(h=>()=>huntCard(h,qq,open));
     noun = res.length===1?"hunt":"hunts";

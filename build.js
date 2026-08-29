@@ -188,9 +188,11 @@ function diff(oldD, newD) {
   }
   const ELS = ["fire", "ice", "earth", "energy", "holy", "death"];  // elementais de arma
   const inHunt = new Set();
+  const onMons = new Set(), testMons = new Set();   // pra achar bichos que so vem em hunt de teste
   const hunts = [];
   for (const h of huntsRaw || []) {
     (h.monsters || []).forEach(k => inHunt.add(k));
+    (h.monsters || []).forEach(k => (h.avail === "test" ? testMons : onMons).add(norm(k)));
     const mons = (h.monsters || []).map(k => It[k]).filter(Boolean);
     // ataque: elemento que os bichos mais TOMAM (menor resist medio)
     const off = ELS.map(el => {
@@ -215,6 +217,7 @@ function diff(oldD, newD) {
       id: h.id, name: h.name, lv: h.minLevel || 0,
       mons: mons.map(m => m.name),
       boss: h.bossKey ? (It[h.bossKey] || {}).name || null : null,   // boss da hunt (Savage Blow + Fatal Hold)
+      soon: h.avail === "test" ? 1 : 0,            // hunt ainda nao lancada (em teste)
       off: off.slice(0, 3).map(x => x.el),
       ofw: off.length && off[0].avg < 0,          // true = fraqueza real (toma dano extra)
       def,                                         // [{el, pct}] ameaca agregada da hunt
@@ -272,6 +275,11 @@ function diff(oldD, newD) {
     });
   }
   console.log("raid bosses adicionados:", raid.length);
+
+  // marca monstros que so aparecem em hunt de teste (conteudo vindo por ai)
+  const upcoming = new Set([...testMons].filter(k => !onMons.has(k)));
+  for (const m of data) if (upcoming.has(norm(m.n))) m.soon = 1;
+  console.log("hunts em teste:", hunts.filter(h => h.soon).length, "| monstros vindo por ai:", data.filter(m => m.soon).length);
   data.sort((a, b) => a.n.localeCompare(b.n));
 
   // ---- equipamento (todo item com slot, dropando ou nao) ----
