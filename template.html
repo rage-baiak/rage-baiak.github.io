@@ -49,7 +49,7 @@ h1 .g{color:var(--accent)}
 .search svg{flex:none;color:var(--muted)}
 #q{flex:1;border:0;background:transparent;color:var(--ink);font:inherit;font-size:16px;outline:none}
 #q::placeholder{color:var(--muted)}
-.modes{display:flex;gap:6px;margin:12px 0 0;justify-content:center}
+.modes{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0;justify-content:center}
 .mode{
   font:inherit;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);
   background:transparent;border:1px solid var(--line);border-radius:999px;padding:7px 16px;
@@ -209,6 +209,13 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 :root[data-theme="dark"] .lvb[aria-pressed="true"]{color:#161821}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .lvb[aria-pressed="true"]{color:#161821}}
 .lvb:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* equip: badges (imbu, charged, dropa/não dropa) */
+.ebadges{display:flex;flex-wrap:wrap;gap:6px;padding:10px 0 2px;margin-top:8px;border-top:1px solid var(--line2)}
+.ebadge{font-size:11px;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:2px 9px;white-space:nowrap}
+.ebadge.charged{color:var(--ri);border-color:color-mix(in srgb,var(--ri) 40%,transparent)}
+.ebadge.drop{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent);cursor:pointer}
+.ebadge.drop:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.ebadge.nodrop{color:var(--muted);opacity:.75}
 .more{display:block;width:100%;margin:12px 0 4px;padding:11px;font:inherit;font-size:13px;font-weight:600;
   color:var(--accent);background:transparent;border:1px solid var(--line);border-radius:9px;cursor:pointer}
 .more:hover{background:color-mix(in srgb,var(--accent) 8%,transparent);border-color:var(--accent)}
@@ -232,11 +239,13 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
       <button class="mode" id="mMon" aria-pressed="true">Monstros</button>
       <button class="mode" id="mBoss" aria-pressed="false">Bosses</button>
       <button class="mode" id="mHunt" aria-pressed="false">Hunts</button>
+      <button class="mode" id="mEquip" aria-pressed="false">Equip</button>
       <button class="mode" id="mItem" aria-pressed="false">Item</button>
     </div>
   </div>
 
   <div class="lvfilter" id="lvfilter"></div>
+  <div class="lvfilter" id="slotfilter"></div>
   <div class="count" id="count"></div>
   <div class="list" id="list"></div>
 
@@ -259,6 +268,7 @@ const M = __DATA__;
 const CHANGES = __CHANGES__;
 const HUNTS = __HUNTS__;
 const CHARMS = __CHARMS__;
+const EQUIP = __EQUIP__;
 
 // indice reverso: item -> [{mon, chance, max}]
 const ITEM = new Map();
@@ -286,7 +296,7 @@ const qty = mx => mx>1 ? "1–"+mx : "";
 
 let mode="mon";
 const q=document.getElementById("q"), list=document.getElementById("list"), count=document.getElementById("count");
-const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mItem=document.getElementById("mItem"), legend=document.getElementById("legend");
+const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), legend=document.getElementById("legend");
 
 const ELPT={physical:"Físico",fire:"Fogo",ice:"Gelo",earth:"Terra",energy:"Energia",holy:"Sagrado",death:"Morte",healing:"Cura"};
 const byName={}; for(const m of M) byName[norm(m.n)]=m;
@@ -415,10 +425,56 @@ function huntCard(h,qq,open){
     +`<div class="hmons2"><div class="lootlbl" style="margin-top:0;border:0;padding-top:0">Monstros</div>${mons}</div></div></details>`;
 }
 
+// ---- equipamento ----
+const VOCPT={sorcerer:"Sorc",druid:"Druid",paladin:"Pala",knight:"Knight",monk:"Monk"};
+const SLOTPT={weapon:"Arma",shield:"Escudo",armor:"Armadura",helmet:"Elmo",legs:"Pernas",boots:"Botas",ring:"Anel",amulet:"Amuleto"};
+const WTPT={sword:"Espada",axe:"Machado",club:"Maça",distance:"Distância",wand:"Wand",rod:"Rod",fist:"Punho"};
+const SKPT={sword:"Espada",axe:"Machado",club:"Maça",distance:"Distância",fist:"Punho",shielding:"Shielding",magic:"Magic"};
+function equipCard(e,qq,open){
+  const dot=el=>`<i class="edot e-${el}"></i>`;
+  const meta=[SLOTPT[e.slot]||e.slot];
+  if(e.lv) meta.push("lv "+e.lv);
+  if(e.voc&&e.voc.length) meta.push(e.voc.map(v=>VOCPT[v]||v).join("/"));
+  const main=[];
+  if(e.atk) main.push(`Atk <b>${e.atk}</b>`);
+  if(e.def) main.push(`Def <b>${e.def}</b>`);
+  if(e.arm) main.push(`Arm <b>${e.arm}</b>`);
+  if(e.wt) main.push((WTPT[e.wt]||e.wt)+(e.two?" · 2 mãos":""));
+  if(e.el&&e.elA) main.push(`${ELPT[e.el]||e.el} +${e.elA}`);
+  if(e.range) main.push("alcance "+e.range);
+  if(e.ms) main.push(`Vel +${e.ms}`);
+  const res=e.r?Object.entries(e.r).filter(([,v])=>v):[];
+  const mel=e.mel?Object.entries(e.mel).filter(([,v])=>v):[];
+  const sk=e.sk?Object.entries(e.sk).filter(([,v])=>v):[];
+  const extra=[];
+  if(e.cc)extra.push(`Crítico +${e.cc}%`); if(e.cd)extra.push(`Dano crít +${e.cd}%`);
+  if(e.ll)extra.push(`Roubo vida +${e.ll}%`); if(e.ml)extra.push(`Roubo mana +${e.ml}%`);
+  if(e.refl)extra.push(`Reflect ${e.refl}`); if(e.hpr)extra.push(`HP regen +${e.hpr}`); if(e.mpr)extra.push(`MP regen +${e.mpr}`);
+  const badges=[];
+  if(e.imb)badges.push(`<span class="ebadge">${e.imb} imbu</span>`);
+  if(e.dur)badges.push(`<span class="ebadge charged">charged ${Math.round(e.dur/3600)}h</span>`);
+  badges.push(e.drop?`<span class="ebadge drop ilink" data-item="${esc(e.n)}">dropa ▸</span>`:`<span class="ebadge nodrop">não dropa</span>`);
+  let body=`<div class="combat">`;
+  if(main.length)body+=`<div class="stats">${main.map(x=>`<span>${x}</span>`).join("")}</div>`;
+  if(sk.length)body+=`<div class="rline"><span class="rlbl wk">skills</span>`+sk.map(([k,v])=>`<span class="rchip wk">${SKPT[k]||k} +${v}</span>`).join("")+`</div>`;
+  if(res.length)body+=`<div class="rline"><span class="rlbl rs">resist</span>`+res.map(([el,v])=>`<span class="rchip ${v>=100?"im":"rs"}">${dot(el)}${ELPT[el]||el} ${v>0?"+":""}${v}%</span>`).join("")+`</div>`;
+  if(mel.length)body+=`<div class="rline"><span class="rlbl">dano mág</span>`+mel.map(([el,v])=>`<span class="rchip wk">${dot(el)}${ELPT[el]||el} +${v}</span>`).join("")+`</div>`;
+  if(extra.length)body+=`<div class="rline"><span class="rlbl">combate</span>`+extra.map(x=>`<span class="atk">${x}</span>`).join("")+`</div>`;
+  if(!main.length&&!sk.length&&!res.length&&!mel.length&&!extra.length)
+    body+=`<div class="rline"><span class="hnone">sem stats no catálogo (item base/cosmético ou stats definidos no servidor)</span></div>`;
+  body+=`<div class="ebadges">${badges.join("")}</div></div>`;
+  return `<details${open}><summary><span class="name item">${hl(e.n,qq)}</span>`
+    +`<span class="meta">${meta.join(" · ")}</span></summary>`
+    +`<div class="body">${body}</div></details>`;
+}
+
 const CHUNK=60; let limit=CHUNK;
 // filtros de nível da aba Hunts: [rótulo, min, max]
 const LVB=[["Todos",0,Infinity],["1-100",1,100],["101-300",101,300],["301-500",301,500],["501-800",501,799],["800+",800,Infinity]];
 let huntLv=0;
+// filtro de slot da aba Equip: [rótulo, slot|null]
+const EQSLOT=[["Todos",null],["Armas","weapon"],["Armaduras","armor"],["Elmos","helmet"],["Escudos","shield"],["Pernas","legs"],["Botas","boots"],["Anéis","ring"],["Amuletos","amulet"]];
+let equipSlot=0;
 
 function render(){
   const raw=q.value.trim(), qq=norm(raw);
@@ -436,6 +492,15 @@ function render(){
     open = raw && res.length<=8 ? " open":"";
     cards = res.map(h=>()=>huntCard(h,qq,open));
     noun = res.length===1?"hunt":"hunts";
+  } else if(mode==="equip"){
+    const slot = EQSLOT[equipSlot][1];
+    const res = EQUIP.filter(e=>(!slot||e.slot===slot) && (!qq
+      || norm(e.n).includes(qq)
+      || norm(SLOTPT[e.slot]||"").includes(qq)
+      || (e.voc&&e.voc.some(v=>norm(VOCPT[v]||v).includes(qq)||norm(v).includes(qq)))));
+    open = raw && res.length<=6 ? " open":"";
+    cards = res.map(e=>()=>equipCard(e,qq,open));
+    noun = res.length===1?"equip":"equips";
   } else {
     const res = ITEMS.filter(it=>!qq || norm(it).includes(qq));
     open = raw && res.length<=6 ? " open":"";
@@ -461,11 +526,19 @@ lvfilter.innerHTML=LVB.map((b,i)=>`<button class="lvb" data-lv="${i}" aria-press
 function setLv(i){ huntLv=i; [...lvfilter.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i)); }
 lvfilter.addEventListener("click",ev=>{ const b=ev.target.closest(".lvb"); if(!b)return; setLv(+b.getAttribute("data-lv")); limit=CHUNK; render(); });
 
+const slotfilter=document.getElementById("slotfilter");
+slotfilter.innerHTML=EQSLOT.map((b,i)=>`<button class="lvb" data-slot="${i}" aria-pressed="${i===0}">${b[0]}</button>`).join("");
+function setSlot(i){ equipSlot=i; [...slotfilter.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i)); }
+slotfilter.addEventListener("click",ev=>{ const b=ev.target.closest(".lvb"); if(!b)return; setSlot(+b.getAttribute("data-slot")); limit=CHUNK; render(); });
+
 function setMode(m){
   mode=m; limit=CHUNK;
-  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["item",mItem]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
+  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["equip",mEquip],["item",mItem]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   lvfilter.style.display = m==="hunt" ? "flex" : "none";
+  slotfilter.style.display = m==="equip" ? "flex" : "none";
+  legend.style.display = (m==="hunt"||m==="equip") ? "none" : "flex";
   q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
+    : m==="equip" ? "Buscar equip (nome, voc: knight, sorc…)…"
     : m==="item" ? "Buscar item (ex: crystal coin, crossbow)…"
     : m==="boss" ? "Buscar boss (ex: deathstrike, ferumbras)…"
     : "Buscar monstro (ex: dragon, demon)…";
@@ -474,6 +547,7 @@ function setMode(m){
 mMon.onclick=()=>setMode("mon");
 mBoss.onclick=()=>setMode("boss");
 mHunt.onclick=()=>setMode("hunt");
+mEquip.onclick=()=>setMode("equip");
 mItem.onclick=()=>setMode("item");
 // links cruzados: monstro <-> item <-> hunt
 list.addEventListener("click",ev=>{

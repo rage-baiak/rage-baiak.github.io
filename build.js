@@ -21,6 +21,39 @@ function readJSON(f, def) {
   try { return JSON.parse(fs.readFileSync(HERE + "/" + f, "utf8")); } catch { return def; }
 }
 
+// Catalogo de EQUIPAMENTO (oa): todo item com `slot`, dropando ou nao. Ancorado por
+// conteudo estavel ("leather helmet") e nao por nome de var (que re-minifica).
+const EQUIP_SLOTS = { weapon: "Arma", shield: "Escudo", armor: "Armadura", helmet: "Elmo", legs: "Pernas", boots: "Botas", ring: "Anel", amulet: "Amuleto" };
+function extractEquip(src) {
+  const anchor = src.indexOf('"leather helmet":{id:');
+  if (anchor < 0) throw new Error("catalogo de equip nao encontrado (jogo mudou o bundle?)");
+  let blk = null;
+  for (let i = anchor; i >= anchor - 4000000 && i >= 0; i--) {
+    if (src[i] === "{" && src[i - 1] === "=") {
+      const b = matchBalanced(src, i);
+      if (i + b.length > anchor) { blk = b; break; }
+    }
+  }
+  if (!blk) throw new Error("container do catalogo de equip nao delimitado");
+  const oa = (0, eval)("(" + blk + ")");
+  const out = [];
+  for (const [name, it] of Object.entries(oa)) {
+    if (!it || typeof it !== "object" || !EQUIP_SLOTS[it.slot]) continue;
+    out.push({
+      n: name, slot: it.slot, lv: it.level || 0, voc: it.vocs || null,
+      atk: it.atk || 0, def: it.def || 0, arm: it.arm || 0,
+      wt: it.wt || null, two: it.twoHanded ? 1 : 0,
+      el: it.elementType || null, elA: it.elementAtk || 0, range: it.range || 0,
+      r: it.absorb || null, mel: it.magicEl || null, sk: it.skills || null,
+      cc: it.critChance || 0, cd: it.critDmg || 0, ll: it.lifeLeech || 0, ml: it.manaLeech || 0,
+      ms: it.moveSpeed || 0, hpr: it.hpRegen || 0, mpr: it.mpRegen || 0, refl: it.reflect || 0,
+      imb: it.imb && it.imb.slots ? it.imb.slots : 0, dur: it.durationSec || 0,
+    });
+  }
+  out.sort((a, b) => a.slot.localeCompare(b.slot) || a.lv - b.lv || a.n.localeCompare(b.n));
+  return out;
+}
+
 // Monta o catalogo final `It` do jogo, descobrindo os nomes minificados por ESTRUTURA
 // (nao por nome fixo — o bundle re-minifica a cada deploy e embaralha os nomes de objeto).
 function assembleCatalog(src) {
@@ -199,7 +232,15 @@ function diff(oldD, newD) {
     });
   }
   data.sort((a, b) => a.n.localeCompare(b.n));
+
+  // ---- equipamento (todo item com slot, dropando ou nao) ----
+  const equip = extractEquip(src);
+  const droppedNames = new Set();
+  for (const m of data) for (const l of m.l) droppedNames.add(norm(l[0]));
+  for (const e of equip) e.drop = droppedNames.has(norm(e.n)) ? 1 : 0;
+  const eBySlot = {}; for (const e of equip) eBySlot[e.slot] = (eBySlot[e.slot] || 0) + 1;
   console.log("monstros:", data.length, "| bosses:", data.filter(m => m.boss).length, "| hunts:", hunts.length);
+  console.log("equip:", equip.length, "| dropam:", equip.filter(e => e.drop).length, "|", JSON.stringify(eBySlot));
 
   // diff vs snapshot anterior
   const prev = readJSON("data.json", null);
@@ -229,6 +270,7 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const CHANGES = __CHANGES__;", "const CHANGES = " + JSON.stringify(changes) + ";");
   tpl = tpl.replace("const HUNTS = __HUNTS__;", "const HUNTS = " + JSON.stringify(hunts) + ";");
   tpl = tpl.replace("const CHARMS = __CHARMS__;", "const CHARMS = " + JSON.stringify(CHARMS) + ";");
+  tpl = tpl.replace("const EQUIP = __EQUIP__;", "const EQUIP = " + JSON.stringify(equip) + ";");
   tpl = tpl.replace("__COUNT__", data.length);
   fs.writeFileSync(HERE + "/index.html", tpl);
   console.log("index.html gerado:", fs.statSync(HERE + "/index.html").size, "bytes");
