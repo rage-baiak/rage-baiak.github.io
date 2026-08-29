@@ -170,9 +170,12 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hchip.charm{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
 .hchip b{font-weight:800;font-variant-numeric:tabular-nums}
 .recrow .rlbl.ch{color:var(--accent)}
-.charmchip{display:inline-flex;align-items:center;font-size:11.5px;font-weight:600;color:var(--accent);
-  border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);border-radius:7px;padding:2px 8px;white-space:nowrap}
-.charmchip.boss{color:var(--rx);border-color:color-mix(in srgb,var(--rx) 45%,transparent);background:color-mix(in srgb,var(--rx) 8%,transparent)}
+.charmchip{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--accent);
+  border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:7px;padding:2px 8px;white-space:nowrap;opacity:.72}
+.charmchip.top{opacity:1;background:color-mix(in srgb,var(--accent) 12%,transparent);border-color:color-mix(in srgb,var(--accent) 50%,transparent)}
+.charmchip em{font-style:normal;font-size:9.5px;font-weight:700;color:var(--muted);letter-spacing:.02em}
+.charmchip.boss{color:var(--rx);border-color:color-mix(in srgb,var(--rx) 45%,transparent);background:color-mix(in srgb,var(--rx) 8%,transparent);opacity:1}
+.hchip.charm.boss{color:var(--rx);border-color:color-mix(in srgb,var(--rx) 45%,transparent);background:color-mix(in srgb,var(--rx) 8%,transparent)}
 .hmon-lead{display:inline-flex;align-items:center;gap:8px}
 .bosstag{font-size:10px;font-weight:700;letter-spacing:.03em;color:var(--rx);
   border:1px solid color-mix(in srgb,var(--rx) 45%,transparent);border-radius:6px;padding:1px 6px;white-space:nowrap}
@@ -344,27 +347,17 @@ function monCard(m,qq,open){
     +`<span class="meta">${dropMeta} · hp ${m.hp.toLocaleString("pt-BR")} · exp ${m.exp.toLocaleString("pt-BR")}</span></summary>`
     +`<div class="body">${huntLine}${monStats(m)}${m.l.length?`<table>${lootRows(m.l,"")}</table>`:""}</div></details>`;
 }
-// alocação de charm por hunt: cada charm elemental vai no bicho MAIS fraco àquele
-// elemento (empate: mais HP), e vale pra 1 bicho só. Boss leva Savage Blow + Fatal Hold.
-const ELORDER=["fire","ice","earth","energy","death","holy","physical"];
-function assignCharms(h){
-  const mons=h.mons.map(n=>({name:n,m:byName[norm(n)]})).filter(x=>x.m);
-  const assign={};
-  const add=(name,c)=>{ (assign[name]=assign[name]||[]); if(!assign[name].includes(c)) assign[name].push(c); };
-  for(const el of ELORDER){
-    let best=null;
-    for(const {name,m} of mons){
-      const v=(m.r&&m.r[el]!=null)?m.r[el]:0;
-      if(v>=0) continue;                       // só interessa fraqueza (resist negativo)
-      if(!best||v<best.v||(v===best.v&&m.hp>best.hp)) best={name,v,hp:m.hp};
-    }
-    if(best) add(best.name, charmFor(el));
-  }
-  if(h.boss) for(const c of CHARMS.boss) add(h.boss, c);
-  return assign;
+// charms de um monstro, EM ORDEM de indicação (fraqueza maior primeiro). Serve como
+// lista de opções: se o 1º já foi usado noutro bicho, ou a party não tem a voc, desce.
+// Boss da hunt: só Savage Blow + Fatal Hold.
+function monCharms(m,isBoss){
+  if(isBoss) return CHARMS.boss.slice();
+  const weak=[]; if(m.r) for(const el in m.r){const v=m.r[el]; if(v<0)weak.push([el,v]);}
+  weak.sort((a,b)=>a[1]-b[1]);                       // mais fraco primeiro
+  const list=weak.map(([el])=>charmFor(el));
+  return list.length ? list : [CHARMS.pure];
 }
-
-function huntMon(name, charms, isBoss){
+function huntMon(name, isBoss){
   const m=byName[norm(name)];
   if(!m) return `<div class="hmon"><div class="hmon-h"><span class="mlink" data-mon="${esc(name)}">${esc(name)}</span></div></div>`;
   const dot=el=>`<i class="edot e-${el}"></i>`;
@@ -381,8 +374,8 @@ function huntMon(name, charms, isBoss){
   const dl = dmg.length
     ? dmg.map(d=>`<span class="dchip">${dot(d.el)}${ELPT[d.el]||d.el} <b>${d.pct}%</b></span>`).join("")
     : `<span class="hnone">só corpo a corpo</span>`;
-  const list = charms&&charms.length ? charms : [CHARMS.pure];
-  const ch = list.map(c=>`<span class="charmchip${CHARMS.boss.includes(c)?" boss":""}">${esc(c)}</span>`).join("");
+  const ch = monCharms(m,isBoss).map((c,i)=>
+    `<span class="charmchip${isBoss?" boss":(i===0?" top":"")}">${i&&!isBoss?`<em>${i+1}º</em> `:""}${esc(c)}</span>`).join("");
   return `<div class="hmon${isBoss?" boss":""}"><div class="hmon-h">`
     +`<span class="hmon-lead"><span class="mlink" data-mon="${esc(m.n)}">${esc(m.n)}</span>${isBoss?'<span class="bosstag">👑 boss</span>':""}</span>`
     +`<span class="hmon-hp">HP ${m.hp.toLocaleString("pt-BR")}</span></div>`
@@ -399,17 +392,18 @@ function huntCard(h,qq,open){
   const def = h.def.length
     ? h.def.map(d=>`<span class="hchip def">${dot(d.el)}${ELPT[d.el]||d.el} <b>${d.pct}%</b></span>`).join("")
     : `<span class="hnote">sem dado</span>`;
-  const assign = assignCharms(h);
-  const usedElem = [...new Set(Object.values(assign).flat().filter(c=>!CHARMS.boss.includes(c)&&c!==CHARMS.pure))];
-  const charm = usedElem.length
-    ? usedElem.map(c=>`<span class="hchip charm">🔮 ${esc(c)}</span>`).join("")
+  const primaries=[...new Set(h.mons.filter(n=>n!==h.boss)
+    .map(n=>{const m=byName[norm(n)]; return m?monCharms(m,false)[0]:null;})
+    .filter(c=>c&&c!==CHARMS.pure))];
+  const charm = primaries.length
+    ? primaries.map(c=>`<span class="hchip charm">🔮 ${esc(c)}</span>`).join("")
     : `<span class="hnote">bichos sem fraqueza</span>`;
   const bossRow = h.boss
     ? `<div class="recrow"><span class="rlbl ch">👑 boss</span>`
       +`<span class="mlink bossname" data-mon="${esc(h.boss)}">${esc(h.boss)}</span>`
-      +CHARMS.boss.map(c=>`<span class="hchip charm">🔮 ${esc(c)}</span>`).join("")+`</div>`
+      +CHARMS.boss.map(c=>`<span class="hchip charm boss">🔮 ${esc(c)}</span>`).join("")+`</div>`
     : "";
-  const mons = h.mons.map(n=>huntMon(n, assign[n], n===h.boss)).join("");
+  const mons = h.mons.map(n=>huntMon(n, n===h.boss)).join("");
   return `<details${open}><summary><span class="name">${hl(h.name,qq)}</span>`
     +`<span class="meta">lv ${h.lv}+ · <span class="chip">${h.mons.length}</span> bichos</span></summary>`
     +`<div class="body hbody"><div class="rec">`
@@ -417,7 +411,7 @@ function huntCard(h,qq,open){
     +`<div class="recrow"><span class="rlbl rs">🛡 proteção</span>${def}</div>`
     +`<div class="recrow"><span class="rlbl ch">🔮 charm</span>${charm}</div>`
     +bossRow
-    +`<div class="recnote">Cada charm elemental vai no bicho mais fraco a ele (um por bicho). O boss leva ${esc(CHARMS.boss.join(" + "))} pra acelerar a run.</div></div>`
+    +`<div class="recnote">Cada bicho tem os charms em ordem de indicação (o 1º é o melhor; se já usou noutro bicho ou a party não tem a voc, desce). O boss leva só ${esc(CHARMS.boss.join(" + "))}.</div></div>`
     +`<div class="hmons2"><div class="lootlbl" style="margin-top:0;border:0;padding-top:0">Monstros</div>${mons}</div></div></details>`;
 }
 
