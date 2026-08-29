@@ -1,7 +1,8 @@
-# Baiak Drops
+# Wiki do Baiak
 
-Página estática com a **taxa de drop** dos monstros e bosses do Baiak Idle.
-Busca por monstro (loot dele) ou por item (onde farmar). Servida via GitHub Pages.
+Wiki estática do Baiak Idle: **drops, combate e hunts** dos monstros e bosses.
+Busca por monstro (loot + fraquezas + ataques), por boss, por hunt (arma e defesa
+recomendadas) ou por item (onde farmar). Servida via GitHub Pages.
 
 - **`index.html`** — a página pronta (gerada). É o que o Pages serve.
 - **`template.html`** — o HTML com `const M = __DATA__;` (sem os dados).

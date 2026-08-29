@@ -21,6 +21,49 @@ function readJSON(f, def) {
   try { return JSON.parse(fs.readFileSync(HERE + "/" + f, "utf8")); } catch { return def; }
 }
 
+// Monta o catalogo final `It` do jogo, descobrindo os nomes minificados por ESTRUTURA
+// (nao por nome fixo — o bundle re-minifica a cada deploy e embaralha os nomes de objeto).
+function assembleCatalog(src) {
+  const need = (re, what) => { const m = re.exec(src); if (!m) throw new Error("estrutura nao encontrada: " + what + " (o jogo mudou o bundle?)"); return m; };
+  const objByName = (name) => { const m = need(new RegExp("\\b" + name + "=([{\\[])"), name); return matchBalanced(src, m.index + name.length + 1); };
+
+  // nomes de objeto (mudam por build) — descobertos por conteudo/estrutura estavel
+  const ixName = need(/([A-Za-z_$][\w$]*)=\{troll:\{name:"Troll"/, "catalogo base ix")[1];
+  const DbName = need(new RegExp("=" + ixName + "\\[\\w+\\],\\w+=([\\w$]+)\\[\\w+\\.name\\.toLowerCase"), "override Db")[1];
+  const gdeName = need(/const ([\w$]+)=\{training_machine/, "escala gde")[1];
+  const w = need(/([\w$]+)=Object\.fromEntries\(([\w$]+)\.map\(\w+=>\[\w+,([\w$]+)\[([\w$]+)\[\w+\]\?\?""\]\?\?1\]\)\)/, "wde/IG/yde/NG");
+  const IGName = w[2], ydeName = w[3], NGName = w[4];
+
+  // helpers chamados dentro do gde (nomes de funcao, ex: gn/Pt/At) — extrai o source de cada
+  const gdeSrc = matchBalanced(src, src.indexOf("{", src.indexOf("const " + gdeName + "=")));
+  const helperNames = [...new Set([...gdeSrc.matchAll(/\.\.\.([\w$]+)\(/g)].map(m => m[1]))];
+  const helperSrc = helperNames.map(fn => {
+    const i = src.indexOf("function " + fn + "(");
+    if (i < 0) throw new Error("helper nao encontrado no bundle: " + fn);
+    const bodyStart = src.indexOf("{", src.indexOf(")", i));
+    return "function " + fn + src.slice(src.indexOf("(", i), bodyStart) + matchBalanced(src, bodyStart);
+  }).join("\n");
+
+  const blob = `
+    const ${ixName}=${objByName(ixName)};
+    const ${DbName}=${objByName(DbName)};
+    ${helperSrc}
+    const ${gdeName}=${gdeSrc};
+    const ${IGName}=${objByName(IGName)}, ${ydeName}=${objByName(ydeName)}, ${NGName}=${objByName(NGName)};
+    const __wm=Object.fromEntries(${IGName}.map(e=>[e,${ydeName}[${NGName}[e]??""]??1]));
+    return { ix:${ixName}, Db:${DbName}, gde:${gdeName}, wde:__wm };
+  `;
+  const G = new Function(blob)();
+
+  const It = {};
+  for (const [k, t] of Object.entries(G.ix)) {
+    if (!t || !t.hp) continue;
+    const a = G.Db[t.name.toLowerCase()] || {}, n = G.gde[k] || {}, o = G.wde[k] ?? 1;
+    It[k] = { ...t, ...a, ...n, ...(o !== 1 ? { exp: Math.round(t.exp * o) } : {}) };
+  }
+  return It;
+}
+
 // monstro -> {item: chance}
 function chanceMap(data) {
   const map = {};
@@ -53,24 +96,9 @@ function diff(oldD, newD) {
   const src = await (await fetch("https://baiakidle.com" + bm[0], { headers: UA })).text();
 
   // ---- catalogo final do jogo (It): base ix + Db override + gde (escala hp/dmg/abil) + exp x yde ----
-  // Replica exatamente o assembler do bundle. `Yne=It` e o catalogo que a UI mostra.
-  const bal = (anchor, ch) => { const i = src.indexOf(anchor); if (i < 0) throw new Error("nao achei " + anchor + " (jogo mudou?)"); return matchBalanced(src, src.indexOf(ch, i)); };
-  const G = new Function(`
-    const ix=${bal("ix={", "{")}, Db=${bal("Db={", "{")};
-    ${src.slice(src.indexOf("function At(e,t)"), src.indexOf("const gde="))}
-    const gde=${bal("const gde=", "{")};
-    const IG=${bal("IG=[", "[")}, NG=${bal("NG={", "{")}, yde=${bal("yde={", "{")};
-    const wde=Object.fromEntries(IG.map(e=>[e,yde[NG[e]??""]??1]));
-    return {ix,Db,gde,wde};
-  `)();
-
+  // Replica o assembler do bundle. `Yne=It` e o catalogo que a UI mostra.
   const norm = s => String(s).replace(/[_-]/g, " ").toLowerCase().trim();
-  const It = {};   // chave underscore (a mesma do ix e das hunts)
-  for (const [k, t] of Object.entries(G.ix)) {
-    if (!t || !t.hp) continue;
-    const a = G.Db[t.name.toLowerCase()] || {}, n = G.gde[k] || {}, o = G.wde[k] ?? 1;
-    It[k] = { ...t, ...a, ...n, ...(o !== 1 ? { exp: Math.round(t.exp * o) } : {}) };
-  }
+  const It = assembleCatalog(src);
 
   // rate do servidor (config publica de admin): hp/exp/atk/def por categoria, igual pra todos
   let rate = null;
@@ -185,7 +213,7 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const M = __DATA__;", "const M = " + JSON.stringify(data) + ";");
   tpl = tpl.replace("const CHANGES = __CHANGES__;", "const CHANGES = " + JSON.stringify(changes) + ";");
   tpl = tpl.replace("const HUNTS = __HUNTS__;", "const HUNTS = " + JSON.stringify(hunts) + ";");
-  tpl = tpl.replace(/Taxa de drop de <b>\d+<\/b>/, `Taxa de drop de <b>${data.length}</b>`);
+  tpl = tpl.replace("__COUNT__", data.length);
   fs.writeFileSync(HERE + "/index.html", tpl);
   console.log("index.html gerado:", fs.statSync(HERE + "/index.html").size, "bytes");
 })();
