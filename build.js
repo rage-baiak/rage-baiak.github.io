@@ -100,6 +100,14 @@ function diff(oldD, newD) {
   const norm = s => String(s).replace(/[_-]/g, " ").toLowerCase().trim();
   const It = assembleCatalog(src);
 
+  // charms ofensivos: elemento -> nome do charm (escolhe-se pela fraqueza do bicho).
+  // O charm da dano do elemento, entao vale o charm do elemento que o alvo mais TOMA.
+  const elemCharm = {};
+  for (const m of src.matchAll(/key:"\w+",name:"([^"]+)",category:"\w+",kind:"offensive",element:"(\w+)"/g)) elemCharm[m[2]] = m[1];
+  const opm = /key:"overpower",name:"([^"]+)"/.exec(src);
+  const CHARMS = { elem: elemCharm, pure: opm ? opm[1] : "Overpower" };
+  console.log("charms:", Object.keys(elemCharm).length, "elementais +", CHARMS.pure, "(puro)");
+
   // rate do servidor (config publica de admin): hp/exp/atk/def por categoria, igual pra todos
   let rate = null;
   try {
@@ -213,6 +221,7 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const M = __DATA__;", "const M = " + JSON.stringify(data) + ";");
   tpl = tpl.replace("const CHANGES = __CHANGES__;", "const CHANGES = " + JSON.stringify(changes) + ";");
   tpl = tpl.replace("const HUNTS = __HUNTS__;", "const HUNTS = " + JSON.stringify(hunts) + ";");
+  tpl = tpl.replace("const CHARMS = __CHARMS__;", "const CHARMS = " + JSON.stringify(CHARMS) + ";");
   tpl = tpl.replace("__COUNT__", data.length);
   fs.writeFileSync(HERE + "/index.html", tpl);
   console.log("index.html gerado:", fs.statSync(HERE + "/index.html").size, "bytes");
