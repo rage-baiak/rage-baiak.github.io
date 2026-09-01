@@ -228,6 +228,8 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .spellstats input{width:68px;font:inherit;font-size:14px;font-weight:600;color:var(--ink);text-align:center;
   background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 6px;font-variant-numeric:tabular-nums}
 .spellstats input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.spellnote{display:none;text-align:center;font-size:11.5px;color:var(--muted);margin:8px 8px 0;line-height:1.5}
+.spellnote b{color:var(--ink);font-weight:600}
 .sp-words{font-size:12px;color:var(--muted);font-style:italic}
 .sp-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:8px 8px 4px;font-size:13px;color:var(--muted)}
 .sp-row b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
@@ -275,7 +277,9 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     <label>magic <input id="stMag" type="number" min="0" value="50" inputmode="numeric"></label>
     <label>dist <input id="stDist" type="number" min="0" value="50" inputmode="numeric"></label>
     <label>melee <input id="stMelee" type="number" min="0" value="50" inputmode="numeric"></label>
+    <label title="% dano/cura de magia do teu gear/build/boosts">% mag <input id="stBonus" type="number" min="0" value="0" inputmode="numeric"></label>
   </div>
+  <div class="spellnote" id="spellnote">Base × (1 + % mag). Estimativa — <b>crítico, augments e eventos</b> entram por cima. Sem gear (% mag = 0) é o dano base da magia.</div>
   <div class="count" id="count"></div>
   <div class="list" id="list"></div>
 
@@ -523,14 +527,15 @@ const MTYPE=[["Todas",null],["Dano","dmg"],["Cura","heal"],["Área","area"]];
 let magiaType=0;
 // lê os stats do char (level/magic/distance/melee) dos inputs
 const stLvl=document.getElementById("stLvl"), stMag=document.getElementById("stMag"),
-      stDist=document.getElementById("stDist"), stMelee=document.getElementById("stMelee");
+      stDist=document.getElementById("stDist"), stMelee=document.getElementById("stMelee"),
+      stBonus=document.getElementById("stBonus");
 const numv=el=>{ const n=parseInt(el.value,10); return isNaN(n)?0:Math.max(0,n); };
-function spellStats(){ return [numv(stLvl), numv(stMag), numv(stDist), numv(stMelee)]; }
+function spellStats(){ return [numv(stLvl), numv(stMag), numv(stDist), numv(stMelee), numv(stBonus)]; }
 function spellCard(s,qq,open,st){
   const f=s.dmg||s.heal, isHeal=!!s.heal;
   let val="—";
-  if(f){ const r=f(st[0],st[1],st[2],st[3]);
-    val=Math.round(r[0]).toLocaleString("pt-BR")+"–"+Math.round(r[1]).toLocaleString("pt-BR"); }
+  if(f){ const r=f(st[0],st[1],st[2],st[3]); const mult=1+(st[4]||0)/100;
+    val=Math.round(r[0]*mult).toLocaleString("pt-BR")+"–"+Math.round(r[1]*mult).toLocaleString("pt-BR"); }
   const vocs=(s.vocs||[]).map(v=>VOCPT[v]||v).join("/");
   const tipo=s.type==="heal"?"cura":s.type==="area"?"área":"ataque";
   const det=[`<span>mana <b>${s.mana}</b></span>`,`<span>cd <b>${s.cd/1000}s</b></span>`];
@@ -626,11 +631,12 @@ wireFilter(mtypefilter, MTYPE, "tipo", i=>magiaType=i);
 
 // stats do char: restaura do localStorage, salva ao digitar, re-renderiza
 const spellstats=document.getElementById("spellstats");
+const spellnote=document.getElementById("spellnote");
 try{ const s=JSON.parse(localStorage.getItem("baiak-stats")||"{}");
-  if(s.lvl)stLvl.value=s.lvl; if(s.mag)stMag.value=s.mag; if(s.dist)stDist.value=s.dist; if(s.mel)stMelee.value=s.mel;
+  if(s.lvl)stLvl.value=s.lvl; if(s.mag)stMag.value=s.mag; if(s.dist)stDist.value=s.dist; if(s.mel)stMelee.value=s.mel; if(s.bonus)stBonus.value=s.bonus;
 }catch(e){}
-for(const el of [stLvl,stMag,stDist,stMelee]) el.addEventListener("input",()=>{
-  try{ localStorage.setItem("baiak-stats", JSON.stringify({lvl:stLvl.value,mag:stMag.value,dist:stDist.value,mel:stMelee.value})); }catch(e){}
+for(const el of [stLvl,stMag,stDist,stMelee,stBonus]) el.addEventListener("input",()=>{
+  try{ localStorage.setItem("baiak-stats", JSON.stringify({lvl:stLvl.value,mag:stMag.value,dist:stDist.value,mel:stMelee.value,bonus:stBonus.value})); }catch(e){}
   if(mode==="magia") render();
 });
 
@@ -641,6 +647,7 @@ function setMode(m){
   slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
   spellstats.style.display = m==="magia" ? "flex" : "none";
+  spellnote.style.display = m==="magia" ? "block" : "none";
   legend.style.display = (m==="hunt"||m==="equip"||m==="magia") ? "none" : "flex";
   q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
     : m==="magia" ? "Buscar magia (nome ou words: exori, exura…)…"
