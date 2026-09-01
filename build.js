@@ -126,6 +126,21 @@ function extractRaidBosses(src, haveNames) {
 }
 const titleCase = s => s.replace(/(^|\s)\w/g, c => c.toUpperCase());
 
+// Catalogo de MAGIAS: extrai a cadeia `const hh=...,IP=...,yr=[...]` inteira (com as
+// FUNCOES de dano/cura) e devolve um IIFE que retorna o array. Injetado cru na pagina
+// pra as formulas rodarem ao vivo (JSON perderia as funcoes). Ancorado por conteudo.
+function extractSpellsSrc(src) {
+  const anchor = src.indexOf('[{words:"exura"');
+  if (anchor < 0) throw new Error("catalogo de magias nao encontrado (jogo mudou o bundle?)");
+  const arrName = (/([A-Za-z_$][\w$]*)=\[\{words:"exura"/.exec(src) || [])[1];
+  if (!arrName) throw new Error("nome do array de magias nao encontrado");
+  const hhIdx = src.lastIndexOf("Math.max(e[0]", anchor);   // helper hh, logo antes do array
+  const start = src.lastIndexOf("const ", hhIdx);
+  const arrEnd = anchor + matchBalanced(src, anchor).length;
+  const chain = src.slice(start, arrEnd);                   // const hh=...,IP=...,<arr>=[...]
+  return "(function(){" + chain + ";return " + arrName + ";})()";
+}
+
 function diff(oldD, newD) {
   const O = chanceMap(oldD), N = chanceMap(newD);
   const nerf = [], buff = [], add = [], rem = [], newmon = [], remmon = [];
@@ -283,6 +298,10 @@ function diff(oldD, newD) {
   const ITEMID = {};
   for (const nm of droppedNames) if (idByName[nm]) ITEMID[nm] = idByName[nm];
   const eBySlot = {}; for (const e of equip) eBySlot[e.slot] = (eBySlot[e.slot] || 0) + 1;
+  // ---- magias (com as formulas de dano/cura por level+skills) ----
+  const spellsIife = extractSpellsSrc(src);
+  const spells = new Function("return " + spellsIife)();  // valida
+  console.log("magias:", spells.length, "|", JSON.stringify(spells.reduce((a, s) => (a[s.type] = (a[s.type] || 0) + 1, a), {})));
   console.log("monstros:", data.length, "| bosses:", data.filter(m => m.boss).length, "| hunts:", hunts.length);
   console.log("equip:", equip.length, "| dropam:", equip.filter(e => e.drop).length, "|", JSON.stringify(eBySlot));
 
@@ -316,6 +335,7 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const CHARMS = __CHARMS__;", "const CHARMS = " + JSON.stringify(CHARMS) + ";");
   tpl = tpl.replace("const EQUIP = __EQUIP__;", "const EQUIP = " + JSON.stringify(equip) + ";");
   tpl = tpl.replace("const ITEMID = __ITEMID__;", "const ITEMID = " + JSON.stringify(ITEMID) + ";");
+  tpl = tpl.replace("const SPELLS = __SPELLS__;", "const SPELLS = " + spellsIife + ";");
   tpl = tpl.replace("__COUNT__", data.length);
   fs.writeFileSync(HERE + "/index.html", tpl);
   console.log("index.html gerado:", fs.statSync(HERE + "/index.html").size, "bytes");

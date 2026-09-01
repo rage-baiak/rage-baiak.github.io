@@ -221,6 +221,20 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .ebadge.drop{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent);cursor:pointer}
 .ebadge.drop:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
 .ebadge.nodrop{color:var(--muted);opacity:.75}
+/* magias: barra de stats do char + valores */
+.spellstats{display:none;flex-wrap:wrap;gap:8px 14px;justify-content:center;align-items:center;margin:10px 0 0}
+.spellstats label{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
+  letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.spellstats input{width:68px;font:inherit;font-size:14px;font-weight:600;color:var(--ink);text-align:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:5px 6px;font-variant-numeric:tabular-nums}
+.spellstats input:focus{outline:2px solid var(--accent);outline-offset:1px}
+.sp-words{font-size:12px;color:var(--muted);font-style:italic}
+.sp-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;padding:8px 8px 4px;font-size:13px;color:var(--muted)}
+.sp-row b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
+.sp-val{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+.sp-val.dmg{color:var(--rx)} .sp-val.heal{color:var(--rc)}
+.sp-tag{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);
+  border:1px solid var(--line);border-radius:6px;padding:1px 7px}
 .more{display:block;width:100%;margin:12px 0 4px;padding:11px;font:inherit;font-size:13px;font-weight:600;
   color:var(--accent);background:transparent;border:1px solid var(--line);border-radius:9px;cursor:pointer}
 .more:hover{background:color-mix(in srgb,var(--accent) 8%,transparent);border-color:var(--accent)}
@@ -244,6 +258,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
       <button class="mode" id="mMon" aria-pressed="true">Monstros</button>
       <button class="mode" id="mBoss" aria-pressed="false">Bosses</button>
       <button class="mode" id="mHunt" aria-pressed="false">Hunts</button>
+      <button class="mode" id="mMagia" aria-pressed="false">Magias</button>
       <button class="mode" id="mEquip" aria-pressed="false">Equip</button>
       <button class="mode" id="mItem" aria-pressed="false">Item</button>
     </div>
@@ -253,6 +268,14 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
   <div class="lvfilter" id="slotfilter"></div>
   <div class="lvfilter" id="vocfilter"></div>
   <div class="lvfilter" id="eqlvfilter"></div>
+  <div class="lvfilter" id="mvocfilter"></div>
+  <div class="lvfilter" id="mtypefilter"></div>
+  <div class="spellstats" id="spellstats">
+    <label>lvl <input id="stLvl" type="number" min="1" value="100" inputmode="numeric"></label>
+    <label>magic <input id="stMag" type="number" min="0" value="50" inputmode="numeric"></label>
+    <label>dist <input id="stDist" type="number" min="0" value="50" inputmode="numeric"></label>
+    <label>melee <input id="stMelee" type="number" min="0" value="50" inputmode="numeric"></label>
+  </div>
   <div class="count" id="count"></div>
   <div class="list" id="list"></div>
 
@@ -277,6 +300,7 @@ const HUNTS = __HUNTS__;
 const CHARMS = __CHARMS__;
 const EQUIP = __EQUIP__;
 const ITEMID = __ITEMID__;
+const SPELLS = __SPELLS__;
 // sprite do item por id (PNG 32x32 do jogo); some se falhar (item sem sprite)
 const spr = id => id ? `<img class="spr" src="https://baiakidle.com/api/things/object/${id}.png?v=2" loading="lazy" alt="" onerror="this.remove()">` : "";
 const itemSpr = name => spr(ITEMID[norm(name)] || 0);
@@ -307,7 +331,7 @@ const qty = mx => mx>1 ? "1–"+mx : "";
 
 let mode="mon";
 const q=document.getElementById("q"), list=document.getElementById("list"), count=document.getElementById("count");
-const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), legend=document.getElementById("legend");
+const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), legend=document.getElementById("legend");
 
 const ELPT={physical:"Físico",fire:"Fogo",ice:"Gelo",earth:"Terra",energy:"Energia",holy:"Sagrado",death:"Morte",healing:"Cura"};
 const byName={}; for(const m of M) byName[norm(m.n)]=m;
@@ -492,6 +516,32 @@ let equipLv=0;
 // filtro de vocação da aba Equip: [rótulo, voc-key | null=todos | "none"=sem restrição]
 const EQVOC=[["Todos",null],["Knight","knight"],["Pala","paladin"],["Sorc","sorcerer"],["Druid","druid"],["Monk","monk"],["Sem voc","none"]];
 let equipVoc=0;
+// filtros da aba Magias
+const MVOC=[["Todas",null],["Knight","knight"],["Pala","paladin"],["Sorc","sorcerer"],["Druid","druid"],["Monk","monk"]];
+let magiaVoc=0;
+const MTYPE=[["Todas",null],["Dano","dmg"],["Cura","heal"],["Área","area"]];
+let magiaType=0;
+// lê os stats do char (level/magic/distance/melee) dos inputs
+const stLvl=document.getElementById("stLvl"), stMag=document.getElementById("stMag"),
+      stDist=document.getElementById("stDist"), stMelee=document.getElementById("stMelee");
+const numv=el=>{ const n=parseInt(el.value,10); return isNaN(n)?0:Math.max(0,n); };
+function spellStats(){ return [numv(stLvl), numv(stMag), numv(stDist), numv(stMelee)]; }
+function spellCard(s,qq,open,st){
+  const f=s.dmg||s.heal, isHeal=!!s.heal;
+  let val="—";
+  if(f){ const r=f(st[0],st[1],st[2],st[3]);
+    val=Math.round(r[0]).toLocaleString("pt-BR")+"–"+Math.round(r[1]).toLocaleString("pt-BR"); }
+  const vocs=(s.vocs||[]).map(v=>VOCPT[v]||v).join("/");
+  const tipo=s.type==="heal"?"cura":s.type==="area"?"área":"ataque";
+  const det=[`<span>mana <b>${s.mana}</b></span>`,`<span>cd <b>${s.cd/1000}s</b></span>`];
+  if(s.range) det.push(`<span>alcance ${s.range}</span>`);
+  if(s.radius) det.push(`<span>raio ${s.radius}</span>`);
+  return `<details${open}><summary><span class="s-lead"><span class="name">${hl(s.name,qq)}</span><span class="sp-words">${esc(s.words)}</span></span>`
+    +`<span class="meta">${vocs} · lvl ${s.level}</span></summary>`
+    +`<div class="body"><div class="sp-row">`
+    +`<span class="sp-val ${isHeal?"heal":"dmg"}">${isHeal?"🩹 cura ":"⚔ "}${val}</span>`
+    +`<span class="sp-tag">${tipo}</span>${det.join("")}</div></div></details>`;
+}
 
 function render(){
   const raw=q.value.trim(), qq=norm(raw);
@@ -522,6 +572,16 @@ function render(){
     open = raw && res.length<=6 ? " open":"";
     cards = res.map(e=>()=>equipCard(e,qq,open));
     noun = res.length===1?"equip":"equips";
+  } else if(mode==="magia"){
+    const vk=MVOC[magiaVoc][1], tk=MTYPE[magiaType][1], st=spellStats();
+    const res = SPELLS.filter(s=>
+      (!vk || (s.vocs||[]).includes(vk)) &&
+      (!tk || (tk==="dmg"?!!s.dmg : tk==="heal"?!!s.heal : s.type===tk)) &&
+      (!qq || norm(s.name).includes(qq) || norm(s.words).includes(qq)));
+    res.sort((a,b)=>a.level-b.level);
+    open = raw && res.length<=8 ? " open":"";
+    cards = res.map(s=>()=>spellCard(s,qq,open,st));
+    noun = res.length===1?"magia":"magias";
   } else {
     const res = ITEMS.filter(it=>!qq || norm(it).includes(qq));
     open = raw && res.length<=6 ? " open":"";
@@ -559,14 +619,31 @@ const eqlvfilter=document.getElementById("eqlvfilter");
 wireFilter(slotfilter, EQSLOT, "slot", i=>equipSlot=i);
 wireFilter(vocfilter, EQVOC, "voc", i=>equipVoc=i);
 wireFilter(eqlvfilter, EQLV, "level", i=>equipLv=i);
+const mvocfilter=document.getElementById("mvocfilter");
+const mtypefilter=document.getElementById("mtypefilter");
+wireFilter(mvocfilter, MVOC, "voc", i=>magiaVoc=i);
+wireFilter(mtypefilter, MTYPE, "tipo", i=>magiaType=i);
+
+// stats do char: restaura do localStorage, salva ao digitar, re-renderiza
+const spellstats=document.getElementById("spellstats");
+try{ const s=JSON.parse(localStorage.getItem("baiak-stats")||"{}");
+  if(s.lvl)stLvl.value=s.lvl; if(s.mag)stMag.value=s.mag; if(s.dist)stDist.value=s.dist; if(s.mel)stMelee.value=s.mel;
+}catch(e){}
+for(const el of [stLvl,stMag,stDist,stMelee]) el.addEventListener("input",()=>{
+  try{ localStorage.setItem("baiak-stats", JSON.stringify({lvl:stLvl.value,mag:stMag.value,dist:stDist.value,mel:stMelee.value})); }catch(e){}
+  if(mode==="magia") render();
+});
 
 function setMode(m){
   mode=m; limit=CHUNK;
-  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["equip",mEquip],["item",mItem]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
+  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   lvfilter.style.display = m==="hunt" ? "flex" : "none";
   slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = m==="equip" ? "flex" : "none";
-  legend.style.display = (m==="hunt"||m==="equip") ? "none" : "flex";
+  mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
+  spellstats.style.display = m==="magia" ? "flex" : "none";
+  legend.style.display = (m==="hunt"||m==="equip"||m==="magia") ? "none" : "flex";
   q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
+    : m==="magia" ? "Buscar magia (nome ou words: exori, exura…)…"
     : m==="equip" ? "Buscar equip (nome, voc: knight, sorc…)…"
     : m==="item" ? "Buscar item (ex: crystal coin, crossbow)…"
     : m==="boss" ? "Buscar boss (ex: deathstrike, ferumbras)…"
@@ -576,6 +653,7 @@ function setMode(m){
 mMon.onclick=()=>setMode("mon");
 mBoss.onclick=()=>setMode("boss");
 mHunt.onclick=()=>setMode("hunt");
+mMagia.onclick=()=>setMode("magia");
 mEquip.onclick=()=>setMode("equip");
 mItem.onclick=()=>setMode("item");
 // links cruzados: monstro <-> item <-> hunt
