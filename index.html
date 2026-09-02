@@ -272,6 +272,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
   <div class="lvfilter" id="slotfilter"></div>
   <div class="lvfilter" id="vocfilter"></div>
   <div class="lvfilter" id="eqlvfilter"></div>
+  <div class="lvfilter" id="eqshopfilter"></div>
   <div class="lvfilter" id="mvocfilter"></div>
   <div class="lvfilter" id="mtypefilter"></div>
   <div class="spellstats" id="spellstats">
@@ -534,6 +535,9 @@ let equipLv=0;
 // filtro de vocação da aba Equip: [rótulo, voc-key | null=todos | "none"=sem restrição]
 const EQVOC=[["Todos",null],["Knight","knight"],["Pala","paladin"],["Sorc","sorcerer"],["Druid","druid"],["Monk","monk"],["Sem voc","none"]];
 let equipVoc=0;
+// filtro de loja da aba Equip: [rótulo, chave em SHOP | null=todos]
+const EQSHOP=[["Todos",null],["🎟️ Boss token","b"],["🪙 Gold","g"],["Qualquer loja","any"]];
+let equipShop=0;
 // filtros da aba Magias
 const MVOC=[["Todas",null],["Knight","knight"],["Pala","paladin"],["Sorc","sorcerer"],["Druid","druid"],["Monk","monk"]];
 let magiaVoc=0;
@@ -582,10 +586,12 @@ function render(){
     const slot = EQSLOT[equipSlot][1];
     const [,lo,hiv] = EQLV[equipLv];
     const vk = EQVOC[equipVoc][1];
+    const sk = EQSHOP[equipShop][1];
     const res = EQUIP.filter(e=>
       (!slot||e.slot===slot) &&
       (e.lv>=lo&&e.lv<=hiv) &&
       (!vk ? true : vk==="none" ? !(e.voc&&e.voc.length) : (e.voc&&e.voc.includes(vk))) &&
+      (!sk ? true : (s=>s && (sk==="any" ? (s.g!=null||s.b!=null) : s[sk]!=null))(SHOP[norm(e.n)])) &&
       (!qq || norm(e.n).includes(qq) || norm(SLOTPT[e.slot]||"").includes(qq)
         || (e.voc&&e.voc.some(v=>norm(VOCPT[v]||v).includes(qq)||norm(v).includes(qq)))));
     open = raw && res.length<=6 ? " open":"";
@@ -638,6 +644,7 @@ const eqlvfilter=document.getElementById("eqlvfilter");
 wireFilter(slotfilter, EQSLOT, "slot", i=>equipSlot=i);
 wireFilter(vocfilter, EQVOC, "voc", i=>equipVoc=i);
 wireFilter(eqlvfilter, EQLV, "level", i=>equipLv=i);
+wireFilter(document.getElementById("eqshopfilter"), EQSHOP, "loja", i=>equipShop=i);
 const mvocfilter=document.getElementById("mvocfilter");
 const mtypefilter=document.getElementById("mtypefilter");
 wireFilter(mvocfilter, MVOC, "voc", i=>magiaVoc=i);
@@ -658,7 +665,7 @@ function setMode(m){
   mode=m; limit=CHUNK;
   [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   lvfilter.style.display = m==="hunt" ? "flex" : "none";
-  slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = m==="equip" ? "flex" : "none";
+  slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
   spellstats.style.display = m==="magia" ? "flex" : "none";
   spellnote.style.display = m==="magia" ? "block" : "none";
