@@ -141,6 +141,20 @@ function extractSpellsSrc(src) {
   return "(function(){" + chain + ";return " + arrName + ";})()";
 }
 
+// Itens compraveis por GOLD: varre as tabelas priceGold do bundle (aneis/amuleto de
+// loja, municao, aljavas, bags, pocoes de boost). Chave = nome normalizado. A loja de
+// BOSS TOKEN vem do endpoint publico adminConfig.bossShop (server-side), buscada no main.
+function extractShopGold(src, norm) {
+  const out = {};
+  // forma array: {name:"x",priceGold:N}
+  let re = /name:"([^"]+)",priceGold:([0-9.eE+]+)/g, m;
+  while ((m = re.exec(src))) out[norm(m[1])] = Number(m[2]);
+  // forma objeto: "x":{ ...priceGold:N }  (pocoes)
+  re = /"([a-z][a-z '.\-]+)":\{[^{}]*?priceGold:([0-9.eE+]+)/g;
+  while ((m = re.exec(src))) { const k = norm(m[1]); if (!(k in out)) out[k] = Number(m[2]); }
+  return out;
+}
+
 function diff(oldD, newD) {
   const O = chanceMap(oldD), N = chanceMap(newD);
   const nerf = [], buff = [], add = [], rem = [], newmon = [], remmon = [];
@@ -192,6 +206,17 @@ function diff(oldD, newD) {
     console.log("rate servidor: monster", JSON.stringify(rate.monster), "| boss", JSON.stringify(rate.boss));
   } catch (e) { console.log("rate do servidor indisponivel, usando base 100%:", e.message); }
   const mul = (v, cat, kind) => rate && rate[cat] ? Math.round(v * (rate[cat][kind] ?? 100) / 100) : v;
+
+  // ---- loja: comprar por gold (bundle) + por boss token (endpoint publico) ----
+  const SHOP = {};
+  const shopGold = extractShopGold(src, norm);
+  for (const [k, v] of Object.entries(shopGold)) (SHOP[k] ||= {}).g = v;
+  try {
+    const bs = await fetch("https://baiakidle.com/api/trpc/adminConfig.bossShop?batch=1&input=%7B%220%22%3A%7B%7D%7D", { headers: UA });
+    const offers = (await bs.json())[0].result.data.config?.offers || [];
+    for (const o of offers) if (o && o.name) (SHOP[norm(o.name)] ||= {}).b = o.priceTokens;
+    console.log("loja: gold", Object.keys(shopGold).length, "| boss token", offers.length);
+  } catch (e) { console.log("bossShop indisponivel:", e.message); }
 
   // ---- hunts + recomendacao de arma (ataque) e defesa ----
   let huntsRaw = null;
@@ -335,6 +360,7 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const CHARMS = __CHARMS__;", "const CHARMS = " + JSON.stringify(CHARMS) + ";");
   tpl = tpl.replace("const EQUIP = __EQUIP__;", "const EQUIP = " + JSON.stringify(equip) + ";");
   tpl = tpl.replace("const ITEMID = __ITEMID__;", "const ITEMID = " + JSON.stringify(ITEMID) + ";");
+  tpl = tpl.replace("const SHOP = __SHOP__;", "const SHOP = " + JSON.stringify(SHOP) + ";");
   tpl = tpl.replace("const SPELLS = __SPELLS__;", "const SPELLS = " + spellsIife + ";");
   tpl = tpl.replace("__COUNT__", data.length);
   fs.writeFileSync(HERE + "/index.html", tpl);

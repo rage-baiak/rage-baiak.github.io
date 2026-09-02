@@ -221,6 +221,8 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .ebadge.drop{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent);cursor:pointer}
 .ebadge.drop:hover{background:color-mix(in srgb,var(--accent) 10%,transparent)}
 .ebadge.nodrop{color:var(--muted);opacity:.75}
+.ebadge.shop.gold{color:#d4a017;border-color:color-mix(in srgb,#d4a017 45%,transparent)}
+.ebadge.shop.boss{color:#c9569a;border-color:color-mix(in srgb,#c9569a 45%,transparent)}
 /* magias: barra de stats do char + valores */
 .spellstats{display:none;flex-wrap:wrap;gap:8px 14px;justify-content:center;align-items:center;margin:10px 0 0}
 .spellstats label{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
@@ -305,6 +307,8 @@ const CHARMS = __CHARMS__;
 const EQUIP = __EQUIP__;
 const ITEMID = __ITEMID__;
 const SPELLS = __SPELLS__;
+// loja: nome-normalizado -> {g:preço em gold, b:preço em boss token}
+const SHOP = __SHOP__;
 // sprite do item por id (PNG 32x32 do jogo); some se falhar (item sem sprite)
 const spr = id => id ? `<img class="spr" src="https://baiakidle.com/api/things/object/${id}.png?v=2" loading="lazy" alt="" onerror="this.remove()">` : "";
 const itemSpr = name => spr(ITEMID[norm(name)] || 0);
@@ -319,6 +323,15 @@ for (const arr of ITEM.values()) arr.sort((a,b)=>b.ch-a.ch);
 const ITEMS = [...ITEM.keys()].sort();
 
 const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+// chip(s) de loja pra um item: gold (mercador) e/ou boss token. "" se n\u00e3o vende.
+const fmtG = n => n>=1e6 ? +(n/1e6).toFixed(n%1e6?1:0)+"M" : n.toLocaleString("pt-BR");
+function shopChips(name){
+  const s = SHOP[norm(name)]; if(!s) return "";
+  let out="";
+  if(s.g!=null) out+=`<span class="ebadge shop gold" title="Compr\u00e1vel no mercador por gold">\ud83e\ude99 ${fmtG(s.g)} gold</span>`;
+  if(s.b!=null) out+=`<span class="ebadge shop boss" title="Compr\u00e1vel na loja por boss token">\ud83c\udf9f\ufe0f ${s.b} boss token${s.b>1?"s":""}</span>`;
+  return out;
+}
 function pct(ch){ const p=ch/1000;
   if(p>=10) return (p%1?p.toFixed(1):p.toFixed(0));
   if(p>=1) return p.toFixed(1);
@@ -493,6 +506,7 @@ function equipCard(e,qq,open){
   if(e.imb)badges.push(`<span class="ebadge">${e.imb} imbu</span>`);
   if(e.dur)badges.push(`<span class="ebadge charged">charged ${Math.round(e.dur/3600)}h</span>`);
   badges.push(e.drop?`<span class="ebadge drop ilink" data-item="${esc(e.n)}">dropa ▸</span>`:`<span class="ebadge nodrop">não dropa</span>`);
+  const _sc=shopChips(e.n); if(_sc)badges.push(_sc);
   let body=`<div class="combat">`;
   if(main.length)body+=`<div class="stats">${main.map(x=>`<span>${x}</span>`).join("")}</div>`;
   if(sk.length)body+=`<div class="rline"><span class="rlbl wk">skills</span>`+sk.map(([k,v])=>`<span class="rchip wk">${SKPT[k]||k} +${v}</span>`).join("")+`</div>`;
@@ -590,10 +604,10 @@ function render(){
   } else {
     const res = ITEMS.filter(it=>!qq || norm(it).includes(qq));
     open = raw && res.length<=6 ? " open":"";
-    cards = res.map(it=>()=>{ const drops=ITEM.get(it), best=drops[0];
+    cards = res.map(it=>()=>{ const drops=ITEM.get(it), best=drops[0], sc=shopChips(it);
       return `<details${open}><summary><span class="s-lead">${itemSpr(it)}<span class="name item">${hl(it,qq)}</span></span>`
         +`<span class="meta">dropa de <span class="chip">${drops.length}</span> · melhor <span class="${band(best.ch)}">${pct(best.ch)}%</span></span></summary>`
-        +`<div class="body"><table>${monRows(drops,"")}</table></div></details>`; });
+        +`<div class="body">${sc?`<div class="ebadges">${sc}</div>`:""}<table>${monRows(drops,"")}</table></div></details>`; });
     noun = res.length===1?"item":"itens";
   }
 
