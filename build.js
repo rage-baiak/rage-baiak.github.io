@@ -155,6 +155,43 @@ function extractShopGold(src, norm) {
   return out;
 }
 
+// Forja: dois sistemas. (1) Forja de tier — tabela de custo `tde` + constantes `ka`
+// (fusão/convergência/transferência/conversão). (2) Bancada de receitas — linha umbral
+// (Ome) e doom (zme), com armas (eV/wM) e multiplicador de custo por tier (Rme).
+function extractForge(src) {
+  // resolve valores que são identificadores minificados (ex: gold:P6 -> gold:1e8)
+  const resolveIdents = s => s.replace(/:([A-Za-z_$][\w$]*)([,}\]])/g, (m, id, tail) => {
+    const mm = new RegExp("\\b" + id + "=([0-9][0-9eE.+]*)(?![\\w$])").exec(src);
+    return mm ? ":" + mm[1] + tail : m;
+  });
+  const lit = (openIdx, pre) => {
+    if (openIdx < 0) throw new Error("forja: literal nao encontrado");
+    let s = matchBalanced(src, openIdx);
+    if (pre) s = pre(s);
+    return (0, eval)("(" + s + ")");
+  };
+  const at = (needle) => src.indexOf(needle);
+
+  const cost = lit(src.search(/\{1:\{1:\{gold:\d/));                         // tde
+  const ka = lit(at("{dustPerSliverBatch"));                                 // ka
+  const stripGain = s => resolveIdents(s.replace(/gain:[A-Za-z_$][\w$]*\("([^"]+)"\)/g, 'gain:"$1"'));
+  const umbral = lit(at('[{kind:"umbral",step:1'), resolveIdents);           // Ome
+  const doom = lit(at('[{kind:"doom",step:1'), stripGain);                   // zme
+  const umbralWeapons = lit(at('[{key:"axe",crude:"crude umbral axe"'));     // eV
+  const doomWeapons = lit(at('["inferniarch arbalest","inferniarch battleaxe"')); // wM
+  const tmIdx = src.search(/\{0:1,1:1\.5,2:2,3:3,4:4\.5,5:6\}/);
+  const tierMult = tmIdx >= 0 ? lit(tmIdx) : { 0: 1, 1: 1.5, 2: 2, 3: 3, 4: 4.5, 5: 6 };
+
+  return {
+    tier: { cost, ka },
+    bench: {
+      tierMult,
+      umbral: { weapons: umbralWeapons, steps: umbral },
+      doom: { weapons: doomWeapons, steps: doom },
+    },
+  };
+}
+
 function diff(oldD, newD) {
   const O = chanceMap(oldD), N = chanceMap(newD);
   const nerf = [], buff = [], add = [], rem = [], newmon = [], remmon = [];
@@ -217,6 +254,16 @@ function diff(oldD, newD) {
     for (const o of offers) if (o && o.name) (SHOP[norm(o.name)] ||= {}).b = o.priceTokens;
     console.log("loja: gold", Object.keys(shopGold).length, "| boss token", offers.length);
   } catch (e) { console.log("bossShop indisponivel:", e.message); }
+
+  // ---- forja (tier + bancada) ----
+  let FORGE = null;
+  try {
+    FORGE = extractForge(src);
+    console.log("forja: tier tabela classes", Object.keys(FORGE.tier.cost).join("/"),
+      "| bancada umbral", FORGE.bench.umbral.steps.length, "etapas /",
+      FORGE.bench.umbral.weapons.length, "armas | doom", FORGE.bench.doom.steps.length, "etapas /",
+      FORGE.bench.doom.weapons.length, "armas");
+  } catch (e) { console.log("forja indisponivel:", e.message); FORGE = { tier: null, bench: null }; }
 
   // ---- hunts + recomendacao de arma (ataque) e defesa ----
   let huntsRaw = null;
@@ -361,6 +408,7 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const EQUIP = __EQUIP__;", "const EQUIP = " + JSON.stringify(equip) + ";");
   tpl = tpl.replace("const ITEMID = __ITEMID__;", "const ITEMID = " + JSON.stringify(ITEMID) + ";");
   tpl = tpl.replace("const SHOP = __SHOP__;", "const SHOP = " + JSON.stringify(SHOP) + ";");
+  tpl = tpl.replace("const FORGE = __FORGE__;", "const FORGE = " + JSON.stringify(FORGE) + ";");
   tpl = tpl.replace("const SPELLS = __SPELLS__;", "const SPELLS = " + spellsIife + ";");
   tpl = tpl.replace("__COUNT__", data.length);
   fs.writeFileSync(HERE + "/index.html", tpl);

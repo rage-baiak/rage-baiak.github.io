@@ -223,6 +223,31 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .ebadge.nodrop{color:var(--muted);opacity:.75}
 .ebadge.shop.gold{color:#d4a017;border-color:color-mix(in srgb,#d4a017 45%,transparent)}
 .ebadge.shop.boss{color:#c9569a;border-color:color-mix(in srgb,#c9569a 45%,transparent)}
+/* aba Forja */
+.fsec{margin:0 0 22px}
+.fsec h2{font-size:20px;margin:8px 0 4px}
+.fsec h3{font-size:15px;margin:16px 0 8px;color:var(--accent)}
+.fp{color:var(--muted);margin:0 0 10px;line-height:1.5}
+.fp.small{font-size:13px}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.fcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.fcard.wide{grid-column:1/-1}
+.fcard h3{margin:0 0 6px;color:var(--fg)}
+.fcard p{margin:0 0 8px;color:var(--muted);font-size:13.5px;line-height:1.45}
+.fcard ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.fcard li{font-size:13.5px;line-height:1.45}
+.ftbl{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+.ftbl table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.ftbl th,.ftbl td{padding:7px 12px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line2)}
+.ftbl th{background:var(--panel);text-align:right;font-size:12.5px;color:var(--muted)}
+.ftbl th:first-child,.ftbl td:first-child{text-align:left}
+.ftbl tbody tr:last-child td{border-bottom:0}
+.ft-t{font-weight:700;color:var(--accent)}
+.fwp{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 10px}
+.fstep{border-top:1px solid var(--line2);padding:10px 0 0;margin:10px 0 0}
+.fstep-h{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.fstep-meta{color:var(--muted);font-size:13px;white-space:nowrap}
+.fmats{display:flex;flex-wrap:wrap;gap:5px}
 /* magias: barra de stats do char + valores */
 .spellstats{display:none;flex-wrap:wrap;gap:8px 14px;justify-content:center;align-items:center;margin:10px 0 0}
 .spellstats label{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;
@@ -265,6 +290,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
       <button class="mode" id="mMagia" aria-pressed="false">Magias</button>
       <button class="mode" id="mEquip" aria-pressed="false">Equip</button>
       <button class="mode" id="mItem" aria-pressed="false">Item</button>
+      <button class="mode" id="mForja" aria-pressed="false">Forja</button>
     </div>
   </div>
 
@@ -310,6 +336,8 @@ const ITEMID = __ITEMID__;
 const SPELLS = __SPELLS__;
 // loja: nome-normalizado -> {g:preço em gold, b:preço em boss token}
 const SHOP = __SHOP__;
+// forja: {tier:{cost,ka}, bench:{tierMult,umbral,doom}}
+const FORGE = __FORGE__;
 // sprite do item por id (PNG 32x32 do jogo); some se falhar (item sem sprite)
 const spr = id => id ? `<img class="spr" src="https://baiakidle.com/api/things/object/${id}.png?v=2" loading="lazy" alt="" onerror="this.remove()">` : "";
 const itemSpr = name => spr(ITEMID[norm(name)] || 0);
@@ -566,7 +594,79 @@ function spellCard(s,qq,open,st){
     +`<span class="sp-tag">${tipo}</span>${det.join("")}</div></div></details>`;
 }
 
+// número grande em k/M/B
+const fmtBig = n => n>=1e9 ? +(n/1e9).toFixed(n%1e9?2:0)+"B" : n>=1e6 ? +(n/1e6).toFixed(n%1e6?1:0)+"M" : n>=1e3 ? +(n/1e3).toFixed(0)+"k" : String(n);
+function forjaHTML(){
+  if(!FORGE || !FORGE.tier) return `<div class="empty">Dados da forja indisponíveis neste build.</div>`;
+  const ka=FORGE.tier.ka, C=FORGE.tier.cost;
+  const perCore = Math.round(ka.sliversPerCore/ka.sliversPerBatch*ka.dustPerSliverBatch);
+  let h="";
+
+  // ---- Forja de Tier ----
+  h+=`<div class="fsec"><h2>⚒️ Forja de Tier</h2>`
+    +`<p class="fp">Sobe o <b>tier</b> (+1) de uma peça. Três modos, mais a conversão de recursos.</p>`;
+
+  h+=`<div class="fgrid">`;
+  h+=`<div class="fcard"><h3>🔨 Fusão</h3><p>Junta <b>duas peças iguais, mesmo tier</b> → uma sobe, a outra é sacrificada.</p>`
+    +`<ul><li>Sucesso base <b>${ka.baseSuccess}%</b>; +1 núcleo → <b>${ka.baseSuccess+ka.coreSuccess}%</b>.</li>`
+    +`<li>Falhou: a peça <b>desce um tier</b> (some no tier 0). 1 núcleo reduz a perda pra ${ka.tierLossReduction}%.</li>`
+    +`<li>Consome <b>${ka.fusionDust} pó</b> + gold + núcleos.</li></ul></div>`;
+  h+=`<div class="fcard"><h3>✨ Convergência</h3><p>Funde <b>duas peças diferentes</b>, ambas <b>classe 4</b> e do <b>mesmo slot</b>.</p>`
+    +`<ul><li><b>100% garantida, 0 núcleos</b>, mantém o tier cheio.</li>`
+    +`<li>Bem <b>mais cara em gold</b> · consome <b>${ka.fusionDustConvergence} pó</b>.</li></ul></div>`;
+  h+=`<div class="fcard"><h3>🔁 Transferência</h3><p>Move o tier de um <b>doador (consumido)</b> pra um <b>receptor</b> — só sobe.</p>`
+    +`<ul><li>Custa gold + núcleos + <b>${ka.transferDust} pó</b>.</li>`
+    +`<li>Versão convergência: garantida, <b>${ka.transferDustConvergence} pó</b>, gold bem maior.</li></ul></div>`;
+  h+=`<div class="fcard"><h3>♻️ Conversão de recursos</h3><p>Pó → Lascas → Núcleos.</p>`
+    +`<ul><li><b>${ka.dustPerSliverBatch} pó = ${ka.sliversPerBatch} lascas</b></li>`
+    +`<li><b>${ka.sliversPerCore} lascas = 1 núcleo</b> (~${fmtBig(perCore)} pó por núcleo)</li>`
+    +`<li>Limite de pó: <b>${ka.baseDustCap}</b> → até <b>${ka.maxDustCap}</b>.</li></ul></div>`;
+  h+=`</div>`;
+
+  // tabela de custo classe 4
+  const tiers=Object.keys(C[4]).map(Number).sort((a,b)=>a-b);
+  h+=`<h3>Custo por tier — classe 4 (Lendário)</h3><div class="ftbl"><table><thead><tr>`
+    +`<th>Tier</th><th>Gold</th><th>Núcleos</th><th>Conv. Fusão</th><th>Conv. Transf.</th></tr></thead><tbody>`;
+  for(const t of tiers){ const c=C[4][t];
+    h+=`<tr><td class="ft-t">+${t}</td><td>${fmtBig(c.gold)}</td><td>${c.cores}</td>`
+      +`<td>${fmtBig(c.convFusion)}</td><td>${fmtBig(c.convTransfer)}</td></tr>`; }
+  h+=`</tbody></table></div>`;
+  // caps das classes menores
+  const capNote=[];
+  for(const cls of [1,2,3]){ if(!C[cls])continue; const mt=Math.max(...Object.keys(C[cls]).map(Number));
+    capNote.push(`Classe ${cls}: até tier +${mt}`); }
+  if(capNote.length) h+=`<p class="fp small">Peças de classe menor custam menos e não sobem tão alto — ${capNote.join(" · ")}. Convergência é exclusiva de classe 4.</p>`;
+  h+=`</div>`;
+
+  // ---- Bancada ----
+  const b=FORGE.bench;
+  if(b){
+    const tm=b.tierMult;
+    const multNote=Object.keys(tm).map(k=>`t${k} ×${tm[k]}`).join(" · ");
+    const recipeCard = (title, sub, weapons, steps) => {
+      let x=`<div class="fcard wide"><h3>${title}</h3><p class="fp">${sub}</p>`;
+      x+=`<div class="fwp">`+weapons.map(w=>`<span class="chip">${w}</span>`).join("")+`</div>`;
+      for(const s of steps){
+        x+=`<div class="fstep"><div class="fstep-h"><b>Etapa ${s.step} — ${esc(s.name)}</b>`
+          +`<span class="fstep-meta">💰 ${fmtBig(s.gold)} · ⏱️ ${s.hours}h</span></div>`
+          +`<div class="fmats">`+s.materials.map(mt=>`<span class="rchip">${esc(mt.item)} <b>×${mt.qty}</b></span>`).join("")+`</div></div>`;
+      }
+      x+=`</div>`; return x;
+    };
+    h+=`<div class="fsec"><h2>🛠️ Bancada (receitas)</h2>`
+      +`<p class="fp">Transforma armas por etapas, com <b>tempo de espera</b>. O custo (materiais e gold) escala pelo tier da peça: ${multNote}.</p>`;
+    h+=`<div class="fgrid">`;
+    h+=recipeCard("Umbral", "Sobe a arma: crude → umbral → master.",
+      b.umbral.weapons.map(w=>w.key), b.umbral.steps);
+    h+=recipeCard("Doom (Inferniarch)", "Dá uma variante à arma inferniarch: Draining / Rending / Siphoning.",
+      b.doom.weapons.map(w=>w.replace("inferniarch ","")), b.doom.steps);
+    h+=`</div></div>`;
+  }
+  return h;
+}
+
 function render(){
+  if(mode==="forja"){ list.innerHTML=forjaHTML(); count.textContent=""; return; }
   const raw=q.value.trim(), qq=norm(raw);
   let cards=[], noun="", open="";
 
@@ -663,13 +763,14 @@ for(const el of [stLvl,stMag,stDist,stMelee,stBonus]) el.addEventListener("input
 
 function setMode(m){
   mode=m; limit=CHUNK;
-  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
+  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   lvfilter.style.display = m==="hunt" ? "flex" : "none";
   slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
   spellstats.style.display = m==="magia" ? "flex" : "none";
   spellnote.style.display = m==="magia" ? "block" : "none";
-  legend.style.display = (m==="hunt"||m==="equip"||m==="magia") ? "none" : "flex";
+  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja") ? "none" : "flex";
+  q.style.display = m==="forja" ? "none" : "";
   q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
     : m==="magia" ? "Buscar magia (nome ou words: exori, exura…)…"
     : m==="equip" ? "Buscar equip (nome, voc: knight, sorc…)…"
@@ -684,6 +785,7 @@ mHunt.onclick=()=>setMode("hunt");
 mMagia.onclick=()=>setMode("magia");
 mEquip.onclick=()=>setMode("equip");
 mItem.onclick=()=>setMode("item");
+mForja.onclick=()=>setMode("forja");
 // links cruzados: monstro <-> item <-> hunt
 list.addEventListener("click",ev=>{
   const ml=ev.target.closest(".mlink"), il=ev.target.closest(".ilink"), hk=ev.target.closest(".hlink");
