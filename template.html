@@ -760,7 +760,12 @@ const WCD=5*60*1000;   // 5 min entre atualizacoes: level/equip nao mudam mais r
       const by={}; c.contas.forEach(x=>by[x.c]=x);
       WAR.contas.forEach(a=>{ const n=by[a.c]; if(n){ a.ch=n.ch; a.tot=n.tot; } });
       if(c.media){ WAR.meta.media_res=c.media; WAR.meta.amostra=c.amostra; }
-      warAt=c.at; warTs=c.ts||0;
+      warAt=c.at;
+      // cache gravado antes do cooldown existir so tem a data: deriva o carimbo
+      // dela (pt-BR "DD/MM/AAAA, HH:MM:SS") pra nao liberar clique indevido.
+      warTs=c.ts||0;
+      if(!warTs&&c.at){ const m=/(\d{2})\/(\d{2})\/(\d{4}),?\s+(\d{2}):(\d{2})(?::(\d{2}))?/.exec(c.at);
+        if(m) warTs=new Date(+m[3],+m[2]-1,+m[1],+m[4],+m[5],+(m[6]||0)).getTime(); }
     } }catch(_){}
 })();
 async function warFetch(nome){
