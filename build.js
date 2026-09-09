@@ -23,7 +23,7 @@ function readJSON(f, def) {
 
 // Catalogo de EQUIPAMENTO (oa): todo item com `slot`, dropando ou nao. Ancorado por
 // conteudo estavel ("leather helmet") e nao por nome de var (que re-minifica).
-const EQUIP_SLOTS = { weapon: "Arma", shield: "Escudo", armor: "Armadura", helmet: "Elmo", legs: "Pernas", boots: "Botas", ring: "Anel", amulet: "Amuleto" };
+const EQUIP_SLOTS = { weapon: "Arma", shield: "Escudo", armor: "Armadura", helmet: "Elmo", legs: "Pernas", boots: "Botas", ring: "Anel", amulet: "Amuleto", trinket: "Berloque" };
 function extractEquip(src) {
   const anchor = src.indexOf('"leather helmet":{id:');
   if (anchor < 0) throw new Error("catalogo de equip nao encontrado (jogo mudou o bundle?)");
@@ -40,9 +40,13 @@ function extractEquip(src) {
   for (const [name, it] of Object.entries(oa)) if (it && typeof it === "object" && it.id) idByName[name.replace(/[_-]/g, " ").toLowerCase().trim()] = it.id;
   const out = [];
   for (const [name, it] of Object.entries(oa)) {
-    if (!it || typeof it !== "object" || !EQUIP_SLOTS[it.slot]) continue;
+    if (!it || typeof it !== "object") continue;
+    // Berloques (nectars) vieram sem `slot` no bundle atual, mas sao equipaveis e
+    // carregam skills/augments — entram como trinket para nao sumirem da conta.
+    const isTrinket = !it.slot && (it.augments || (it.skills && Object.keys(it.skills).length));
+    if (!EQUIP_SLOTS[it.slot] && !isTrinket) continue;
     out.push({
-      n: name, id: it.id || 0, slot: it.slot, lv: it.level || 0, voc: it.vocs || null,
+      n: name, id: it.id || 0, slot: it.slot || "trinket", lv: it.level || 0, voc: it.vocs || null,
       atk: it.atk || 0, def: it.def || 0, arm: it.arm || 0,
       wt: it.wt || null, two: it.twoHanded ? 1 : 0,
       el: it.elementType || null, elA: it.elementAtk || 0, range: it.range || 0,
@@ -164,6 +168,20 @@ function extractShopGold(src, norm) {
 // Forja: dois sistemas. (1) Forja de tier — tabela de custo `tde` + constantes `ka`
 // (fusão/convergência/transferência/conversão). (2) Bancada de receitas — linha umbral
 // (Ome) e doom (zme), com armas (eV/wM) e multiplicador de custo por tier (Rme).
+// Tabela dos atributos rolaveis do item (id -> bonus por nivel) e as constantes
+// da forja. Descobertos por estrutura: o bundle re-minifica os nomes a cada deploy.
+function extractAttrs(src) {
+  const m = /\{id:1,key:"weapon_attack"/.exec(src);
+  if (!m) throw new Error("tabela de atributos nao encontrada");
+  const arr = eval("(" + matchBalanced(src, src.lastIndexOf("[", m.index)) + ")");
+  const tab = {};
+  for (const a of arr) tab[a.id] = { key: a.key, name: a.name, bonus: a.bonus, pct: !!a.percent };
+  const f = /\{onslaught:\[([\d.,]+)\],momentum:\[([\d.,]+)\],ruse:\[([\d.,]+)\],transcendence:\[([\d.,]+)\],amplification:\[([\d.,]+)\]\}/.exec(src);
+  const num = t => t.split(",").map(Number);
+  const forge = f ? { onslaught:num(f[1]), momentum:num(f[2]), ruse:num(f[3]), transcendence:num(f[4]), amplification:num(f[5]) } : null;
+  return { tab, forge };
+}
+
 function extractForge(src) {
   // resolve valores que são identificadores minificados (ex: gold:P6 -> gold:1e8)
   const resolveIdents = s => s.replace(/:([A-Za-z_$][\w$]*)([,}\]])/g, (m, id, tail) => {
@@ -416,6 +434,11 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const ITEMID = __ITEMID__;", "const ITEMID = " + JSON.stringify(ITEMID) + ";");
   tpl = tpl.replace("const SHOP = __SHOP__;", "const SHOP = " + JSON.stringify(SHOP) + ";");
   tpl = tpl.replace("const FORGE = __FORGE__;", "const FORGE = " + JSON.stringify(FORGE) + ";");
+  let ATTRS = { tab: {}, forge: null };
+  try { ATTRS = extractAttrs(src); console.log("atributos de item:", Object.keys(ATTRS.tab).length, "| forja:", ATTRS.forge ? "ok" : "-"); }
+  catch (e) { console.log("atributos indisponiveis:", e.message); }
+  tpl = tpl.replace("const ATTRS = __ATTRS__;", "const ATTRS = " + JSON.stringify(ATTRS) + ";");
+
   // guerra: opcional. Se war.json nao existe, a aba some (nao quebra o build semanal).
   let war = { meta: null, contas: [] };
   try { war = JSON.parse(fs.readFileSync(HERE + "/war.json", "utf8")); } catch (_) {}
