@@ -2,6 +2,7 @@
 <title>Wiki do Baiak</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%94%EF%B8%8F%3C/text%3E%3C/svg%3E">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>try{var t=localStorage.getItem("baiak-theme");if(t==="dark"||t==="light")document.documentElement.setAttribute("data-theme",t)}catch(e){}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap">
@@ -40,6 +41,12 @@ body::before,body::after{content:"";position:fixed;inset:0;pointer-events:none}
 body::before{z-index:-2;background:url("rage-bg.jpg") center top/cover no-repeat}
 body::after{z-index:-1;background:var(--bg);opacity:var(--veil,.93)}
 @media (max-width:640px){ body::before{background-position:center} }
+.themebtn{position:fixed;top:14px;right:14px;z-index:5;width:38px;height:38px;display:grid;place-items:center;
+  border:1px solid var(--line);border-radius:11px;background:var(--panel);color:var(--muted);cursor:pointer;
+  box-shadow:var(--shadow);transition:color .15s,border-color .15s}
+.themebtn:hover{color:var(--accent);border-color:var(--accent)}
+.themebtn svg{width:19px;height:19px}
+@media (max-width:640px){.themebtn{top:8px;right:8px;width:34px;height:34px}}
 .wrap{max-width:820px;margin:0 auto;padding:0 18px 80px}
 header{padding:40px 0 22px;text-align:center}
 h1{
@@ -306,6 +313,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 </style>
 
 <div class="wrap">
+  <button id="themeBtn" class="themebtn" type="button" aria-label="Alternar tema"></button>
   <header>
     <h1>Wiki do <span class="g">Baiak</span></h1>
     <p class="sub">Loot, combate e hunts de <b>__COUNT__</b> criaturas do Baiak Idle. Busca um bicho pra ver drop e fraquezas, uma hunt pra saber <b>arma e defesa</b>, ou um item pra achar onde farmar.</p>
@@ -1009,6 +1017,27 @@ list.addEventListener("click",ev=>{
   window.scrollTo({top:0,behavior:"smooth"});
 });
 q.addEventListener("input",()=>{ limit=CHUNK; render(); });
+// Tema: alterna claro/escuro e guarda a escolha. Sem escolha salva, segue o sistema.
+const T_SOL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const T_LUA='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>';
+const themeBtn=document.getElementById("themeBtn");
+const temaAtual=()=>document.documentElement.getAttribute("data-theme")||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light");
+function pintaTema(){
+  const escuro=temaAtual()==="dark";
+  themeBtn.innerHTML=escuro?T_SOL:T_LUA;      // mostra o destino do clique
+  themeBtn.title=escuro?"Mudar para o tema claro":"Mudar para o tema escuro";
+  themeBtn.setAttribute("aria-label",themeBtn.title);
+}
+themeBtn.onclick=()=>{
+  const novo=temaAtual()==="dark"?"light":"dark";
+  document.documentElement.setAttribute("data-theme",novo);
+  try{ localStorage.setItem("baiak-theme",novo); }catch(_){}
+  pintaTema();
+};
+try{ matchMedia("(prefers-color-scheme:dark)").addEventListener("change",()=>{
+  if(!localStorage.getItem("baiak-theme")) pintaTema(); }); }catch(_){}
+pintaTema();
+
 setMode("mon");
 
 // painel de mudancas (nerf/buff) — abaixo do titulo
