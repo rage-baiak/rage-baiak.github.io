@@ -60,7 +60,13 @@ function extractEquip(src) {
 // (nao por nome fixo — o bundle re-minifica a cada deploy e embaralha os nomes de objeto).
 function assembleCatalog(src) {
   const need = (re, what) => { const m = re.exec(src); if (!m) throw new Error("estrutura nao encontrada: " + what + " (o jogo mudou o bundle?)"); return m; };
-  const objByName = (name) => { const m = need(new RegExp("\\b" + name + "=([{\\[])"), name); return matchBalanced(src, m.index + name.length + 1); };
+  // nomes minificados podem conter $ (regex especial) e \b nao funciona antes de $:
+  // escapa o nome e usa lookbehind zero-width pra manter o offset do match.
+  const objByName = (name) => {
+    const rx = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const m = need(new RegExp("(?<![\\w$])" + rx + "=([{\\[])"), name);
+    return matchBalanced(src, m.index + name.length + 1);
+  };
 
   // nomes de objeto (mudam por build) — descobertos por conteudo/estrutura estavel
   const ixName = need(/([A-Za-z_$][\w$]*)=\{troll:\{name:"Troll"/, "catalogo base ix")[1];
@@ -161,7 +167,8 @@ function extractShopGold(src, norm) {
 function extractForge(src) {
   // resolve valores que são identificadores minificados (ex: gold:P6 -> gold:1e8)
   const resolveIdents = s => s.replace(/:([A-Za-z_$][\w$]*)([,}\]])/g, (m, id, tail) => {
-    const mm = new RegExp("\\b" + id + "=([0-9][0-9eE.+]*)(?![\\w$])").exec(src);
+    const rx = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");   // nomes minificados podem ter $
+    const mm = new RegExp("(?<![\\w$])" + rx + "=([0-9][0-9eE.+]*)(?![\\w$])").exec(src);
     return mm ? ":" + mm[1] + tail : m;
   });
   const lit = (openIdx, pre) => {
@@ -409,6 +416,10 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const ITEMID = __ITEMID__;", "const ITEMID = " + JSON.stringify(ITEMID) + ";");
   tpl = tpl.replace("const SHOP = __SHOP__;", "const SHOP = " + JSON.stringify(SHOP) + ";");
   tpl = tpl.replace("const FORGE = __FORGE__;", "const FORGE = " + JSON.stringify(FORGE) + ";");
+  // guerra: opcional. Se war.json nao existe, a aba some (nao quebra o build semanal).
+  let war = { meta: null, contas: [] };
+  try { war = JSON.parse(fs.readFileSync(HERE + "/war.json", "utf8")); } catch (_) {}
+  tpl = tpl.replace("const WAR = __WAR__;", "const WAR = " + JSON.stringify(war) + ";");
   tpl = tpl.replace("const SPELLS = __SPELLS__;", "const SPELLS = " + spellsIife + ";");
   tpl = tpl.replace("__COUNT__", data.length);
   fs.writeFileSync(HERE + "/index.html", tpl);

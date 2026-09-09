@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Wiki do Baiak</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9A%94%EF%B8%8F%3C/text%3E%3C/svg%3E">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -38,6 +39,24 @@ h1{
 }
 h1 .g{color:var(--accent)}
 .sub{color:var(--muted);margin:10px 0 0;font-size:16px}
+.wmeta{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 4px}
+.wkpi{border:1px solid var(--line);border-radius:10px;padding:6px 11px;background:var(--card)}
+.wkpi b{display:block;font-size:17px}
+.wkpi small{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.wbest{border:1px solid var(--accent);border-radius:10px;padding:8px 12px;margin:6px 0 12px;background:color-mix(in srgb,var(--accent) 8%,transparent)}
+.wbest b{color:var(--accent)}
+.wtot{color:var(--muted);font-size:13px;margin-left:8px}
+.wchar{border-top:1px solid var(--line);padding:9px 0}
+.wchar:first-child{border-top:0}
+.whead{font-weight:700;margin-bottom:4px}
+.whead .wlv{color:var(--muted);font-weight:400;font-size:13px;margin-left:6px}
+.wrow{font-size:13px;margin:3px 0;line-height:1.6}
+.wrow .wlbl{color:var(--muted);display:inline-block;min-width:74px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+.wchip{display:inline-block;border:1px solid var(--line);border-radius:7px;padding:1px 7px;margin:2px 3px 2px 0;font-size:12px}
+.wchip.weak{border-color:var(--rc);color:var(--rc);font-weight:700}
+.wchip.zero{border-color:var(--accent);color:var(--accent)}
+.wchip b{font-variant-numeric:tabular-nums}
+
 .sub b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
 
 .tools{
@@ -291,6 +310,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
       <button class="mode" id="mEquip" aria-pressed="false">Equip</button>
       <button class="mode" id="mItem" aria-pressed="false">Item</button>
       <button class="mode" id="mForja" aria-pressed="false">Forja</button>
+      <button class="mode" id="mWar" aria-pressed="false">⚔️ Guerra</button>
     </div>
   </div>
 
@@ -338,6 +358,8 @@ const SPELLS = __SPELLS__;
 const SHOP = __SHOP__;
 // forja: {tier:{cost,ka}, bench:{tierMult,umbral,doom}}
 const FORGE = __FORGE__;
+// guerra: dossie da guild adversaria (contas -> chars -> atributos/resistencias)
+const WAR = __WAR__;
 // sprite do item por id (PNG 32x32 do jogo); some se falhar (item sem sprite)
 const spr = id => id ? `<img class="spr" src="https://baiakidle.com/api/things/object/${id}.png?v=2" loading="lazy" alt="" onerror="this.remove()">` : "";
 const itemSpr = name => spr(ITEMID[norm(name)] || 0);
@@ -377,7 +399,7 @@ const qty = mx => mx>1 ? "1–"+mx : "";
 
 let mode="mon";
 const q=document.getElementById("q"), list=document.getElementById("list"), count=document.getElementById("count");
-const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), legend=document.getElementById("legend");
+const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), mWar=document.getElementById("mWar"), legend=document.getElementById("legend");
 
 const ELPT={physical:"Físico",fire:"Fogo",ice:"Gelo",earth:"Terra",energy:"Energia",holy:"Sagrado",death:"Morte",healing:"Cura"};
 const byName={}; for(const m of M) byName[norm(m.n)]=m;
@@ -665,8 +687,50 @@ function forjaHTML(){
   return h;
 }
 
+// ---- Modo Guerra: dossie da guild adversaria ----
+const WEL={fisico:"physical",fogo:"fire",gelo:"ice",energia:"energy",terra:"earth",sagrado:"holy",morte:"death"};
+const WORD=["fisico","fogo","gelo","energia","terra","sagrado","morte"];
+function warHeader(){
+  const m=WAR.meta, best=m.media_res[0];
+  return `<div class="wbest">Melhor caminho contra a <b>${esc(m.foe)}</b>: <b>${esc(best[0])}</b> `
+    +`(resistência média ${best[1]}% em ${m.amostra} personagens lv 300+). `
+    +`Pior: ${esc(m.media_res[m.media_res.length-1][0])} (${m.media_res[m.media_res.length-1][1]}%).</div>`
+    +`<div class="wmeta">`
+    +`<div class="wkpi"><small>${esc(m.us.n)}</small><b>${m.us.soma.toLocaleString("pt-BR")}</b><small>média ${m.us.media}</small></div>`
+    +`<div class="wkpi"><small>${esc(m.tag)}</small><b>${m.them.soma.toLocaleString("pt-BR")}</b><small>média ${m.them.media}</small></div>`
+    +`<div class="wkpi"><small>vantagem</small><b>+${(m.us.soma-m.them.soma).toLocaleString("pt-BR")}</b><small>níveis</small></div>`
+    +`<div class="wkpi"><small>resistência média</small><b>`
+    +m.media_res.map(([e,v])=>`<span class="wchip"><i class="edot e-${WEL[e]}"></i>${e} ${v}%</span>`).join("")
+    +`</b><small>atualizado ${esc(m.at)}</small></div></div>`;
+}
+function warCard(a,qq,open){
+  const chars=a.ch.filter(c=>c.lv>=100).map(c=>{
+    const sk=Object.entries(c.sk).sort((x,y)=>y[1]-x[1]).map(([k,v])=>`${k} ${v}`).join(" · ");
+    const at=Object.entries(c.at).filter(([k])=>!/^Regen|^Ruse|Amplification/.test(k))
+      .sort((x,y)=>y[1]-x[1]).slice(0,6).map(([k,v])=>`<span class="wchip">${esc(k)} <b>+${v}</b></span>`).join("");
+    const res=WORD.filter(e=>e in c.res||true).map(e=>{
+      const v=c.res[e]||0, cls=v<0?" weak":(v===0?" zero":"");
+      return `<span class="wchip${cls}"><i class="edot e-${WEL[e]}"></i>${e} <b>${v>0?"+":""}${v}%</b></span>`;
+    }).join("");
+    return `<div class="wchar"><div class="whead">${hl(c.n,qq)}<span class="wlv">Lv ${c.lv} · ${esc(c.v)}</span></div>`
+      +(sk?`<div class="wrow"><span class="wlbl">skills</span>${esc(sk)}</div>`:"")
+      +(at?`<div class="wrow"><span class="wlbl">atributos</span>${at}</div>`:"")
+      +`<div class="wrow"><span class="wlbl">resistência</span>${res}</div></div>`;
+  }).join("");
+  return `<details${open}><summary><span class="name">${hl(a.c,qq)}</span>`
+    +`<span class="wtot">${a.tot.toLocaleString("pt-BR")} níveis · ${a.ch.filter(c=>c.lv>=100).length} chars</span></summary>`
+    +`<div class="body">${chars}</div></details>`;
+}
 function render(){
   if(mode==="forja"){ list.innerHTML=forjaHTML(); count.textContent=""; return; }
+  if(mode==="war"){
+    const qw=norm(q.value.trim());
+    const res=WAR.contas.filter(a=>!qw||norm(a.c).includes(qw)||a.ch.some(c=>norm(c.n).includes(qw)));
+    const op=q.value.trim()&&res.length<=4?" open":"";
+    list.innerHTML=warHeader()+res.map(a=>warCard(a,qw,op)).join("");
+    count.textContent=`${res.length} ${res.length===1?"conta":"contas"} · ${WAR.meta.foe}`;
+    return;
+  }
   const raw=q.value.trim(), qq=norm(raw);
   let cards=[], noun="", open="";
 
@@ -763,18 +827,19 @@ for(const el of [stLvl,stMag,stDist,stMelee,stBonus]) el.addEventListener("input
 
 function setMode(m){
   mode=m; limit=CHUNK;
-  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
+  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   lvfilter.style.display = m==="hunt" ? "flex" : "none";
   slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
   spellstats.style.display = m==="magia" ? "flex" : "none";
   spellnote.style.display = m==="magia" ? "block" : "none";
-  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja") ? "none" : "flex";
+  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war") ? "none" : "flex";
   q.style.display = m==="forja" ? "none" : "";
   q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
     : m==="magia" ? "Buscar magia (nome ou words: exori, exura…)…"
     : m==="equip" ? "Buscar equip (nome, voc: knight, sorc…)…"
     : m==="item" ? "Buscar item (ex: crystal coin, crossbow)…"
+    : m==="war" ? "Buscar conta ou personagem inimigo…"
     : m==="boss" ? "Buscar boss (ex: deathstrike, ferumbras)…"
     : "Buscar monstro (ex: dragon, demon)…";
   render();
@@ -786,6 +851,8 @@ mMagia.onclick=()=>setMode("magia");
 mEquip.onclick=()=>setMode("equip");
 mItem.onclick=()=>setMode("item");
 mForja.onclick=()=>setMode("forja");
+mWar.onclick=()=>setMode("war");
+if(!WAR||!WAR.meta||!WAR.contas.length) mWar.style.display="none";
 // links cruzados: monstro <-> item <-> hunt
 list.addEventListener("click",ev=>{
   const ml=ev.target.closest(".mlink"), il=ev.target.closest(".ilink"), hk=ev.target.closest(".hlink");
