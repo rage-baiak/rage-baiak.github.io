@@ -748,14 +748,15 @@ function warFicha(p){
 
 // ---- Guerra: atualizar as fichas ao vivo pela API publica do jogo ----
 const WCACHE="baiak-war-cache-v1";
-let warBusy=false, warAt=null;
+let warBusy=false, warAt=null, warTs=0;
+const WCD=5*60*1000;   // 5 min entre atualizacoes: level/equip nao mudam mais rapido que isso
 (function(){ // reidrata o ultimo "atualizar" deste navegador
   try{ const c=JSON.parse(localStorage.getItem(WCACHE)||"null");
     if(c&&WAR.meta&&c.id===WAR.meta.id&&c.contas){
       const by={}; c.contas.forEach(x=>by[x.c]=x);
       WAR.contas.forEach(a=>{ const n=by[a.c]; if(n){ a.ch=n.ch; a.tot=n.tot; } });
       if(c.media){ WAR.meta.media_res=c.media; WAR.meta.amostra=c.amostra; }
-      warAt=c.at;
+      warAt=c.at; warTs=c.ts||0;
     } }catch(_){}
 })();
 async function warFetch(nome){
@@ -768,7 +769,14 @@ async function warFetch(nome){
   return null;
 }
 async function warUpdate(){
-  if(warBusy) return; warBusy=true;
+  if(warBusy) return;
+  const resta=WCD-(Date.now()-warTs);
+  if(resta>0){                       // ainda no cooldown: avisa, nao dispara
+    const e=document.getElementById("warStatus");
+    if(e) e.textContent=`atualizado ${warAt} · aguarde ${Math.ceil(resta/60000)} min`;
+    return;
+  }
+  warBusy=true;
   const btn=document.getElementById("warRefresh");
   if(btn) btn.disabled=true;
   const alvos=[]; WAR.contas.forEach(a=>a.ch.forEach(c=>alvos.push([a,c.n])));
@@ -782,16 +790,16 @@ async function warUpdate(){
     if(p&&p.equipment){ const i=conta.ch.findIndex(x=>x.n===nome); const f=warFicha(p); if(i>=0) conta.ch[i]=f; }
     else falhas++;
     feitos++; st();
-    await new Promise(r=>setTimeout(r,120));
+    await new Promise(r=>setTimeout(r,220));
   } };
-  await Promise.all([worker(),worker(),worker(),worker()]);   // 4 em paralelo
+  await Promise.all([worker(),worker(),worker()]);   // 3 em paralelo, ~8 req/s
   WAR.contas.forEach(a=>{ a.tot=a.ch.reduce((t,c)=>t+c.lv,0); });
   WAR.contas.sort((a,b)=>b.tot-a.tot);
   const soma={}; let n=0; WORD.forEach(e=>soma[e]=0);
   WAR.contas.forEach(a=>a.ch.forEach(c=>{ if(c.lv<300)return; n++; WORD.forEach(e=>soma[e]+=(c.res[e]||0)); }));
   if(n){ WAR.meta.media_res=WORD.map(e=>[e,Math.round(soma[e]/n*100)/100]).sort((x,y)=>x[1]-y[1]); WAR.meta.amostra=n; }
-  warAt=new Date().toLocaleString("pt-BR");
-  try{ localStorage.setItem(WCACHE,JSON.stringify({id:WAR.meta.id,at:warAt,contas:WAR.contas,media:WAR.meta.media_res,amostra:WAR.meta.amostra})); }catch(_){}
+  warTs=Date.now(); warAt=new Date().toLocaleString("pt-BR");
+  try{ localStorage.setItem(WCACHE,JSON.stringify({id:WAR.meta.id,at:warAt,ts:warTs,contas:WAR.contas,media:WAR.meta.media_res,amostra:WAR.meta.amostra})); }catch(_){}
   warBusy=false; if(btn) btn.disabled=false;
   render();
   if(falhas){ const e=document.getElementById("warStatus"); if(e) e.textContent="atualizado "+warAt+" · "+falhas+" falharam"; }
@@ -841,7 +849,13 @@ function render(){
     const res=WAR.contas.filter(a=>!qw||norm(a.c).includes(qw)||a.ch.some(c=>norm(c.n).includes(qw)));
     const op=q.value.trim()&&res.length<=4?" open":"";
     list.innerHTML=warHeader()+res.map(a=>warCard(a,qw,op)).join("");
-    const rb=document.getElementById("warRefresh"); if(rb) rb.onclick=warUpdate;
+    const rb=document.getElementById("warRefresh");
+    if(rb){
+      rb.onclick=warUpdate;
+      const falta=WCD-(Date.now()-warTs);
+      if(falta>0){ rb.disabled=true; rb.textContent=`↻ aguarde ${Math.ceil(falta/60000)} min`;
+        setTimeout(()=>{ if(mode==="war") render(); }, Math.min(falta,60000)+500); }
+    }
     count.textContent=`${res.length} ${res.length===1?"conta":"contas"} · ${WAR.meta.foe}`;
     return;
   }
