@@ -182,14 +182,18 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .stats b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
 .rline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0}
 .reshd{margin:6px 0 5px}
-.resgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:5px;margin-bottom:7px}
-.reschip{display:flex;align-items:center;gap:7px;font-size:13.5px;padding:4px 10px;border-radius:7px;
-  border:1px solid var(--line);background:var(--line2);color:var(--muted)}
-.reschip .resnm{flex:1}
-.reschip b{font-weight:700;font-variant-numeric:tabular-nums}
-.reschip.wk{color:var(--rc);border-color:color-mix(in srgb,var(--rc) 50%,transparent);background:color-mix(in srgb,var(--rc) 12%,transparent)}
-.reschip.rs{color:var(--rr);border-color:color-mix(in srgb,var(--rr) 45%,transparent);background:color-mix(in srgb,var(--rr) 9%,transparent)}
-.reschip.im{color:var(--rx);border-color:color-mix(in srgb,var(--rx) 55%,transparent);background:color-mix(in srgb,var(--rx) 13%,transparent);font-weight:700}
+.resgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(152px,1fr));gap:6px;margin-bottom:7px}
+.reschip{display:flex;align-items:stretch;font-size:13.5px;border:1px solid var(--line);
+  border-radius:7px;overflow:hidden;background:var(--line2)}
+.resic{display:flex;align-items:center;gap:7px;padding:4px 9px;color:var(--muted);flex:1}
+.resnm{white-space:nowrap}
+.reschip b{display:flex;align-items:center;justify-content:center;min-width:58px;padding:4px 8px;
+  font-weight:700;font-variant-numeric:tabular-nums;border-left:1px solid var(--line)}
+/* cores fixas nos dois temas, como no TibiaWiki: o bloco do valor carrega o significado */
+.reschip.nt b{color:var(--muted)}
+.reschip.wk b{background:#7fc98a;color:#123019}
+.reschip.rs b{background:#f2d24b;color:#453505}
+.reschip.im b{background:#e2564c;color:#fff}
 .rlbl{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-right:2px}
 .rlbl.wk{color:var(--rc)} .rlbl.rs{color:var(--rr)}
 .rchip,.atk{font-size:13.5px;border-radius:7px;padding:3px 9px;border:1px solid var(--line);white-space:nowrap}
@@ -491,8 +495,8 @@ function resGrid(r){
     const v=Number((r||{})[el]||0), dano=100-v;
     const cls = dano<=0 ? "im" : dano>100 ? "wk" : dano<100 ? "rs" : "nt";
     const txt = dano<=0 ? "imune" : dano+"%";
-    return `<span class="reschip ${cls}"><i class="edot e-${el}"></i>`
-      +`<span class="resnm">${ELPT[el]||el}</span><b>${txt}</b></span>`;
+    return `<span class="reschip ${cls}"><span class="resic"><i class="edot e-${el}"></i>`
+      +`<span class="resnm">${ELPT[el]||el}</span></span><b>${txt}</b></span>`;
   }).join("");
   return `<div class="resgrid">${linhas}</div>`;
 }
