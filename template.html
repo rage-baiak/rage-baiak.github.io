@@ -77,6 +77,22 @@ h1 .g{color:var(--accent)}
 .wrow .wlbl{color:var(--muted);display:inline-block;min-width:74px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
 .wchip{display:inline-block;border:1px solid var(--line);border-radius:7px;padding:1px 7px;margin:2px 3px 2px 0;font-size:12px}
 .wchip.weak{border-color:var(--rc);color:var(--rc);font-weight:700}
+/* aba Casket: grade de outfits candidatos */
+.ohead{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--line2);margin-bottom:12px;font-size:14px}
+.ohead-sub{margin-top:6px;font-size:13px;color:var(--muted);line-height:1.55}
+.ohead code{font-size:12px;background:var(--card);padding:1px 5px;border-radius:4px}
+.ogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ocard{border:1px solid var(--line);border-radius:10px;background:var(--card);padding:10px 8px 9px;text-align:center}
+.ocard.ok{border-color:color-mix(in srgb,var(--rc) 55%,transparent);background:color-mix(in srgb,var(--rc) 8%,transparent)}
+.osprs{display:flex;justify-content:center;gap:0;min-height:92px;align-items:center}
+.ospr{--s:92px;--fw:64;--fh:64;--nf:9;--x0:1;--k:calc(var(--s)/var(--fh));
+  width:calc(var(--fw)*var(--k));height:var(--s);image-rendering:pixelated;background-repeat:no-repeat;
+  background-size:calc(var(--fw)*var(--nf)*var(--k)) calc(var(--fh)*4*var(--k));
+  background-position-y:calc(var(--fh)*var(--k)*-2);
+  background-position-x:calc(var(--fw)*var(--k)*var(--x0)*-1)}
+.ospr-off{background:none}
+.oname{margin-top:7px;font-size:13px;font-weight:600;line-height:1.3}
+.otag{margin-top:4px;font-size:11px;font-weight:700;color:var(--rc)}
 .expstage{margin-top:14px}
 .expstage-h{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--bd);padding-bottom:5px;margin-bottom:9px}
 .wchip.zero{border-color:var(--accent);color:var(--accent)}
@@ -388,6 +404,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
       <button class="mode" id="mItem" aria-pressed="false">Item</button>
       <button class="mode" id="mForja" aria-pressed="false">Forja</button>
       <button class="mode" id="mExped" aria-pressed="false">🗺️ Expedição</button>
+      <button class="mode" id="mCasket" aria-pressed="false">🎁 Casket</button>
       <button class="mode" id="mWar" aria-pressed="false">⚔️ Guerra</button>
     </div>
   </div>
@@ -430,6 +447,7 @@ const CHANGES = __CHANGES__;
 const HUNTS = __HUNTS__;
 const EXPED = __EXPED__;
 const OUTFIT = __OUTFIT__;
+const OUTFITS = __OUTFITS__;
 const CHARMS = __CHARMS__;
 const EQUIP = __EQUIP__;
 const ITEMID = __ITEMID__;
@@ -481,7 +499,7 @@ const qty = mx => mx>1 ? "1–"+mx : "";
 
 let mode="mon";
 const q=document.getElementById("q"), list=document.getElementById("list"), count=document.getElementById("count");
-const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), mExped=document.getElementById("mExped"), mWar=document.getElementById("mWar"), legend=document.getElementById("legend");
+const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), mExped=document.getElementById("mExped"), mCasket=document.getElementById("mCasket"), mWar=document.getElementById("mWar"), legend=document.getElementById("legend");
 
 const ELPT={physical:"Físico",fire:"Fogo",ice:"Gelo",earth:"Terra",energy:"Energia",holy:"Sagrado",death:"Morte",healing:"Cura"};
 const byName={}; for(const m of M) byName[norm(m.n)]=m;
@@ -545,6 +563,37 @@ function dmgGrid(dmg){
     +`<img src="${ELICO[d.el]}" alt="${ELPT[d.el]||d.el}" width="11" height="11"></span>`
     +`<b>${d.pct}%</b></span>`).join("")+`</div>`;
 }
+// ---- Aba Casket: candidatos do addon casket ----
+// Cores neutras pro preview (no jogo cada um escolhe as suas).
+const OC_PREVIEW = [78, 88, 58, 76];
+function outfitSpr(id, sexo){
+  if(!id) return `<div class="ospr ospr-off"></div>`;
+  const o = OUTFIT[id] || [1,0,64,64,0];
+  const [nf,ws,fw,fh,mask] = o;
+  // -a3 = os dois addons, que e o que o casket entrega
+  const url = `https://baiakidle.com/api/things/outfit/${id}-a3.png`;
+  const st = `--fw:${fw};--fh:${fh};--nf:${nf};--x0:${ws};background-image:url(${url})`;
+  const dc = mask ? ` data-lt="${id}" data-oc="${OC_PREVIEW.join(",")}" data-a3="1"` : "";
+  return `<div class="ospr" style="${st}" title="${esc(sexo)}"${dc}></div>`;
+}
+function casketCard(o,qq){
+  const dupla = o.m !== o.f;
+  return `<div class="ocard${o.ok?" ok":""}">`
+    +`<div class="osprs">${outfitSpr(o.m,"masculino")}${dupla?outfitSpr(o.f,"feminino"):""}</div>`
+    +`<div class="oname">${hl(o.n,qq)}</div>`
+    +(o.ok?`<div class="otag">✓ confirmado</div>`:"")
+    +`</div>`;
+}
+function casketHeader(){
+  const n = OUTFITS.length, ok = OUTFITS.filter(o=>o.ok).length;
+  return `<div class="ohead"><b>${n} outfits</b> que o addon casket pode entregar — `
+    +`lista por eliminação, não a tabela do servidor.`
+    +`<div class="ohead-sub">Entram só os que têm addon de verdade (o sprite <code>-a3</code> existe e é diferente do base) `
+    +`e que não estão à venda na loja de coins. Ficam de fora os de doação, staff e ranking. `
+    +`<b>${ok} confirmados</b> em aberturas reais; o resto é candidato. `
+    +`Os sprites aparecem com os 2 addons e cores neutras — no jogo você escolhe as suas.</div></div>`;
+}
+
 // ---- Colorização de outfit ----
 // Sprites de humanoide vêm com as áreas coloríveis em branco e uma máscara ao lado
 // (outfit/{id}_mask.png) marcando as regiões: amarelo=cabeça, vermelho=corpo,
@@ -581,12 +630,15 @@ const carrega = src => new Promise((ok,err)=>{
   im.onload = ()=>ok(im); im.onerror = err; im.src = src;
 });
 
-async function spriteColorido(lt, oc){
-  const chave = lt+":"+oc.join(",");
+async function spriteColorido(lt, oc, suf){
+  const sf = suf || "";
+  const chave = lt+sf+":"+oc.join(",");
   if(corCache.has(chave)) return corCache.get(chave);
   const pr = (async ()=>{
-    const base = `https://baiakidle.com/api/things/outfit/${lt}.png`;
-    const [img, msk] = await Promise.all([carrega(base), carrega(`https://baiakidle.com/api/things/outfit/${lt}_mask.png`)]);
+    const base = `https://baiakidle.com/api/things/outfit/${lt}${sf}.png`;
+    // a máscara do addon tem o sufixo antes do _mask
+    const mURL = `https://baiakidle.com/api/things/outfit/${lt}${sf}_mask.png`;
+    const [img, msk] = await Promise.all([carrega(base), carrega(mURL)]);
     const cv = document.createElement("canvas");
     cv.width = img.naturalWidth; cv.height = img.naturalHeight;
     const cx = cv.getContext("2d", {willReadFrequently:true});
@@ -618,10 +670,11 @@ async function spriteColorido(lt, oc){
 
 // troca o fundo dos sprites que precisam de cor; roda depois de cada render
 function pintaSprites(){
-  for(const el of document.querySelectorAll(".mspr[data-oc]")){
+  for(const el of document.querySelectorAll(".mspr[data-oc],.ospr[data-oc]")){
     const lt = el.dataset.lt, oc = el.dataset.oc.split(",").map(Number);
+    const suf = el.dataset.a3 ? "-a3" : "";
     el.removeAttribute("data-oc");                       // não repete
-    spriteColorido(lt, oc).then(url=>{ if(url) el.style.backgroundImage = `url(${url})`; });
+    spriteColorido(lt, oc, suf).then(url=>{ if(url) el.style.backgroundImage = `url(${url})`; });
   }
 }
 
@@ -1204,6 +1257,14 @@ function warCard(a,qq,open){
 function render(){
   setTimeout(pintaSprites,0);   // sprites de humanoide precisam de cor
   if(mode==="forja"){ list.innerHTML=forjaHTML(); count.textContent=""; return; }
+  if(mode==="casket"){
+    const qc=norm(q.value.trim());
+    const res=OUTFITS.filter(o=>!qc||norm(o.n).includes(qc));
+    list.innerHTML=casketHeader()+`<div class="ogrid">`+res.map(o=>casketCard(o,qc)).join("")+`</div>`;
+    count.textContent=`${res.length} ${res.length===1?"outfit":"outfits"}`;
+    setTimeout(pintaSprites,0);
+    return;
+  }
   if(mode==="war"){
     const qw=norm(q.value.trim());
     const res=WAR.contas.filter(a=>!qw||norm(a.c).includes(qw)||a.ch.some(c=>norm(c.n).includes(qw)));
@@ -1320,18 +1381,19 @@ for(const el of [stLvl,stMag,stDist,stMelee,stBonus]) el.addEventListener("input
 
 function setMode(m){
   mode=m; limit=CHUNK;
-  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
+  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["casket",mCasket],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   lvfilter.style.display = m==="hunt" ? "flex" : "none";
   slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
   spellstats.style.display = m==="magia" ? "flex" : "none";
   spellnote.style.display = m==="magia" ? "block" : "none";
-  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war"||m==="exped") ? "none" : "flex";
+  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war"||m==="exped"||m==="casket") ? "none" : "flex";
   q.style.display = m==="forja" ? "none" : "";
   q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
     : m==="magia" ? "Buscar magia (nome ou words: exori, exura…)…"
     : m==="equip" ? "Buscar equip (nome, voc: knight, sorc…)…"
     : m==="item" ? "Buscar item (ex: crystal coin, crossbow)…"
+    : m==="casket" ? "Buscar outfit…"
     : m==="exped" ? "Buscar expedição (nome, chefe ou bicho)…"
     : m==="war" ? "Buscar conta ou personagem inimigo…"
     : m==="boss" ? "Buscar boss (ex: deathstrike, ferumbras)…"
@@ -1346,9 +1408,11 @@ mEquip.onclick=()=>setMode("equip");
 mItem.onclick=()=>setMode("item");
 mForja.onclick=()=>setMode("forja");
 mExped.onclick=()=>setMode("exped");
+mCasket.onclick=()=>setMode("casket");
 mWar.onclick=()=>setMode("war");
 if(!WAR||!WAR.meta||!WAR.contas.length) mWar.style.display="none";
 if(!EXPED||!EXPED.length) mExped.style.display="none";
+if(!OUTFITS||!OUTFITS.length) mCasket.style.display="none";
 // links cruzados: monstro <-> item <-> hunt
 list.addEventListener("click",ev=>{
   const ml=ev.target.closest(".mlink"), il=ev.target.closest(".ilink"), hk=ev.target.closest(".hlink");

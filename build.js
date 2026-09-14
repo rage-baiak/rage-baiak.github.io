@@ -533,10 +533,55 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const M = __DATA__;", "const M = " + JSON.stringify(data) + ";");
   tpl = tpl.replace("const CHANGES = __CHANGES__;", "const CHANGES = " + JSON.stringify(changes) + ";");
   tpl = tpl.replace("const HUNTS = __HUNTS__;", "const HUNTS = " + JSON.stringify(hunts) + ";");
-  const lookTypes = [...new Set(data.filter(m => m.lt).map(m => m.lt))];
+
+  // ---- Outfits do addon casket ----
+  // O pool do casket e sorteado no servidor e nao existe no bundle. O que da pra fazer
+  // e eliminar por evidencia: so entra outfit que TEM addon de verdade (o outfitmeta diz,
+  // e confere com os sprites -a1/-a2/-a3) e que NAO esta a venda na loja de coins.
+  // Confirmado em campo: 3 aberturas, 3 acertos.
+  const CASKET_CONFIRMADOS = ["necromancer sorcerer", "soulcaller", "dragon slayer"];
+  // origem conhecida (doacao, staff, ranking) — nao sai em caixa
+  const CASKET_FORA = /^(founder partner|god|adm|gamemaster|beta defender|overlord|baron |lord )/i;
+
+  let OUTFITS = [];
+  try {
+    const rc = await fetch("https://baiakidle.com/api/trpc/admin.cosmeticsOverrides?input=%7B%7D");
+    const lista = (await rc.json())?.result?.data?.outfit ?? [];
+    // o campo `addons` do outfitmeta diz se existe addon pra aquele sprite
+    const meta = {};
+    const ids = [...new Set(lista.flatMap(o => [o.maleId, o.femaleId]).filter(Boolean))];
+    const lote = 24;
+    for (let i = 0; i < ids.length; i += lote) {
+      await Promise.all(ids.slice(i, i + lote).map(async id => {
+        try {
+          const r = await fetch(`https://baiakidle.com/api/things/outfitmeta/${id}`);
+          if (r.ok) meta[id] = (await r.json())?.addons ?? 0;
+        } catch (_) { }
+      }));
+    }
+    for (const o of lista) {
+      const add = Math.max(meta[o.maleId] ?? 0, meta[o.femaleId] ?? 0);
+      if (!add) continue;                                  // sem addon: fora por definicao
+      if (o.store) continue;                               // a venda na loja de coins
+      if (CASKET_FORA.test(o.name)) continue;              // doacao/staff/ranking
+      OUTFITS.push({
+        n: o.name, m: o.maleId, f: o.femaleId,
+        ok: CASKET_CONFIRMADOS.includes(o.name.toLowerCase()) ? 1 : 0,
+      });
+    }
+    OUTFITS.sort((a, b) => (b.ok - a.ok) || a.n.localeCompare(b.n, "pt-BR"));
+    console.log("outfits candidatos do casket:", OUTFITS.length,
+      "| confirmados em campo:", OUTFITS.filter(o => o.ok).length);
+  } catch (e) { console.log("outfits indisponiveis:", e.message); }
+
+  const lookTypes = [...new Set([
+    ...data.filter(m => m.lt).map(m => m.lt),
+    ...OUTFITS.flatMap(o => [o.m, o.f]),          // outfits do casket usam o mesmo sprite sheet
+  ].filter(Boolean))];
   const OUTFIT = await fetchOutfits(lookTypes);
   console.log("outfits:", Object.keys(OUTFIT).length + "/" + lookTypes.length, "com metadados de animacao");
   tpl = tpl.replace("const OUTFIT = __OUTFIT__;", "const OUTFIT = " + JSON.stringify(OUTFIT) + ";");
+  tpl = tpl.replace("const OUTFITS = __OUTFITS__;", "const OUTFITS = " + JSON.stringify(OUTFITS) + ";");
   tpl = tpl.replace("const EXPED = __EXPED__;", "const EXPED = " + JSON.stringify(exped) + ";");
   tpl = tpl.replace("const CHARMS = __CHARMS__;", "const CHARMS = " + JSON.stringify(CHARMS) + ";");
   tpl = tpl.replace("const EQUIP = __EQUIP__;", "const EQUIP = " + JSON.stringify(equip) + ";");
