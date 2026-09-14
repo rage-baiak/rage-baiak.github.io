@@ -276,14 +276,16 @@ function diff(oldD, newD) {
   // Tabela completa de charms, pra saber quem e major/ofensivo e qual elemento leva.
   // Cada charm ocupa UM slot e aponta pra UM monstro (slots[charmId].monsterKey no jogo),
   // entao numa hunt os bichos nao podem repetir charm — e o que o wiki resolve.
-  let MAJOR = [];
+  let MAJOR = [], MINOR = [];
   try {
     const i = src.search(/\[\{id:0,key:"wound"/);
     let d = 0, j = i;
     for (; j < src.length; j++) { if (src[j] === "[") d++; else if (src[j] === "]") { d--; if (!d) { j++; break; } } }
-    MAJOR = (0, eval)("(" + src.slice(i, j) + ")")
-      .filter(c => c.category === "major" && c.kind === "offensive")
-      .map(c => ({ k: c.key, n: c.name, el: c.element || null, ch: (c.chance || [])[1] || 0, d: c.desc || "" }));
+    const todos = (0, eval)("(" + src.slice(i, j) + ")")
+      .map(c => ({ k: c.key, n: c.name, el: c.element || null, cat: c.category,
+                   kind: c.kind, ch: (c.chance || [])[1] || 0, d: c.desc || "" }));
+    MAJOR = todos.filter(c => c.cat === "major" && c.kind === "offensive");
+    MINOR = todos.filter(c => c.cat === "minor");
   } catch (e) { console.log("tabela de charms indisponivel:", e.message); }
 
   const CHARMS = {
@@ -291,8 +293,10 @@ function diff(oldD, newD) {
     pure: opm ? opm[1] : "Overpower",
     boss: [sbm ? sbm[1] : "Savage Blow", fhm ? fhm[1] : "Fatal Hold"],  // crit no boss da hunt
     major: MAJOR,                                                        // candidatos da distribuicao
+    minor: MINOR,                                                        // cada bicho leva 1 major + 1 minor
   };
   console.log("charms major ofensivos:", MAJOR.map(c => c.n + (c.el ? "" : "*")).join(", "), "(* = dano puro)");
+  console.log("charms minor:", MINOR.map(c => c.n).join(", "));
   console.log("charms:", Object.keys(elemCharm).length, "elementais +", CHARMS.pure, "+ boss", CHARMS.boss.join("/"));
 
   // rate do servidor (config publica de admin): hp/exp/atk/def por categoria, igual pra todos

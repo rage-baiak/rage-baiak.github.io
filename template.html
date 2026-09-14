@@ -272,7 +272,15 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hmon-cols{display:flex;flex-wrap:wrap;gap:10px 26px;margin:7px 0 2px}
 .hmon-col{min-width:104px}
 .hmon-col .rlbl{margin:0 0 5px}
-.charmwhy{font-size:12px;color:var(--muted);margin-left:8px}
+.hmon-charms{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
+.charmbig{display:inline-flex;align-items:baseline;gap:7px;font-size:15px;font-weight:700;
+  padding:5px 13px;border-radius:8px;border:1px solid var(--line)}
+.charmbig i{font-style:normal;font-size:12px;font-weight:600;opacity:.75}
+.charmbig.major{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 50%,transparent);
+  background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.charmbig.minor{color:var(--muted);background:var(--line2)}
+.charmbig.boss{color:var(--rx);border-color:color-mix(in srgb,var(--rx) 45%,transparent);
+  background:color-mix(in srgb,var(--rx) 9%,transparent)}
 .hmon .resgrid{grid-template-columns:1fr;gap:4px;margin:0;max-width:130px}
 .reschip.dm b{color:var(--muted)}
 .reschip.dm{background:var(--card)}
@@ -537,6 +545,45 @@ function dmgGrid(dmg){
     +`<img src="${ELICO[d.el]}" alt="${ELPT[d.el]||d.el}" width="11" height="11"></span>`
     +`<b>${d.pct}%</b></span>`).join("")+`</div>`;
 }
+// ---- Minor charms ----
+// Os major têm critério objetivo: o dano do elemento. Os minor não — cada um serve a um
+// objetivo diferente (dano, loot, defesa), então o critério aqui é ADEQUAÇÃO AO BICHO,
+// medida com o que o wiki sabe dele e normalizada dentro da hunt. É heurística, não
+// verdade do jogo: um bicho tanque aproveita mais Fatal Hold, um que dropa bem aproveita
+// mais Gut, um que bate forte aproveita mais Numb.
+function perfilBichos(mons){
+  const mx = (f) => Math.max(1, ...mons.map(f));
+  const hpM = mx(m=>m.hp||0), spM = mx(m=>m.sp||0);
+  const ameaca = m => { let t = (m.dm&&m.dm[1])||0;
+    for(const a of m.a||[]) if(a.el!=="healing") t += (a.ch||0)*(((a.mn||0)+(a.mx||0))/2)/100;
+    return t; };
+  const amM = mx(ameaca);
+  const lootM = mx(m=>(m.l||[]).length);
+  const temOuro = m => (m.l||[]).some(x=>/gold coin/i.test(x[0]));
+  return mons.map(m=>({
+    hp: (m.hp||0)/hpM*100,
+    vel: (m.sp||0)/spM*100,
+    ameaca: ameaca(m)/amM*100,
+    loot: (m.l||[]).length/lootM*100,
+    ouro: temOuro(m)?100:35,
+  }));
+}
+function minorValor(pf, c){
+  switch(c.k){
+    case "fatal_hold":       return pf.hp;                 // fase final rende mais em bicho tanque
+    case "gut":              return pf.loot;               // chance de drop: vale onde há drop
+    case "scavenge":         return pf.ouro;               // ouro: vale em quem dropa ouro
+    case "cripple":          return pf.vel;                // lentidão: vale em bicho rápido
+    case "numb":             return pf.ameaca;             // lentidão no atacante
+    case "adrenaline_burst": return pf.ameaca*0.85;
+    case "void_inversion":   return pf.ameaca*0.8;         // escudo de mana
+    case "vampiric_embrace": return 45;                    // sustain, depende do seu equip
+    case "voids_call":       return 35;
+    case "bless":            return 20;                    // só ajuda quando a party morre
+    default:                 return 30;
+  }
+}
+
 // ---- Distribuição de charms numa hunt ----
 // No jogo cada charm ocupa um slot e aponta pra UM monstro, então dois bichos da mesma
 // hunt não podem levar o mesmo charm. Escolher o melhor pra cada um isoladamente não
@@ -550,8 +597,19 @@ function charmValor(m, c){
   return 100 - Number((m.r||{})[c.el] || 0);    // dano recebido daquele elemento
 }
 
-function distribuiCharms(mons){
-  const cands = (CHARMS.major || []);
+function distribuiCharms(mons, reservados){
+  // o boss da hunt leva Savage Blow + Fatal Hold; Fatal Hold e minor, entao sairia na
+  // distribuicao dos outros bichos e apareceria duas vezes na mesma hunt.
+  const fora = new Set((reservados||[]).map(x=>norm(x)));
+  const livre = l => (l||[]).filter(c=>!fora.has(norm(c.n)));
+  const maj = atribui(mons, livre(CHARMS.major), (m,c,i)=>charmValor(m,c));
+  const pf = perfilBichos(mons);
+  const min = atribui(mons, livre(CHARMS.minor), (m,c,i)=>minorValor(pf[i],c));
+  return mons.map((m,i)=>({ c: maj[i] && maj[i].c, v: maj[i] && maj[i].v,
+                            mc: min[i] && min[i].c, mv: min[i] && min[i].v }));
+}
+// atribuicao otima: cada bicho leva um charm, sem repetir (DP sobre o conjunto usado)
+function atribui(mons, cands, valor){
   const n = mons.length, m = cands.length;
   if(!n || !m) return [];
   if(n > m) return mons.map(x => null);          // mais bichos que charms: não resolve
@@ -566,7 +624,7 @@ function distribuiCharms(mons){
       for(let j=0;j<m;j++){
         if(mask & (1<<j)) continue;
         const nm = mask | (1<<j);
-        const v = cur + charmValor(mons[i], cands[j]);
+        const v = cur + valor(mons[i], cands[j], i);
         if(v > dp[(i+1)*N+nm]){ dp[(i+1)*N+nm] = v; esc[(i+1)*N+nm] = j; }
       }
     }
@@ -576,7 +634,7 @@ function distribuiCharms(mons){
   const out = new Array(n);
   let mask = bmask;
   for(let i=n;i>0;i--){ const j = esc[i*N+mask]; out[i-1] = j; mask ^= (1<<j); }
-  return out.map((j,i) => ({ c: cands[j], v: charmValor(mons[i], cands[j]) }));
+  return out.map((j,i) => ({ c: cands[j], v: valor(mons[i], cands[j], i) }));
 }
 
 function monSpr(lt,sm){
@@ -640,25 +698,27 @@ function huntMon(name, isBoss, atrib){
     ? dmg.map(d=>`<span class="dchip">${dot(d.el)}${ELPT[d.el]||d.el} <b>${d.pct}%</b></span>`).join("")
     : `<span class="hnone">só corpo a corpo</span>`;
   // boss tem regra propria (crit); os outros recebem o charm que a distribuicao decidiu
+  // cada bicho leva 1 major + 1 minor. O major vem do dano do elemento; o minor, do perfil.
+  const why = atrib && atrib.c
+    ? (atrib.c.el ? `${ELPT[atrib.c.el]||atrib.c.el} ${Math.round(atrib.v)}%` : "dano puro")
+    : "";
   const ch = isBoss
-    ? CHARMS.boss.map(c=>`<span class="charmchip boss">${esc(c)}</span>`).join("")
-    : atrib
-      ? `<span class="charmchip top">${esc(atrib.c.n)}</span>`
-        +(atrib.c.el
-          ? `<span class="charmwhy">${ELPT[atrib.c.el]||atrib.c.el} · ${Math.round(atrib.v)}% de dano</span>`
-          : `<span class="charmwhy">dano puro · não depende da resistência</span>`)
-      : monCharms(m,isBoss).map((c,i)=>
-          `<span class="charmchip${i===0?" top":""}">${i?`<em>${i+1}º</em> `:""}${esc(c)}</span>`).join("");
+    ? CHARMS.boss.map(c=>`<span class="charmbig boss">🔮 ${esc(c)}</span>`).join("")
+    : atrib && atrib.c
+      ? `<span class="charmbig major">🔮 ${esc(atrib.c.n)}${why?`<i>${esc(why)}</i>`:""}</span>`
+        +(atrib.mc?`<span class="charmbig minor">🔮 ${esc(atrib.mc.n)}<i>minor</i></span>`:"")
+      : "";
   return `<div class="hmon${isBoss?" boss":""}">`
     +monSpr(m.lt,true)
     +`<div class="hmon-body"><div class="hmon-h">`
     +`<span class="hmon-lead"><span class="mlink" data-mon="${esc(m.n)}">${esc(m.n)}</span>${isBoss?'<span class="bosstag">👑 boss</span>':""}</span>`
     +`<span class="hmon-hp">HP ${m.hp.toLocaleString("pt-BR")}</span></div>`
+    +(ch?`<div class="hmon-charms">${ch}</div>`:"")
     +`<div class="hmon-cols">`
     +`<div class="hmon-col"><div class="rlbl">dano que recebe <span class="hint">· 100% = normal</span></div>${resGrid(m.r)}</div>`
     +`<div class="hmon-col"><div class="rlbl">dano que causa <span class="hint">· fatia do total</span></div>${dmgGrid(dmg)}</div>`
     +`</div>`
-    +`<div class="hmon-r"><span class="rlbl ch">🔮 charm</span>${ch}</div></div></div>`;
+    +`</div></div>`;
 }
 // ---- Expedições: raid de até 30 jogadores, 3 stages + chefe ----
 function expedCard(e,qq,open){
@@ -728,16 +788,13 @@ function huntCard(h,qq,open){
   // distribui os charms entre os bichos (o boss fica fora: leva os de crit)
   const normais = h.mons.filter(n=>n!==h.boss);
   const regs = normais.map(n=>byName[norm(n)]).filter(Boolean);
-  const dist = distribuiCharms(regs);
+  const dist = distribuiCharms(regs, h.boss ? CHARMS.boss : null);
   const porNome = {};
   regs.forEach((m,i)=>{ if(dist[i]) porNome[norm(m.n)] = dist[i]; });
-  const charm = dist.length
-    ? dist.map((d,i)=>d?`<span class="hchip charm" title="${esc(regs[i].n)}">🔮 ${esc(d.c.n)}</span>`:"").join("")
-    : `<span class="hnote">sem bicho pra distribuir</span>`;
+
   const bossRow = h.boss
     ? `<div class="recrow"><span class="rlbl ch">👑 boss</span>`
-      +`<span class="mlink bossname" data-mon="${esc(h.boss)}">${esc(h.boss)}</span>`
-      +CHARMS.boss.map(c=>`<span class="hchip charm boss">🔮 ${esc(c)}</span>`).join("")+`</div>`
+      +`<span class="mlink bossname" data-mon="${esc(h.boss)}">${esc(h.boss)}</span></div>`
     : "";
   const mons = h.mons.map(n=>huntMon(n, n===h.boss, porNome[norm(n)])).join("");
   return `<details${open}><summary><span class="name">${hl(h.name,qq)}</span>`
@@ -745,7 +802,7 @@ function huntCard(h,qq,open){
     +`<div class="body hbody"><div class="rec">`
     +`<div class="recrow"><span class="rlbl wk">⚔ arma / imbu</span>${arma}</div>`
     +`<div class="recrow"><span class="rlbl rs">🛡 proteção</span>${def}</div>`
-    +`<div class="recrow"><span class="rlbl ch">🔮 charms</span>${charm}<span class="hnote">um por bicho, sem repetir</span></div>`
+    
     +bossRow
     +`<div class="recnote">Cada charm ocupa um slot e vai pra um monstro só, então dois bichos da hunt não podem levar o mesmo. A distribuição abaixo é a que rende mais no conjunto — não é o melhor de cada um isolado. O boss leva ${esc(CHARMS.boss.join(" + "))}.</div></div>`
     +`<div class="hmons2"><div class="lootlbl" style="margin-top:0;border:0;padding-top:0">Monstros</div>${mons}</div></div></details>`;
