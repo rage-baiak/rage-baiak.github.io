@@ -269,7 +269,12 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hmons2{padding:10px 0 0;margin-top:8px;border-top:1px solid var(--line2)}
 .hmon{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:10px 0;border-top:1px solid var(--line2)}
 .hmon-body{min-width:0}
-.hmon .resgrid{margin:6px 0 2px;max-width:430px}
+.hmon-cols{display:flex;flex-wrap:wrap;gap:10px 26px;margin:7px 0 2px}
+.hmon-col{min-width:104px}
+.hmon-col .rlbl{margin:0 0 5px}
+.hmon .resgrid{grid-template-columns:1fr;gap:4px;margin:0;max-width:130px}
+.reschip.dm b{color:var(--muted)}
+.reschip.dm{background:var(--card)}
 .hmon:first-of-type{border-top:0;padding-top:4px}
 .hmon-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .hmon-h .mlink{font-weight:600;font-size:15px}
@@ -522,6 +527,15 @@ const ELICO={"physical": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJ
 // Sprite do monstro, animado. O spritesheet e frames x 4 direcoes; a direcao 2 (sul)
 // e o bicho de frente. A animacao de andar vai de walkStart ate o ultimo frame.
 // frames/walkStart/tamanho variam por outfit — por isso vem do OUTFIT, nao chutado.
+// Dano que o bicho CAUSA, no mesmo formato dos chips de resistencia. A cor nao entra
+// aqui: o numero e fatia do dano dele, nao "resiste tanto" — quem separa e o rotulo.
+function dmgGrid(dmg){
+  if(!dmg.length) return `<div class="resgrid"><span class="hnone">só corpo a corpo</span></div>`;
+  return `<div class="resgrid">`+dmg.map(d=>
+    `<span class="reschip dm" title="${ELPT[d.el]||d.el}"><span class="resic">`
+    +`<img src="${ELICO[d.el]}" alt="${ELPT[d.el]||d.el}" width="11" height="11"></span>`
+    +`<b>${d.pct}%</b></span>`).join("")+`</div>`;
+}
 function monSpr(lt,sm){
   const cls = "mspr"+(sm?" mspr-sm":"");
   if(!lt) return `<div class="${cls} mspr-off"></div>`;
@@ -589,8 +603,10 @@ function huntMon(name, isBoss){
     +`<div class="hmon-body"><div class="hmon-h">`
     +`<span class="hmon-lead"><span class="mlink" data-mon="${esc(m.n)}">${esc(m.n)}</span>${isBoss?'<span class="bosstag">👑 boss</span>':""}</span>`
     +`<span class="hmon-hp">HP ${m.hp.toLocaleString("pt-BR")}</span></div>`
-    +resGrid(m.r)
-    +`<div class="hmon-r"><span class="rlbl rs">dano</span>${dl}</div>`
+    +`<div class="hmon-cols">`
+    +`<div class="hmon-col"><div class="rlbl">dano que recebe <span class="hint">· 100% = normal</span></div>${resGrid(m.r)}</div>`
+    +`<div class="hmon-col"><div class="rlbl">dano que causa <span class="hint">· fatia do total</span></div>${dmgGrid(dmg)}</div>`
+    +`</div>`
     +`<div class="hmon-r"><span class="rlbl ch">🔮 charm</span>${ch}</div></div></div>`;
 }
 // ---- Expedições: raid de até 30 jogadores, 3 stages + chefe ----
