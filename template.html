@@ -747,13 +747,13 @@ function expedCard(e,qq,open){
   const distE = distribuiCharms(regsE);
   const porNomeE = {};
   regsE.forEach((m,i)=>{ if(distE[i]) porNomeE[norm(m.n)] = distE[i]; });
-  const stages = `<div class="expstage"><div class="expstage-h">Bichos (${unicos.length})</div>`
-    +`<div class="hmons2">${unicos.map(n=>huntMon(n,false,porNomeE[norm(n)])).join("")}</div></div>`
-    // o chefe entra com a mesma ficha dos outros (antes so aparecia numa linha do resumo)
-    +(e.boss && byName[norm(e.boss)]
+  // chefe primeiro, com a mesma ficha dos outros
+  const stages = (e.boss && byName[norm(e.boss)]
       ? `<div class="expstage"><div class="expstage-h">Chefe</div>`
         +`<div class="hmons2">${huntMon(e.boss,true)}</div></div>`
-      : "");
+      : "")
+    +`<div class="expstage"><div class="expstage-h">Bichos (${unicos.length})</div>`
+    +`<div class="hmons2">${unicos.map(n=>huntMon(n,false,porNomeE[norm(n)])).join("")}</div></div>`;
   return `<details${open}><summary><span class="name">${hl(e.name,qq)}</span>`
     +`<span class="meta">lv ${e.lv}+ · 👑 ${esc(e.boss||"?")} · <span class="chip">${fmtBig(e.xp)}</span> xp</span></summary>`
     +`<div class="body hbody"><div class="rec">`
@@ -791,7 +791,9 @@ function huntCard(h,qq,open){
     ? `<div class="recrow"><span class="rlbl ch">👑 boss</span>`
       +`<span class="mlink bossname" data-mon="${esc(h.boss)}">${esc(h.boss)}</span></div>`
     : "";
-  const mons = h.mons.map(n=>huntMon(n, n===h.boss, porNome[norm(n)])).join("");
+  // boss primeiro
+  const ordem = h.boss ? [h.boss, ...h.mons.filter(n=>n!==h.boss)] : h.mons;
+  const mons = ordem.map(n=>huntMon(n, n===h.boss, porNome[norm(n)])).join("");
   return `<details${open}><summary><span class="name">${hl(h.name,qq)}</span>`
     +`<span class="meta">lv ${h.lv}+ · <span class="chip">${h.mons.length}</span> bichos</span></summary>`
     +`<div class="body hbody"><div class="rec">`
