@@ -78,7 +78,9 @@ h1 .g{color:var(--accent)}
 .wchip{display:inline-block;border:1px solid var(--line);border-radius:7px;padding:1px 7px;margin:2px 3px 2px 0;font-size:12px}
 .wchip.weak{border-color:var(--rc);color:var(--rc);font-weight:700}
 /* aba Bags: conteúdo das reward bags */
-.bagtier{font-size:13px;color:var(--muted);margin:2px 0 9px}
+.bagtier{font-size:13px;color:var(--muted);margin:2px 0 9px;line-height:1.5}
+.bagtier.est i,.bagtbl .bgc.est i{font-style:italic}
+.bagtbl .bgc.est{color:var(--muted);font-weight:600}
 .bagtier b{color:var(--fg);font-variant-numeric:tabular-nums}
 .bagtbl{width:100%;border-collapse:collapse}
 .bagtbl th{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
@@ -578,28 +580,31 @@ function dmgGrid(dmg){
 }
 // ---- Aba Bags: conteúdo das reward bags ----
 function bagCard(b,qq,open){
+  const real = b.it.some(i=>i.c!=null);              // chance que veio do jogo
   const itens = b.it.slice().sort((x,y)=>(y.c??-1)-(x.c??-1) || x.n.localeCompare(y.n,"pt-BR"));
-  const temCh = itens.some(i=>i.c!=null);
   const linhas = itens.map(i=>{
     const bate = qq && norm(i.n).includes(qq);
+    const ch = i.c!=null ? `${i.c}%` : (b.unif!=null ? `<i>${b.unif}%</i>` : "—");
     return `<tr${bate?' class="hit"':""}>`
-      +`<td class="bgc">${i.c!=null?i.c+"%":"—"}</td>`
+      +`<td class="bgc${i.c==null?" est":""}">${ch}</td>`
       +`<td class="bgi">${itemSpr(i.n)}<span class="mlink" data-item="${esc(i.n)}">${hl(i.n,qq)}</span></td></tr>`;
   }).join("");
-  const tier = b.tier
-    ? `<div class="bagtier">peso por tier: ${Object.entries(b.tier).map(([t,p])=>`T${t} <b>${p}</b>`).join(" · ")}</div>`
-    : "";
+  const nota = real
+    ? `<div class="bagtier">Chance de cada item, como o jogo traz.</div>`
+    : `<div class="bagtier est">O jogo não traz peso pra esta bag — só a lista. `
+      +`O <i>${b.unif}%</i> é 1 em ${b.it.length}, ou seja, o que sai se o sorteio for igual pra todos. Estimativa, não dado do jogo.</div>`;
   return `<details${open}><summary><span class="name">${hl(b.n,qq)}</span>`
-    +`<span class="meta"><span class="chip">${b.it.length}</span> itens${temCh?" · com chance":""}</span></summary>`
-    +`<div class="body">${tier}`
-    +`<table class="bagtbl"><thead><tr><th>${temCh?"chance":""}</th><th>item</th></tr></thead><tbody>${linhas}</tbody></table>`
+    +`<span class="meta"><span class="chip">${b.it.length}</span> itens · ${real?"chance real":"chance estimada"}</span></summary>`
+    +`<div class="body">${nota}`
+    +`<table class="bagtbl"><thead><tr><th>chance</th><th>item</th></tr></thead><tbody>${linhas}</tbody></table>`
     +`</div></details>`;
 }
 function bagsHeader(){
   return `<div class="ohead">Conteúdo das <b>reward bags</b>, direto do cliente do jogo.`
-    +`<div class="ohead-sub">Cada bag entrega um item sorteado da sua lista. A <b>mystic bag</b> e a `
-    +`<b>glooth bag</b> trazem a chance de cada item; nas outras o jogo só expõe a lista. `
-    +`“Peso por tier” é o peso relativo do tier do item quando ele sai.</div></div>`;
+    +`<div class="ohead-sub">Cada bag entrega um item sorteado da sua lista. Só a <b>glooth bag</b> `
+    +`traz o peso de cada item no dado do jogo — ali a chance é real. Nas outras três o jogo expõe `
+    +`apenas a lista, então o número aparece <i>em itálico</i>: é 1 dividido pelo total, o que sai `
+    +`se o sorteio for igual pra todos. Estimativa, não dado do jogo.</div></div>`;
 }
 
 // ---- Aba Casket: candidatos do addon casket ----

@@ -545,11 +545,19 @@ function diff(oldD, newD) {
     const tm = /\{"random bis bag":/.exec(src);
     if (!tm) throw new Error("tabela de bags nao encontrada");
     const tbl = (0, eval)("(" + matchBalanced(src, tm.index) + ")");
+    // so as bags que existem no jogo hoje; as outras da tabela nao estao implementadas
+    const NO_JOGO = new Set(["bag you desire", "bag you covet", "primal bag"]);
     for (const [nome, v] of Object.entries(tbl)) {
+      if (!NO_JOGO.has(nome)) continue;
+      const itens = v.items || [];
+      // essas tres nao trazem peso nenhum no dado — so a lista. Sem peso, a leitura
+      // natural e sorteio uniforme; fica marcado como estimativa, nao como dado do jogo.
+      const unif = itens.length ? +(100 / itens.length).toFixed(2) : null;
       BAGS.push({
         n: nome,
-        it: (v.items || []).map(i => ({ n: i.name, c: i.chance ?? null })),
+        it: itens.map(i => ({ n: i.name, c: i.chance ?? null })),
         tier: v.class4Tier || null,
+        unif,                                   // chance se o sorteio for uniforme
       });
     }
     // glooth bag: array de faixas { name, count, from, to }
@@ -564,7 +572,15 @@ function diff(oldD, newD) {
       });
     }
     BAGS.sort((a, b) => b.it.length - a.it.length);
-    console.log("reward bags:", BAGS.length, "|", BAGS.map(b => `${b.n}(${b.it.length})`).join(" "));
+    // os itens de bag em geral nao dropam de monstro, entao nao entraram no ITEMID.
+    // Sem isso o sprite some na tabela (soul*, sanguine*, glooth*).
+    let add = 0;
+    for (const b of BAGS) for (const i of b.it) {
+      const k = norm(i.n);
+      if (!ITEMID[k] && idByName[k]) { ITEMID[k] = idByName[k]; add++; }
+    }
+    console.log("reward bags:", BAGS.length, "|", BAGS.map(b => `${b.n}(${b.it.length})`).join(" "),
+      "| +" + add + " sprites no indice");
   } catch (e) { console.log("bags indisponiveis:", e.message); }
 
   // ---- Outfits do addon casket ----
