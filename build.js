@@ -408,7 +408,7 @@ function diff(oldD, newD) {
       n: m.name || k, boss,
       hp: mul(m.hp || 0, cat, "hp"),
       exp: mul(m.exp || 0, cat, "exp"),
-      arm: m.armor || 0, sp: m.speed || 0,
+      arm: m.armor || 0, sp: m.speed || 0, lt: m.lookType || 0,
       dm: m.dmg || null, r: m.resist || null,
       a: (m.abilities || []).map(x => ({
         el: x.element, mn: x.min, mx: x.max, ch: x.chance,
@@ -435,7 +435,7 @@ function diff(oldD, newD) {
     data.push({
       n: titleCase(key), boss: 1, raid: 1,
       hp: mul(m.hp || 0, "boss", "hp"), exp: 0,
-      arm: m.armor || 0, sp: m.speed || 0,
+      arm: m.armor || 0, sp: m.speed || 0, lt: m.lookType || 0,
       dm: m.dmg || null, r: m.resist || null,
       a: (m.abilities || []).map(x => ({
         el: x.element, mn: x.min, mx: x.max, ch: x.chance,

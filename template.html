@@ -181,19 +181,28 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .stats{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;color:var(--muted);padding:8px 0 10px}
 .stats b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
 .rline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0}
-.reshd{margin:6px 0 5px}
-.resgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(152px,1fr));gap:6px;margin-bottom:7px}
+.reshd{margin:0 0 5px}
+/* infobox: sprite | stats | resistências, igual ao TibiaWiki */
+.infobox{display:grid;grid-template-columns:auto minmax(150px,1fr) minmax(318px,auto);gap:16px;align-items:start;
+  padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--line2);margin-bottom:8px}
+.mspr{width:64px;height:64px;flex:none;image-rendering:pixelated;
+  background-repeat:no-repeat;background-position:0 -128px}
+.mspr-off{background:none}
+.infobox .stats{display:grid;grid-template-columns:repeat(2,minmax(96px,1fr));gap:4px 16px;align-content:start}
+.resbox{min-width:0}
+.resgrid{display:grid;grid-template-columns:repeat(4,minmax(72px,1fr));gap:5px}
 .reschip{display:flex;align-items:stretch;font-size:13.5px;border:1px solid var(--line);
-  border-radius:7px;overflow:hidden;background:var(--line2)}
-.resic{display:flex;align-items:center;gap:7px;padding:4px 9px;color:var(--muted);flex:1}
-.resnm{white-space:nowrap}
-.reschip b{display:flex;align-items:center;justify-content:center;min-width:58px;padding:4px 8px;
+  border-radius:6px;overflow:hidden;background:var(--card)}
+.resic{display:flex;align-items:center;justify-content:center;padding:3px 7px;background:var(--line2)}
+.resic img{image-rendering:pixelated;display:block}
+.reschip b{display:flex;align-items:center;justify-content:center;flex:1;min-width:50px;padding:3px 7px;
   font-weight:700;font-variant-numeric:tabular-nums;border-left:1px solid var(--line)}
-/* cores fixas nos dois temas, como no TibiaWiki: o bloco do valor carrega o significado */
 .reschip.nt b{color:var(--muted)}
 .reschip.wk b{background:#7fc98a;color:#123019}
 .reschip.rs b{background:#f2d24b;color:#453505}
 .reschip.im b{background:#e2564c;color:#fff}
+@media(max-width:860px){.infobox{grid-template-columns:auto 1fr}.resbox{grid-column:1/-1}}
+@media(max-width:520px){.resgrid{grid-template-columns:repeat(2,1fr)}}
 .rlbl{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-right:2px}
 .rlbl.wk{color:var(--rc)} .rlbl.rs{color:var(--rr)}
 .rchip,.atk{font-size:13.5px;border-radius:7px;padding:3px 9px;border:1px solid var(--line);white-space:nowrap}
@@ -456,8 +465,11 @@ function monStats(m){
   if(m.arm) st.push(`Armor <b>${m.arm}</b>`);
   if(m.sp) st.push(`Vel <b>${m.sp}</b>`);
   if(m.dm) st.push(`Dano <b>${m.dm[0]}–${m.dm[1]}</b>`);
-  h+=`<div class="stats">${st.map(x=>`<span>${x}</span>`).join("")}</div>`;
-  h+=`<div class="rlbl reshd">dano que recebe <span class="hint">· 100% = normal</span></div>`+resGrid(m.r);
+  h+=`<div class="infobox">`
+    +monSpr(m.lt)
+    +`<div class="stats">${st.map(x=>`<span>${x}</span>`).join("")}</div>`
+    +`<div class="resbox"><div class="rlbl reshd">dano que recebe <span class="hint">· 100% = normal</span></div>`
+    +resGrid(m.r)+`</div></div>`;
   if(m.a&&m.a.length){
     h+=`<div class="atksec"><div class="rlbl">ataques <span class="hint">· % = chance de sair</span></div><div class="atks">`
       +m.a.map(x=>{
@@ -488,6 +500,13 @@ function monRows(arr,qq){
 // mostrando o dano que o bicho RECEBE (100% = normal). No dado, r[el] e o quanto ele
 // reduz: negativo = fraqueza. Elemento ausente = neutro. Entao recebido = 100 - r[el].
 const ELORD=["physical","earth","fire","death","energy","holy","ice"];  // ordem do TibiaWiki
+const ELICO={"physical": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAABS2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxMzggNzkuMTU5ODI0LCAyMDE2LzA5LzE0LTAxOjA5OjAxICAgICAgICAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIi8+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJyIj8+IEmuOgAAAKFJREFUGJVdjbENhDAQBMfoM0pwCb7YiAAqoADX4AIoggLInbkAKqAGWqAEx/fBy/9vRjqtbnW3i6pSxzmnzjlNKTXaAYiIioiu6wrAPM+NdiKix3E0Zoyx0RfAeZ6Nue87lWVZPkc5Z/6JMWKtZZqmX1IIoamqe23oeGCt/T5UjPeeUoqO4wjAfd+EEADYto2+743x3gNQStFn6nVdZhgG3kmORkB769ekAAAAAElFTkSuQmCC", "earth": "data:image/gif;base64,R0lGODlhCQAJAMIGAB8zITR2PjaoRjzUUqj/te3/8P///////yH5BAEKAAcALAAAAAAJAAkAAAMdeHqwDqG9IOIbREgWSBkWI2CDpgDjUG7o6jDAlgAAOw==", "fire": "data:image/gif;base64,R0lGODlhCQAJAMIGAD0bH64QDdogBP2LAP7NC//fXf///////yH5BAEKAAcALAAAAAAJAAkAAAMheAcB+ks0yIYELpLRWi1WIGDCUGzCCJTFaTnrgGYLhikJADs=", "death": "data:image/gif;base64,R0lGODlhCQAJAKUlAAICAgQEBAYGBgkJCQoKCgsLCw4ODg8PDxERERQUFBkZGSAgICEhISIiIiQkJCkpKSwsLDAwMDg4ODs7O0ZGRlhYWGRkZGhoaHd3d319fX5+fX5+foaGhpCQkKSkpKmpqbe3t7m5ucXFxdLS0tvb2////////////////////////////////////////////////////////////////////////////////////////////////////////////yH5BAEKAD8ALAAAAAAJAAkAAAY+wJ/wRyAEhr/BwAMaHZMhjmRTsQQGIlLDMWE8CoMLZRFRJATJBSRBGAgAmOSAcAB0fmjh4PMzbJA/CBlJGkEAOw==", "energy": "data:image/gif;base64,R0lGODlhCQAJAMIHAEMVRpoyoMpwz85+081/0vGt9f7o/////yH5BAEKAAcALAAAAAAJAAkAAAMjWHCgEM+ANl2RTZ0RKVsAUXCAYAWXEhiGIjkVgAlPAQ0QkAAAOw==", "holy": "data:image/gif;base64,R0lGODlhCQAJAIQRADsbBLNRGed1Heh1HOyKEemPHO2SHOuVJfKZL/KfF/S3Yv3JM/fGef3YaP7xuv71y//1zf///////////////////////////////////////////////////////////yH5BAEKAB8ALAAAAAAJAAkAAAUq4CcCpGgCT7MAJwQEQMICDimQA8kEQh8YJISNVJgRXgAFa3Q43EyjkigEADs=", "ice": "data:image/gif;base64,R0lGODlhCQAJAOMIABwcHADI2GT//3///4D//5z//63//778/P///////////////////////////////yH5BAEKAA8ALAAAAAAJAAkAAAQg8MkHpgQ44EoJGIB3hYfHBUKBGEMwEoZ5eaBIZZtFWREAOw=="};
+// sprite do monstro: spritesheet 9 frames x 4 direcoes de 64px.
+// frame 0 (parado), direcao 2 (sul) = o bicho de frente.
+function monSpr(lt){
+  if(!lt) return `<div class="mspr mspr-off"></div>`;
+  return `<div class="mspr" style="background-image:url(https://baiakidle.com/api/things/outfit/${lt}.png)"></div>`;
+}
 function resGrid(r){
   // sem dado nenhum != neutro em tudo — nao inventar 100%
   if(!r || !Object.keys(r).length) return `<div class="rline"><span class="rchip rs">sem dado de resistência</span></div>`;
@@ -495,8 +514,9 @@ function resGrid(r){
     const v=Number((r||{})[el]||0), dano=100-v;
     const cls = dano<=0 ? "im" : dano>100 ? "wk" : dano<100 ? "rs" : "nt";
     const txt = dano<=0 ? "imune" : dano+"%";
-    return `<span class="reschip ${cls}"><span class="resic"><i class="edot e-${el}"></i>`
-      +`<span class="resnm">${ELPT[el]||el}</span></span><b>${txt}</b></span>`;
+    return `<span class="reschip ${cls}" title="${ELPT[el]||el}"><span class="resic">`
+      +`<img src="${ELICO[el]}" alt="${ELPT[el]||el}" width="11" height="11"></span>`
+      +`<b>${txt}</b></span>`;
   }).join("");
   return `<div class="resgrid">${linhas}</div>`;
 }
