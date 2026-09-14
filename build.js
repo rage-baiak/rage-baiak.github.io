@@ -109,6 +109,26 @@ function assembleCatalog(src) {
   return It;
 }
 
+// Metadados do sprite de cada outfit: frames, walkStart e tamanho do quadro variam
+// (9/16/3/5/21 frames, 64x64 / 32x32 / 32x64), entao nao da pra assumir um padrao.
+// Sem isso a animacao sai errada em ~100 monstros.
+async function fetchOutfits(lookTypes) {
+  const out = {};
+  const lote = 24;
+  for (let i = 0; i < lookTypes.length; i += lote) {
+    await Promise.all(lookTypes.slice(i, i + lote).map(async lt => {
+      try {
+        const r = await fetch(`https://baiakidle.com/api/things/outfitmeta/${lt}`);
+        if (!r.ok) return;
+        const j = await r.json();
+        // [frames, walkStart, frameW, frameH] — direcoes sao sempre 4
+        out[lt] = [j.frames || 1, j.walkStart || 0, j.frameW || 64, j.frameH || 64];
+      } catch (_) { /* outfit sem meta fica estatico */ }
+    }));
+  }
+  return out;
+}
+
 // monstro -> {item: chance}
 function chanceMap(data) {
   const map = {};
@@ -491,6 +511,10 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const M = __DATA__;", "const M = " + JSON.stringify(data) + ";");
   tpl = tpl.replace("const CHANGES = __CHANGES__;", "const CHANGES = " + JSON.stringify(changes) + ";");
   tpl = tpl.replace("const HUNTS = __HUNTS__;", "const HUNTS = " + JSON.stringify(hunts) + ";");
+  const lookTypes = [...new Set(data.filter(m => m.lt).map(m => m.lt))];
+  const OUTFIT = await fetchOutfits(lookTypes);
+  console.log("outfits:", Object.keys(OUTFIT).length + "/" + lookTypes.length, "com metadados de animacao");
+  tpl = tpl.replace("const OUTFIT = __OUTFIT__;", "const OUTFIT = " + JSON.stringify(OUTFIT) + ";");
   tpl = tpl.replace("const EXPED = __EXPED__;", "const EXPED = " + JSON.stringify(exped) + ";");
   tpl = tpl.replace("const CHARMS = __CHARMS__;", "const CHARMS = " + JSON.stringify(CHARMS) + ";");
   tpl = tpl.replace("const EQUIP = __EQUIP__;", "const EQUIP = " + JSON.stringify(equip) + ";");
@@ -502,9 +526,13 @@ function diff(oldD, newD) {
   catch (e) { console.log("atributos indisponiveis:", e.message); }
   tpl = tpl.replace("const ATTRS = __ATTRS__;", "const ATTRS = " + JSON.stringify(ATTRS) + ";");
 
-  // guerra: opcional. Se war.json nao existe, a aba some (nao quebra o build semanal).
+  // guerra: so aparece quando a guild esta em guerra. Pra religar, troque GUERRA_ATIVA
+  // pra true e rode o build — o war.json continua no repo, so nao e injetado.
+  // (se o arquivo nao existir, a aba some do mesmo jeito e o build nao quebra)
+  const GUERRA_ATIVA = false;
   let war = { meta: null, contas: [] };
-  try { war = JSON.parse(fs.readFileSync(HERE + "/war.json", "utf8")); } catch (_) {}
+  if (GUERRA_ATIVA) { try { war = JSON.parse(fs.readFileSync(HERE + "/war.json", "utf8")); } catch (_) {} }
+  console.log("guerra:", GUERRA_ATIVA ? `${war.contas.length} contas` : "desligada (aba oculta)");
   tpl = tpl.replace("const WAR = __WAR__;", "const WAR = " + JSON.stringify(war) + ";");
   tpl = tpl.replace("const SPELLS = __SPELLS__;", "const SPELLS = " + spellsIife + ";");
   tpl = tpl.replace("__COUNT__", data.length);

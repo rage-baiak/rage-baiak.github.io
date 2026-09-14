@@ -185,9 +185,21 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 /* infobox: sprite | stats | resistências, igual ao TibiaWiki */
 .infobox{display:grid;grid-template-columns:auto minmax(150px,1fr) minmax(318px,auto);gap:16px;align-items:start;
   padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--line2);margin-bottom:8px}
-.mspr{--s:64px;width:var(--s);height:var(--s);flex:none;image-rendering:pixelated;background-repeat:no-repeat;
-  background-size:calc(var(--s)*9) calc(var(--s)*4);background-position:0 calc(var(--s)*-2)}
-.mspr-sm{--s:44px}
+.mspr{--s:96px;--fw:64;--fh:64;--nf:9;--x0:1;
+  --k:calc(var(--s)/var(--fh));                          /* escala pelo quadro nativo */
+  width:calc(var(--fw)*var(--k));height:var(--s);flex:none;image-rendering:pixelated;
+  background-repeat:no-repeat;
+  background-size:calc(var(--fw)*var(--nf)*var(--k)) calc(var(--fh)*4*var(--k));
+  background-position-y:calc(var(--fh)*var(--k)*-2);     /* direcao 2 = de frente */
+  background-position-x:calc(var(--fw)*var(--k)*var(--x0)*-1)}
+.mspr-sm{--s:64px}
+.mspr-off{background:none;width:var(--s)}
+@keyframes andar{to{background-position-x:calc(var(--fw)*var(--k)*var(--nf)*-1)}}
+.anim-2{animation:andar .6s steps(2) infinite}
+.anim-3{animation:andar .9s steps(3) infinite}
+.anim-4{animation:andar 1.2s steps(4) infinite}
+.anim-8{animation:andar 2.4s steps(8) infinite}
+@media(prefers-reduced-motion:reduce){.mspr{animation:none}}
 .mspr-off{background:none}
 .infobox .stats{display:grid;grid-template-columns:repeat(2,minmax(96px,1fr));gap:4px 16px;align-content:start}
 .resbox{min-width:0}
@@ -403,6 +415,7 @@ const M = __DATA__;
 const CHANGES = __CHANGES__;
 const HUNTS = __HUNTS__;
 const EXPED = __EXPED__;
+const OUTFIT = __OUTFIT__;
 const CHARMS = __CHARMS__;
 const EQUIP = __EQUIP__;
 const ITEMID = __ITEMID__;
@@ -506,10 +519,20 @@ const ELORD=["physical","earth","fire","death","energy","holy","ice"];  // ordem
 const ELICO={"physical": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAABS2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxMzggNzkuMTU5ODI0LCAyMDE2LzA5LzE0LTAxOjA5OjAxICAgICAgICAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIi8+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJyIj8+IEmuOgAAAKFJREFUGJVdjbENhDAQBMfoM0pwCb7YiAAqoADX4AIoggLInbkAKqAGWqAEx/fBy/9vRjqtbnW3i6pSxzmnzjlNKTXaAYiIioiu6wrAPM+NdiKix3E0Zoyx0RfAeZ6Nue87lWVZPkc5Z/6JMWKtZZqmX1IIoamqe23oeGCt/T5UjPeeUoqO4wjAfd+EEADYto2+743x3gNQStFn6nVdZhgG3kmORkB769ekAAAAAElFTkSuQmCC", "earth": "data:image/gif;base64,R0lGODlhCQAJAMIGAB8zITR2PjaoRjzUUqj/te3/8P///////yH5BAEKAAcALAAAAAAJAAkAAAMdeHqwDqG9IOIbREgWSBkWI2CDpgDjUG7o6jDAlgAAOw==", "fire": "data:image/gif;base64,R0lGODlhCQAJAMIGAD0bH64QDdogBP2LAP7NC//fXf///////yH5BAEKAAcALAAAAAAJAAkAAAMheAcB+ks0yIYELpLRWi1WIGDCUGzCCJTFaTnrgGYLhikJADs=", "death": "data:image/gif;base64,R0lGODlhCQAJAKUlAAICAgQEBAYGBgkJCQoKCgsLCw4ODg8PDxERERQUFBkZGSAgICEhISIiIiQkJCkpKSwsLDAwMDg4ODs7O0ZGRlhYWGRkZGhoaHd3d319fX5+fX5+foaGhpCQkKSkpKmpqbe3t7m5ucXFxdLS0tvb2////////////////////////////////////////////////////////////////////////////////////////////////////////////yH5BAEKAD8ALAAAAAAJAAkAAAY+wJ/wRyAEhr/BwAMaHZMhjmRTsQQGIlLDMWE8CoMLZRFRJATJBSRBGAgAmOSAcAB0fmjh4PMzbJA/CBlJGkEAOw==", "energy": "data:image/gif;base64,R0lGODlhCQAJAMIHAEMVRpoyoMpwz85+081/0vGt9f7o/////yH5BAEKAAcALAAAAAAJAAkAAAMjWHCgEM+ANl2RTZ0RKVsAUXCAYAWXEhiGIjkVgAlPAQ0QkAAAOw==", "holy": "data:image/gif;base64,R0lGODlhCQAJAIQRADsbBLNRGed1Heh1HOyKEemPHO2SHOuVJfKZL/KfF/S3Yv3JM/fGef3YaP7xuv71y//1zf///////////////////////////////////////////////////////////yH5BAEKAB8ALAAAAAAJAAkAAAUq4CcCpGgCT7MAJwQEQMICDimQA8kEQh8YJISNVJgRXgAFa3Q43EyjkigEADs=", "ice": "data:image/gif;base64,R0lGODlhCQAJAOMIABwcHADI2GT//3///4D//5z//63//778/P///////////////////////////////yH5BAEKAA8ALAAAAAAJAAkAAAQg8MkHpgQ44EoJGIB3hYfHBUKBGEMwEoZ5eaBIZZtFWREAOw=="};
 // sprite do monstro: spritesheet 9 frames x 4 direcoes de 64px.
 // frame 0 (parado), direcao 2 (sul) = o bicho de frente.
+// Sprite do monstro, animado. O spritesheet e frames x 4 direcoes; a direcao 2 (sul)
+// e o bicho de frente. A animacao de andar vai de walkStart ate o ultimo frame.
+// frames/walkStart/tamanho variam por outfit — por isso vem do OUTFIT, nao chutado.
 function monSpr(lt,sm){
   const cls = "mspr"+(sm?" mspr-sm":"");
   if(!lt) return `<div class="${cls} mspr-off"></div>`;
-  return `<div class="${cls}" style="background-image:url(https://baiakidle.com/api/things/outfit/${lt}.png)"></div>`;
+  const o = OUTFIT[lt] || [1,0,64,64];
+  const [nf,ws,fw,fh] = o;
+  const passos = Math.max(0, nf-ws);
+  const url = `https://baiakidle.com/api/things/outfit/${lt}.png`;
+  const st = `--fw:${fw};--fh:${fh};--nf:${nf};--x0:${ws};background-image:url(${url})`;
+  // 1 frame util = nao ha o que animar
+  if(passos<2) return `<div class="${cls}" style="${st}"></div>`;
+  return `<div class="${cls} anim-${passos}" style="${st}"></div>`;
 }
 function resGrid(r){
   // sem dado nenhum != neutro em tudo — nao inventar 100%
