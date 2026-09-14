@@ -122,7 +122,8 @@ async function fetchOutfits(lookTypes) {
         if (!r.ok) return;
         const j = await r.json();
         // [frames, walkStart, frameW, frameH] — direcoes sao sempre 4
-        out[lt] = [j.frames || 1, j.walkStart || 0, j.frameW || 64, j.frameH || 64];
+        // [frames, walkStart, frameW, frameH, temMascara]
+        out[lt] = [j.frames || 1, j.walkStart || 0, j.frameW || 64, j.frameH || 64, j.mask ? 1 : 0];
       } catch (_) { /* outfit sem meta fica estatico */ }
     }));
   }
@@ -448,6 +449,7 @@ function diff(oldD, newD) {
       hp: mul(m.hp || 0, cat, "hp"),
       exp: mul(m.exp || 0, cat, "exp"),
       arm: m.armor || 0, sp: m.speed || 0, lt: m.lookType || 0,
+      oc: m.outfit ? [m.outfit.head|0, m.outfit.body|0, m.outfit.legs|0, m.outfit.feet|0] : null,
       dm: m.dmg || null, r: m.resist || null,
       a: (m.abilities || []).map(x => ({
         el: x.element, mn: x.min, mx: x.max, ch: x.chance,
@@ -475,6 +477,7 @@ function diff(oldD, newD) {
       n: titleCase(key), boss: 1, raid: 1,
       hp: mul(m.hp || 0, "boss", "hp"), exp: 0,
       arm: m.armor || 0, sp: m.speed || 0, lt: m.lookType || 0,
+      oc: m.outfit ? [m.outfit.head|0, m.outfit.body|0, m.outfit.legs|0, m.outfit.feet|0] : null,
       dm: m.dmg || null, r: m.resist || null,
       a: (m.abilities || []).map(x => ({
         el: x.element, mn: x.min, mx: x.max, ch: x.chance,

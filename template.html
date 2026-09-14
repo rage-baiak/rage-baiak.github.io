@@ -496,7 +496,7 @@ function monStats(m){
   if(m.sp) st.push(`Vel <b>${m.sp}</b>`);
   if(m.dm) st.push(`Dano <b>${m.dm[0]}–${m.dm[1]}</b>`);
   h+=`<div class="infobox">`
-    +monSpr(m.lt)
+    +monSpr(m.lt,false,m.oc)
     +`<div class="stats">${st.map(x=>`<span>${x}</span>`).join("")}</div>`
     +`<div class="resbox"><div class="rlbl reshd">dano que recebe <span class="hint">· 100% = normal</span></div>`
     +resGrid(m.r)+`</div></div>`;
@@ -545,6 +545,86 @@ function dmgGrid(dmg){
     +`<img src="${ELICO[d.el]}" alt="${ELPT[d.el]||d.el}" width="11" height="11"></span>`
     +`<b>${d.pct}%</b></span>`).join("")+`</div>`;
 }
+// ---- Colorização de outfit ----
+// Sprites de humanoide vêm com as áreas coloríveis em branco e uma máscara ao lado
+// (outfit/{id}_mask.png) marcando as regiões: amarelo=cabeça, vermelho=corpo,
+// verde=pernas, azul=pés. O jogo multiplica o pixel base pela cor da paleta. Sem isso a
+// Amazon fica de roupa branca. Só 67 dos 319 outfits têm máscara; o resto já vem pronto.
+const M1 = 19, SF = 7;
+function paleta(e){                       // índice da paleta do Tibia -> [r,g,b]
+  let t = e; if(t >= M1*SF || t < 0) t = 0;
+  let a = 0, n = 0, o = 0;
+  if(t % M1 !== 0){
+    a = t % M1 / 18; n = 1; o = 1;
+    switch(Math.floor(t / M1)){
+      case 0: n=.25; o=1;    break;  case 1: n=.25; o=.75; break;
+      case 2: n=.5;  o=.75;  break;  case 3: n=.667; o=.75; break;
+      case 4: n=1;   o=1;    break;  case 5: n=1;   o=.75; break;
+      case 6: n=1;   o=.5;   break;
+    }
+  } else { a = 0; n = 0; o = 1 - t/M1/SF; }
+  if(o === 0) return [0,0,0];
+  if(n === 0){ const c = Math.floor(o*255); return [c,c,c]; }
+  let i=0, s=0, l=0;
+  if(a < 1/6){ i=o; l=o*(1-n); s=l+(o-l)*6*a; }
+  else if(a < 2/6){ s=o; l=o*(1-n); i=s-(o-l)*(6*a-1); }
+  else if(a < 3/6){ s=o; i=o*(1-n); l=i+(o-i)*(6*a-2); }
+  else if(a < 4/6){ l=o; i=o*(1-n); s=l-(o-i)*(6*a-3); }
+  else if(a < 5/6){ l=o; s=o*(1-n); i=s+(o-s)*(6*a-4); }
+  else { i=o; s=o*(1-n); l=i-(o-s)*(6*a-5); }
+  return [Math.floor(i*255), Math.floor(s*255), Math.floor(l*255)];
+}
+
+const corCache = new Map();
+const carrega = src => new Promise((ok,err)=>{
+  const im = new Image(); im.crossOrigin = "anonymous";
+  im.onload = ()=>ok(im); im.onerror = err; im.src = src;
+});
+
+async function spriteColorido(lt, oc){
+  const chave = lt+":"+oc.join(",");
+  if(corCache.has(chave)) return corCache.get(chave);
+  const pr = (async ()=>{
+    const base = `https://baiakidle.com/api/things/outfit/${lt}.png`;
+    const [img, msk] = await Promise.all([carrega(base), carrega(`https://baiakidle.com/api/things/outfit/${lt}_mask.png`)]);
+    const cv = document.createElement("canvas");
+    cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+    const cx = cv.getContext("2d", {willReadFrequently:true});
+    cx.drawImage(img,0,0);
+    const dst = cx.getImageData(0,0,cv.width,cv.height);
+    const cv2 = document.createElement("canvas");
+    cv2.width = cv.width; cv2.height = cv.height;
+    const cx2 = cv2.getContext("2d", {willReadFrequently:true});
+    cx2.drawImage(msk,0,0);
+    const src = cx2.getImageData(0,0,cv.width,cv.height);
+    const [hd,bd,lg,ft] = oc.map(paleta);
+    const f = dst.data, g = src.data;
+    for(let b=0;b<f.length;b+=4){
+      if((g[b+3]||0) === 0) continue;
+      const r=g[b]||0, v=g[b+1]||0, z=g[b+2]||0;
+      let C = null;
+      if(r>0 && v>0 && z===0) C = hd;         // amarelo
+      else if(r>0 && v===0 && z===0) C = bd;  // vermelho
+      else if(v>0 && r===0 && z===0) C = lg;  // verde
+      else if(z>0 && r===0 && v===0) C = ft;  // azul
+      if(C){ f[b]=f[b]*C[0]/255; f[b+1]=f[b+1]*C[1]/255; f[b+2]=f[b+2]*C[2]/255; }
+    }
+    cx.putImageData(dst,0,0);
+    return cv.toDataURL("image/png");
+  })().catch(()=>null);
+  corCache.set(chave, pr);
+  return pr;
+}
+
+// troca o fundo dos sprites que precisam de cor; roda depois de cada render
+function pintaSprites(){
+  for(const el of document.querySelectorAll(".mspr[data-oc]")){
+    const lt = el.dataset.lt, oc = el.dataset.oc.split(",").map(Number);
+    el.removeAttribute("data-oc");                       // não repete
+    spriteColorido(lt, oc).then(url=>{ if(url) el.style.backgroundImage = `url(${url})`; });
+  }
+}
+
 // ---- Minor charms ----
 // Os major têm critério objetivo: o dano do elemento. Os minor não — cada um serve a um
 // objetivo diferente (dano, loot, defesa), então o critério aqui é ADEQUAÇÃO AO BICHO,
@@ -637,17 +717,19 @@ function atribui(mons, cands, valor){
   return out.map((j,i) => ({ c: cands[j], v: valor(mons[i], cands[j], i) }));
 }
 
-function monSpr(lt,sm){
+function monSpr(lt,sm,oc){
   const cls = "mspr"+(sm?" mspr-sm":"");
   if(!lt) return `<div class="${cls} mspr-off"></div>`;
-  const o = OUTFIT[lt] || [1,0,64,64];
-  const [nf,ws,fw,fh] = o;
+  const o = OUTFIT[lt] || [1,0,64,64,0];
+  const [nf,ws,fw,fh,mask] = o;
+  // humanoide com máscara vem em branco: marca pra colorir depois do render
+  const dc = (mask && oc) ? ` data-lt="${lt}" data-oc="${oc.join(",")}"` : "";
   const passos = Math.max(0, nf-ws);
   const url = `https://baiakidle.com/api/things/outfit/${lt}.png`;
   const st = `--fw:${fw};--fh:${fh};--nf:${nf};--x0:${ws};background-image:url(${url})`;
   // 1 frame util = nao ha o que animar
-  if(passos<2) return `<div class="${cls}" style="${st}"></div>`;
-  return `<div class="${cls} anim-${passos}" style="${st}"></div>`;
+  if(passos<2) return `<div class="${cls}" style="${st}"${dc}></div>`;
+  return `<div class="${cls} anim-${passos}" style="${st}"${dc}></div>`;
 }
 function resGrid(r){
   // sem dado nenhum != neutro em tudo — nao inventar 100%
@@ -709,7 +791,7 @@ function huntMon(name, isBoss, atrib){
         +(atrib.mc?`<span class="charmbig minor">🔮 ${esc(atrib.mc.n)}<i>minor</i></span>`:"")
       : "";
   return `<div class="hmon${isBoss?" boss":""}">`
-    +monSpr(m.lt,true)
+    +monSpr(m.lt,true,m.oc)
     +`<div class="hmon-body"><div class="hmon-h">`
     +`<span class="hmon-lead"><span class="mlink" data-mon="${esc(m.n)}">${esc(m.n)}</span>${isBoss?'<span class="bosstag">👑 boss</span>':""}</span>`
     +`<span class="hmon-hp">HP ${m.hp.toLocaleString("pt-BR")}</span></div>`
@@ -1120,6 +1202,7 @@ function warCard(a,qq,open){
     +`<div class="body">${chars}</div></details>`;
 }
 function render(){
+  setTimeout(pintaSprites,0);   // sprites de humanoide precisam de cor
   if(mode==="forja"){ list.innerHTML=forjaHTML(); count.textContent=""; return; }
   if(mode==="war"){
     const qw=norm(q.value.trim());
