@@ -534,6 +534,39 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const CHANGES = __CHANGES__;", "const CHANGES = " + JSON.stringify(changes) + ";");
   tpl = tpl.replace("const HUNTS = __HUNTS__;", "const HUNTS = " + JSON.stringify(hunts) + ";");
 
+
+  // ---- Reward bags ----
+  // O jogo traz a tabela de conteudo de 12 caixas no proprio cliente (ao contrario do
+  // addon casket, que e sorteado so no servidor). A glooth bag usa faixas 0..10000 em
+  // vez de chance, entao converte pra % pra ficar na mesma unidade das outras.
+  let BAGS = [];
+  try {
+    // ancora no conteudo: a tabela comeca com a "random bis bag"
+    const tm = /\{"random bis bag":/.exec(src);
+    if (!tm) throw new Error("tabela de bags nao encontrada");
+    const tbl = (0, eval)("(" + matchBalanced(src, tm.index) + ")");
+    for (const [nome, v] of Object.entries(tbl)) {
+      BAGS.push({
+        n: nome,
+        it: (v.items || []).map(i => ({ n: i.name, c: i.chance ?? null })),
+        tier: v.class4Tier || null,
+      });
+    }
+    // glooth bag: array de faixas { name, count, from, to }
+    const gm = /(\w+)=\[\{name:"glooth spear",count:\d+,from:\d+,to:\d+\}/.exec(src);
+    if (gm) {
+      const arr = (0, eval)("(" + matchBalanced(src, src.indexOf("[", gm.index)) + ")");
+      const teto = Math.max(...arr.map(x => x.to)) + 1;
+      BAGS.push({
+        n: "glooth bag",
+        it: arr.map(x => ({ n: x.name, c: +((x.to - x.from + 1) / teto * 100).toFixed(2) })),
+        tier: null,
+      });
+    }
+    BAGS.sort((a, b) => b.it.length - a.it.length);
+    console.log("reward bags:", BAGS.length, "|", BAGS.map(b => `${b.n}(${b.it.length})`).join(" "));
+  } catch (e) { console.log("bags indisponiveis:", e.message); }
+
   // ---- Outfits do addon casket ----
   // O pool do casket e sorteado no servidor e nao existe no bundle. O que da pra fazer
   // e eliminar por evidencia: so entra outfit que TEM addon de verdade (o outfitmeta diz,
@@ -582,6 +615,7 @@ function diff(oldD, newD) {
   console.log("outfits:", Object.keys(OUTFIT).length + "/" + lookTypes.length, "com metadados de animacao");
   tpl = tpl.replace("const OUTFIT = __OUTFIT__;", "const OUTFIT = " + JSON.stringify(OUTFIT) + ";");
   tpl = tpl.replace("const OUTFITS = __OUTFITS__;", "const OUTFITS = " + JSON.stringify(OUTFITS) + ";");
+  tpl = tpl.replace("const BAGS = __BAGS__;", "const BAGS = " + JSON.stringify(BAGS) + ";");
   tpl = tpl.replace("const EXPED = __EXPED__;", "const EXPED = " + JSON.stringify(exped) + ";");
   tpl = tpl.replace("const CHARMS = __CHARMS__;", "const CHARMS = " + JSON.stringify(CHARMS) + ";");
   tpl = tpl.replace("const EQUIP = __EQUIP__;", "const EQUIP = " + JSON.stringify(equip) + ";");
