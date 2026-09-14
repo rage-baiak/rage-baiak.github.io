@@ -272,6 +272,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hmon-cols{display:flex;flex-wrap:wrap;gap:10px 26px;margin:7px 0 2px}
 .hmon-col{min-width:104px}
 .hmon-col .rlbl{margin:0 0 5px}
+.charmwhy{font-size:12px;color:var(--muted);margin-left:8px}
 .hmon .resgrid{grid-template-columns:1fr;gap:4px;margin:0;max-width:130px}
 .reschip.dm b{color:var(--muted)}
 .reschip.dm{background:var(--card)}
@@ -536,6 +537,48 @@ function dmgGrid(dmg){
     +`<img src="${ELICO[d.el]}" alt="${ELPT[d.el]||d.el}" width="11" height="11"></span>`
     +`<b>${d.pct}%</b></span>`).join("")+`</div>`;
 }
+// ---- Distribuição de charms numa hunt ----
+// No jogo cada charm ocupa um slot e aponta pra UM monstro, então dois bichos da mesma
+// hunt não podem levar o mesmo charm. Escolher o melhor pra cada um isoladamente não
+// serve: se três bichos são fracos a fogo, só um fica com o Enflame.
+// Resolve o ótimo exato por programação dinâmica sobre o conjunto de charms já usados
+// (<=7 bichos x 10 charms = 1024 estados, instantâneo).
+const CHARM_PURO_BONUS = 0.01;   // desempate: dano puro não depende de resistência
+
+function charmValor(m, c){
+  if(!c.el) return 100 + CHARM_PURO_BONUS;      // dano puro ignora a resistência
+  return 100 - Number((m.r||{})[c.el] || 0);    // dano recebido daquele elemento
+}
+
+function distribuiCharms(mons){
+  const cands = (CHARMS.major || []);
+  const n = mons.length, m = cands.length;
+  if(!n || !m) return [];
+  if(n > m) return mons.map(x => null);          // mais bichos que charms: não resolve
+  const N = 1 << m, NEG = -1e9;
+  const dp = new Float64Array((n+1)*N).fill(NEG);
+  const esc = new Int8Array((n+1)*N).fill(-1);
+  dp[0] = 0;
+  for(let i=0;i<n;i++){
+    for(let mask=0;mask<N;mask++){
+      const cur = dp[i*N+mask];
+      if(cur === NEG) continue;
+      for(let j=0;j<m;j++){
+        if(mask & (1<<j)) continue;
+        const nm = mask | (1<<j);
+        const v = cur + charmValor(mons[i], cands[j]);
+        if(v > dp[(i+1)*N+nm]){ dp[(i+1)*N+nm] = v; esc[(i+1)*N+nm] = j; }
+      }
+    }
+  }
+  let best = NEG, bmask = 0;
+  for(let mask=0;mask<N;mask++) if(dp[n*N+mask] > best){ best = dp[n*N+mask]; bmask = mask; }
+  const out = new Array(n);
+  let mask = bmask;
+  for(let i=n;i>0;i--){ const j = esc[i*N+mask]; out[i-1] = j; mask ^= (1<<j); }
+  return out.map((j,i) => ({ c: cands[j], v: charmValor(mons[i], cands[j]) }));
+}
+
 function monSpr(lt,sm){
   const cls = "mspr"+(sm?" mspr-sm":"");
   if(!lt) return `<div class="${cls} mspr-off"></div>`;
@@ -582,7 +625,7 @@ function monCharms(m,isBoss){
   const list=weak.map(([el])=>charmFor(el));
   return list.length ? list : [CHARMS.pure];
 }
-function huntMon(name, isBoss){
+function huntMon(name, isBoss, atrib){
   const m=byName[norm(name)];
   if(!m) return `<div class="hmon"><div class="hmon-h"><span class="mlink" data-mon="${esc(name)}">${esc(name)}</span></div></div>`;
   const dot=el=>`<i class="edot e-${el}"></i>`;
@@ -596,8 +639,16 @@ function huntMon(name, isBoss){
   const dl = dmg.length
     ? dmg.map(d=>`<span class="dchip">${dot(d.el)}${ELPT[d.el]||d.el} <b>${d.pct}%</b></span>`).join("")
     : `<span class="hnone">só corpo a corpo</span>`;
-  const ch = monCharms(m,isBoss).map((c,i)=>
-    `<span class="charmchip${isBoss?" boss":(i===0?" top":"")}">${i&&!isBoss?`<em>${i+1}º</em> `:""}${esc(c)}</span>`).join("");
+  // boss tem regra propria (crit); os outros recebem o charm que a distribuicao decidiu
+  const ch = isBoss
+    ? CHARMS.boss.map(c=>`<span class="charmchip boss">${esc(c)}</span>`).join("")
+    : atrib
+      ? `<span class="charmchip top">${esc(atrib.c.n)}</span>`
+        +(atrib.c.el
+          ? `<span class="charmwhy">${ELPT[atrib.c.el]||atrib.c.el} · ${Math.round(atrib.v)}% de dano</span>`
+          : `<span class="charmwhy">dano puro · não depende da resistência</span>`)
+      : monCharms(m,isBoss).map((c,i)=>
+          `<span class="charmchip${i===0?" top":""}">${i?`<em>${i+1}º</em> `:""}${esc(c)}</span>`).join("");
   return `<div class="hmon${isBoss?" boss":""}">`
     +monSpr(m.lt,true)
     +`<div class="hmon-body"><div class="hmon-h">`
@@ -642,8 +693,12 @@ function expedCard(e,qq,open){
   // ficha de cada bicho, uma vez só
   const vistos=new Set(), unicos=[];
   for(const st of e.stages) for(const n of st.mons){ if(vistos.has(n))continue; vistos.add(n); unicos.push(n); }
+  const regsE = unicos.map(n=>byName[norm(n)]).filter(Boolean);
+  const distE = distribuiCharms(regsE);
+  const porNomeE = {};
+  regsE.forEach((m,i)=>{ if(distE[i]) porNomeE[norm(m.n)] = distE[i]; });
   const stages = `<div class="expstage"><div class="expstage-h">Bichos (${unicos.length})</div>`
-    +`<div class="hmons2">${unicos.map(n=>huntMon(n,false)).join("")}</div></div>`;
+    +`<div class="hmons2">${unicos.map(n=>huntMon(n,false,porNomeE[norm(n)])).join("")}</div></div>`;
   return `<details${open}><summary><span class="name">${hl(e.name,qq)}</span>`
     +`<span class="meta">lv ${e.lv}+ · 👑 ${esc(e.boss||"?")} · <span class="chip">${fmtBig(e.xp)}</span> xp</span></summary>`
     +`<div class="body hbody"><div class="rec">`
@@ -670,26 +725,29 @@ function huntCard(h,qq,open){
   const def = h.def.length
     ? h.def.map(d=>`<span class="hchip def">${dot(d.el)}${ELPT[d.el]||d.el} <b>${d.pct}%</b></span>`).join("")
     : `<span class="hnote">sem dado</span>`;
-  const primaries=[...new Set(h.mons.filter(n=>n!==h.boss)
-    .map(n=>{const m=byName[norm(n)]; return m?monCharms(m,false)[0]:null;})
-    .filter(c=>c&&c!==CHARMS.pure))];
-  const charm = primaries.length
-    ? primaries.map(c=>`<span class="hchip charm">🔮 ${esc(c)}</span>`).join("")
-    : `<span class="hnote">bichos sem fraqueza</span>`;
+  // distribui os charms entre os bichos (o boss fica fora: leva os de crit)
+  const normais = h.mons.filter(n=>n!==h.boss);
+  const regs = normais.map(n=>byName[norm(n)]).filter(Boolean);
+  const dist = distribuiCharms(regs);
+  const porNome = {};
+  regs.forEach((m,i)=>{ if(dist[i]) porNome[norm(m.n)] = dist[i]; });
+  const charm = dist.length
+    ? dist.map((d,i)=>d?`<span class="hchip charm" title="${esc(regs[i].n)}">🔮 ${esc(d.c.n)}</span>`:"").join("")
+    : `<span class="hnote">sem bicho pra distribuir</span>`;
   const bossRow = h.boss
     ? `<div class="recrow"><span class="rlbl ch">👑 boss</span>`
       +`<span class="mlink bossname" data-mon="${esc(h.boss)}">${esc(h.boss)}</span>`
       +CHARMS.boss.map(c=>`<span class="hchip charm boss">🔮 ${esc(c)}</span>`).join("")+`</div>`
     : "";
-  const mons = h.mons.map(n=>huntMon(n, n===h.boss)).join("");
+  const mons = h.mons.map(n=>huntMon(n, n===h.boss, porNome[norm(n)])).join("");
   return `<details${open}><summary><span class="name">${hl(h.name,qq)}</span>`
     +`<span class="meta">lv ${h.lv}+ · <span class="chip">${h.mons.length}</span> bichos</span></summary>`
     +`<div class="body hbody"><div class="rec">`
     +`<div class="recrow"><span class="rlbl wk">⚔ arma / imbu</span>${arma}</div>`
     +`<div class="recrow"><span class="rlbl rs">🛡 proteção</span>${def}</div>`
-    +`<div class="recrow"><span class="rlbl ch">🔮 charm</span>${charm}</div>`
+    +`<div class="recrow"><span class="rlbl ch">🔮 charms</span>${charm}<span class="hnote">um por bicho, sem repetir</span></div>`
     +bossRow
-    +`<div class="recnote">Cada bicho tem os charms em ordem de indicação (o 1º é o melhor; se já usou noutro bicho ou a party não tem a voc, desce). O boss leva só ${esc(CHARMS.boss.join(" + "))}.</div></div>`
+    +`<div class="recnote">Cada charm ocupa um slot e vai pra um monstro só, então dois bichos da hunt não podem levar o mesmo. A distribuição abaixo é a que rende mais no conjunto — não é o melhor de cada um isolado. O boss leva ${esc(CHARMS.boss.join(" + "))}.</div></div>`
     +`<div class="hmons2"><div class="lootlbl" style="margin-top:0;border:0;padding-top:0">Monstros</div>${mons}</div></div></details>`;
 }
 

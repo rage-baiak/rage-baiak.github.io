@@ -273,11 +273,26 @@ function diff(oldD, newD) {
   const opm = /key:"overpower",name:"([^"]+)"/.exec(src);
   const sbm = /key:"savage[_a-z]*",name:"([^"]+)"/.exec(src);
   const fhm = /key:"fatal[_a-z]*",name:"([^"]+)"/.exec(src);
+  // Tabela completa de charms, pra saber quem e major/ofensivo e qual elemento leva.
+  // Cada charm ocupa UM slot e aponta pra UM monstro (slots[charmId].monsterKey no jogo),
+  // entao numa hunt os bichos nao podem repetir charm — e o que o wiki resolve.
+  let MAJOR = [];
+  try {
+    const i = src.search(/\[\{id:0,key:"wound"/);
+    let d = 0, j = i;
+    for (; j < src.length; j++) { if (src[j] === "[") d++; else if (src[j] === "]") { d--; if (!d) { j++; break; } } }
+    MAJOR = (0, eval)("(" + src.slice(i, j) + ")")
+      .filter(c => c.category === "major" && c.kind === "offensive")
+      .map(c => ({ k: c.key, n: c.name, el: c.element || null, ch: (c.chance || [])[1] || 0, d: c.desc || "" }));
+  } catch (e) { console.log("tabela de charms indisponivel:", e.message); }
+
   const CHARMS = {
     elem: elemCharm,
     pure: opm ? opm[1] : "Overpower",
     boss: [sbm ? sbm[1] : "Savage Blow", fhm ? fhm[1] : "Fatal Hold"],  // crit no boss da hunt
+    major: MAJOR,                                                        // candidatos da distribuicao
   };
+  console.log("charms major ofensivos:", MAJOR.map(c => c.n + (c.el ? "" : "*")).join(", "), "(* = dano puro)");
   console.log("charms:", Object.keys(elemCharm).length, "elementais +", CHARMS.pure, "+ boss", CHARMS.boss.join("/"));
 
   // rate do servidor (config publica de admin): hp/exp/atk/def por categoria, igual pra todos
