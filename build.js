@@ -334,6 +334,68 @@ function diff(oldD, newD) {
   }
   hunts.sort((a, b) => a.lv - b.lv);
 
+  // ---- expedicoes (raid de ate 30 jogadores, 3 stages + boss) ----
+  // Ancora ESTRUTURAL: array de objetos com `stages` e `bossBaseHp`. Nomes minificados
+  // mudam a cada deploy do jogo, entao nunca ancorar em identificador.
+  let expedRaw = null;
+  for (let i = src.indexOf('[{id:"'); i >= 0; i = src.indexOf('[{id:"', i + 1)) {
+    try {
+      const arr = (0, eval)("(" + matchBalanced(src, i) + ")");
+      if (Array.isArray(arr) && arr[0] && arr[0].bossBaseHp != null && Array.isArray(arr[0].stages)) { expedRaw = arr; break; }
+    } catch (e) { /* segue procurando */ }
+  }
+  const exped = [];
+  for (const e of expedRaw || []) {
+    // todos os bichos da expedicao, sem repetir, na ordem dos stages
+    const seen = new Set(), mons = [];
+    for (const st of e.stages || []) for (const k of st.monsters || []) {
+      if (seen.has(k)) continue; seen.add(k);
+      const m = It[k]; if (m) mons.push(m);
+    }
+    // ataque: elemento que os bichos menos resistem (mesma regra das hunts)
+    const off = ELS.map(el => {
+      let s = 0, c = 0;
+      for (const m of mons) if (m.resist && el in m.resist) { s += m.resist[el]; c++; }
+      return c ? { el, avg: s / c } : null;
+    }).filter(Boolean).sort((a, b) => a.avg - b.avg);
+    // defesa: elemento que os bichos mais causam
+    const th = {};
+    for (const m of mons) {
+      if (m.dmg) th.physical = (th.physical || 0) + (m.dmg[1] || 0);
+      for (const ab of (m.abilities || [])) {
+        if (!ab.element || ab.element === "healing") continue;
+        th[ab.element] = (th[ab.element] || 0) + (ab.chance || 0) * (((ab.min || 0) + (ab.max || 0)) / 2) / 100;
+      }
+    }
+    const defRaw = Object.entries(th).map(([el, v]) => ({ el, v })).filter(x => x.v > 0).sort((a, b) => b.v - a.v);
+    const defTot = defRaw.reduce((s, x) => s + x.v, 0);
+    const def = defRaw.map(x => ({ el: x.el, pct: defTot ? Math.round(x.v / defTot * 100) : 0 }))
+      .filter(x => x.pct > 0).slice(0, 5);
+    const bm = It[e.bossKey] || null;
+    exped.push({
+      id: e.id, name: e.name,
+      boss: e.bossName || (bm && bm.name) || null,
+      bossHp: bm ? bm.hp || 0 : 0,
+      bossArm: bm ? bm.armor || 0 : 0,
+      bossRes: bm ? bm.resist || null : null,
+      lv: e.minLevel || 0,
+      pmin: e.minPlayers || 0, pmax: e.maxPlayers || 0,
+      min: Math.round((e.timeLimitMs || 0) / 60000),
+      cap: e.levelCap || 0,
+      xp: e.expReward || 0,
+      stages: (e.stages || []).map(st => ({
+        n: st.stageNumber,
+        mons: (st.monsters || []).map(k => (It[k] || {}).name).filter(Boolean),
+      })),
+      mons: mons.map(m => m.name),
+      off: off.slice(0, 3).map(x => x.el),
+      ofw: off.length && off[0].avg < 0,
+      def,
+    });
+  }
+  exped.sort((a, b) => b.xp - a.xp);
+  console.log("expedicoes:", exped.length, exped.map(e => `${e.name}(${e.stages.length} stages)`).join(", "));
+
   // ---- data: aplica o rate por categoria (in-hunt = "monster", senao = "boss") ----
   const data = [];
   for (const [k, m] of Object.entries(It)) {
@@ -429,6 +491,7 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const M = __DATA__;", "const M = " + JSON.stringify(data) + ";");
   tpl = tpl.replace("const CHANGES = __CHANGES__;", "const CHANGES = " + JSON.stringify(changes) + ";");
   tpl = tpl.replace("const HUNTS = __HUNTS__;", "const HUNTS = " + JSON.stringify(hunts) + ";");
+  tpl = tpl.replace("const EXPED = __EXPED__;", "const EXPED = " + JSON.stringify(exped) + ";");
   tpl = tpl.replace("const CHARMS = __CHARMS__;", "const CHARMS = " + JSON.stringify(CHARMS) + ";");
   tpl = tpl.replace("const EQUIP = __EQUIP__;", "const EQUIP = " + JSON.stringify(equip) + ";");
   tpl = tpl.replace("const ITEMID = __ITEMID__;", "const ITEMID = " + JSON.stringify(ITEMID) + ";");

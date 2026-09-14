@@ -77,6 +77,8 @@ h1 .g{color:var(--accent)}
 .wrow .wlbl{color:var(--muted);display:inline-block;min-width:74px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
 .wchip{display:inline-block;border:1px solid var(--line);border-radius:7px;padding:1px 7px;margin:2px 3px 2px 0;font-size:12px}
 .wchip.weak{border-color:var(--rc);color:var(--rc);font-weight:700}
+.expstage{margin-top:14px}
+.expstage-h{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--bd);padding-bottom:5px;margin-bottom:9px}
 .wchip.zero{border-color:var(--accent);color:var(--accent)}
 .wchip b{font-variant-numeric:tabular-nums}
 
@@ -214,7 +216,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hchip.arma{color:var(--rc);border-color:color-mix(in srgb,var(--rc) 45%,transparent);background:color-mix(in srgb,var(--rc) 9%,transparent)}
 .hchip.def{color:var(--rr);border-color:color-mix(in srgb,var(--rr) 45%,transparent);background:color-mix(in srgb,var(--rr) 9%,transparent)}
 .hchip.charm{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
-.hchip b{font-weight:800;font-variant-numeric:tabular-nums}
+.hchip b{font-weight:800;font-variant-numeric:tabular-nums;margin-left:5px}
 .recrow .rlbl.ch{color:var(--accent)}
 .charmchip{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--accent);
   border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:7px;padding:2px 8px;white-space:nowrap;opacity:.72}
@@ -334,6 +336,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
       <button class="mode" id="mEquip" aria-pressed="false">Equip</button>
       <button class="mode" id="mItem" aria-pressed="false">Item</button>
       <button class="mode" id="mForja" aria-pressed="false">Forja</button>
+      <button class="mode" id="mExped" aria-pressed="false">🗺️ Expedição</button>
       <button class="mode" id="mWar" aria-pressed="false">⚔️ Guerra</button>
     </div>
   </div>
@@ -374,6 +377,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 const M = __DATA__;
 const CHANGES = __CHANGES__;
 const HUNTS = __HUNTS__;
+const EXPED = __EXPED__;
 const CHARMS = __CHARMS__;
 const EQUIP = __EQUIP__;
 const ITEMID = __ITEMID__;
@@ -425,7 +429,7 @@ const qty = mx => mx>1 ? "1–"+mx : "";
 
 let mode="mon";
 const q=document.getElementById("q"), list=document.getElementById("list"), count=document.getElementById("count");
-const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), mWar=document.getElementById("mWar"), legend=document.getElementById("legend");
+const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), mExped=document.getElementById("mExped"), mWar=document.getElementById("mWar"), legend=document.getElementById("legend");
 
 const ELPT={physical:"Físico",fire:"Fogo",ice:"Gelo",earth:"Terra",energy:"Energia",holy:"Sagrado",death:"Morte",healing:"Cura"};
 const byName={}; for(const m of M) byName[norm(m.n)]=m;
@@ -521,6 +525,58 @@ function huntMon(name, isBoss){
     +`<div class="hmon-r"><span class="rlbl wk">fraco a</span>${wk}</div>`
     +`<div class="hmon-r"><span class="rlbl rs">dano</span>${dl}</div>`
     +`<div class="hmon-r"><span class="rlbl ch">🔮 charm</span>${ch}</div></div>`;
+}
+// ---- Expedições: raid de até 30 jogadores, 3 stages + chefe ----
+function expedCard(e,qq,open){
+  const dot=el=>`<i class="edot e-${el}"></i>`;
+  const arma = e.off.length
+    ? e.off.map(el=>`<span class="hchip arma">${dot(el)}${ELPT[el]||el}</span>`).join("")
+      +`<span class="hnote">${e.ofw?"fraqueza real":"menos resistido"}</span>`
+    : `<span class="hnote">sem dado de resistência</span>`;
+  const def = e.def.length
+    ? e.def.map(d=>`<span class="hchip def">${dot(d.el)}${ELPT[d.el]||d.el} <b>${d.pct}%</b></span>`).join("")
+    : `<span class="hnote">sem dado</span>`;
+  // chefe: fraquezas e resistências próprias
+  const bw=[], br=[];
+  if(e.bossRes) for(const el in e.bossRes){const v=e.bossRes[el]; if(v<0)bw.push([el,v]); else if(v>0)br.push([el,v]);}
+  bw.sort((a,b)=>a[1]-b[1]); br.sort((a,b)=>b[1]-a[1]);
+  const bossChips = bw.map(([el,v])=>`<span class="rchip wk">${dot(el)}${ELPT[el]||el} +${Math.abs(v)}%</span>`).join("")
+    + br.map(([el,v])=>`<span class="rchip ${v>=100?"im":"rs"}">${dot(el)}${ELPT[el]||el} ${v>=100?"imune":"−"+v+"%"}</span>`).join("")
+    + (!bw.length&&!br.length?`<span class="hnone">dano normal em todos os elementos</span>`:"");
+  const bossRow = e.boss
+    ? `<div class="recrow"><span class="rlbl ch">👑 chefe</span>`
+      +`<span class="mlink bossname" data-mon="${esc(e.boss)}">${esc(e.boss)}</span>`
+      +`<span class="hchip">${fmtBig(e.bossHp)} hp</span>`
+      +(e.bossArm?`<span class="hchip">armor ${e.bossArm}</span>`:"")
+      +bossChips+`</div>`
+    : "";
+  // fases: só os nomes (vários mapas repetem o mesmo bicho em todas as fases)
+  const chips = ms => ms.map(n=>`<span class="hchip">${esc(n)}</span>`).join("");
+  const iguais = e.stages.length>1 && e.stages.every(st=>st.mons.join("|")===e.stages[0].mons.join("|"));
+  const fases = iguais
+    ? `<div class="recrow"><span class="rlbl">▸ todas as fases</span>${chips(e.stages[0].mons)}</div>`
+    : e.stages.map(st=>`<div class="recrow"><span class="rlbl">▸ fase ${st.n}</span>${chips(st.mons)}</div>`).join("");
+  // ficha de cada bicho, uma vez só
+  const vistos=new Set(), unicos=[];
+  for(const st of e.stages) for(const n of st.mons){ if(vistos.has(n))continue; vistos.add(n); unicos.push(n); }
+  const stages = `<div class="expstage"><div class="expstage-h">Bichos (${unicos.length})</div>`
+    +`<div class="hmons2">${unicos.map(n=>huntMon(n,false)).join("")}</div></div>`;
+  return `<details${open}><summary><span class="name">${hl(e.name,qq)}</span>`
+    +`<span class="meta">lv ${e.lv}+ · 👑 ${esc(e.boss||"?")} · <span class="chip">${fmtBig(e.xp)}</span> xp</span></summary>`
+    +`<div class="body hbody"><div class="rec">`
+    +`<div class="recrow"><span class="rlbl">📋 formato</span>`
+    +`<span class="hchip">${e.pmin}–${e.pmax} jogadores</span>`
+    +`<span class="hchip">${e.min} min</span>`
+    +`<span class="hchip">${e.stages.length} fases + chefe</span>`
+    +`<span class="hchip">escada até ${e.cap}</span></div>`
+    +fases
+    +`<div class="recrow"><span class="rlbl wk">⚔ arma / imbu</span>${arma}</div>`
+    +`<div class="recrow"><span class="rlbl rs">🛡 proteção</span>${def}</div>`
+    +bossRow
+    +`<div class="recnote">A expedição é uma corrida até o chefe: cada fase abre uma porta pra seguinte. `
+    +`Todo sobrevivente leva a experiência e um item sorteado no fim, e a sua escada neste mapa sobe um degrau (teto ${e.cap}). `
+    +`Os bichos daqui não dropam nada no caminho.</div></div>`
+    +stages+`</div></details>`;
 }
 function huntCard(h,qq,open){
   const dot=el=>`<i class="edot e-${el}"></i>`;
@@ -894,6 +950,11 @@ function render(){
     open = raw && res.length<=6 ? " open":"";
     cards = res.map(m=>()=>monCard(m,qq,open));
     noun = wantBoss ? (res.length===1?"boss":"bosses") : (res.length===1?"monstro":"monstros");
+  } else if(mode==="exped"){
+    const res = EXPED.filter(e=>!qq || norm(e.name).includes(qq) || norm(e.boss||"").includes(qq) || e.mons.some(x=>norm(x).includes(qq)));
+    open = raw && res.length<=4 ? " open":"";
+    cards = res.map(e=>()=>expedCard(e,qq,open));
+    noun = res.length===1?"expedição":"expedições";
   } else if(mode==="hunt"){
     const [,lo,hiv]=LVB[huntLv];
     const res = HUNTS.filter(h=>(h.lv>=lo&&h.lv<=hiv) && (!qq || norm(h.name).includes(qq) || h.mons.some(x=>norm(x).includes(qq))));
@@ -981,18 +1042,19 @@ for(const el of [stLvl,stMag,stDist,stMelee,stBonus]) el.addEventListener("input
 
 function setMode(m){
   mode=m; limit=CHUNK;
-  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
+  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   lvfilter.style.display = m==="hunt" ? "flex" : "none";
   slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
   spellstats.style.display = m==="magia" ? "flex" : "none";
   spellnote.style.display = m==="magia" ? "block" : "none";
-  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war") ? "none" : "flex";
+  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war"||m==="exped") ? "none" : "flex";
   q.style.display = m==="forja" ? "none" : "";
   q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
     : m==="magia" ? "Buscar magia (nome ou words: exori, exura…)…"
     : m==="equip" ? "Buscar equip (nome, voc: knight, sorc…)…"
     : m==="item" ? "Buscar item (ex: crystal coin, crossbow)…"
+    : m==="exped" ? "Buscar expedição (nome, chefe ou bicho)…"
     : m==="war" ? "Buscar conta ou personagem inimigo…"
     : m==="boss" ? "Buscar boss (ex: deathstrike, ferumbras)…"
     : "Buscar monstro (ex: dragon, demon)…";
@@ -1005,8 +1067,10 @@ mMagia.onclick=()=>setMode("magia");
 mEquip.onclick=()=>setMode("equip");
 mItem.onclick=()=>setMode("item");
 mForja.onclick=()=>setMode("forja");
+mExped.onclick=()=>setMode("exped");
 mWar.onclick=()=>setMode("war");
 if(!WAR||!WAR.meta||!WAR.contas.length) mWar.style.display="none";
+if(!EXPED||!EXPED.length) mExped.style.display="none";
 // links cruzados: monstro <-> item <-> hunt
 list.addEventListener("click",ev=>{
   const ml=ev.target.closest(".mlink"), il=ev.target.closest(".ilink"), hk=ev.target.closest(".hlink");
