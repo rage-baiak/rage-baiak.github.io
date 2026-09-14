@@ -185,8 +185,9 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 /* infobox: sprite | stats | resistências, igual ao TibiaWiki */
 .infobox{display:grid;grid-template-columns:auto minmax(150px,1fr) minmax(318px,auto);gap:16px;align-items:start;
   padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--line2);margin-bottom:8px}
-.mspr{width:64px;height:64px;flex:none;image-rendering:pixelated;
-  background-repeat:no-repeat;background-position:0 -128px}
+.mspr{--s:64px;width:var(--s);height:var(--s);flex:none;image-rendering:pixelated;background-repeat:no-repeat;
+  background-size:calc(var(--s)*9) calc(var(--s)*4);background-position:0 calc(var(--s)*-2)}
+.mspr-sm{--s:44px}
 .mspr-off{background:none}
 .infobox .stats{display:grid;grid-template-columns:repeat(2,minmax(96px,1fr));gap:4px 16px;align-content:start}
 .resbox{min-width:0}
@@ -254,7 +255,9 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hnote{font-size:11px;color:var(--muted);font-weight:500}
 .recnote{font-size:11px;color:var(--muted);font-weight:500;padding-top:2px}
 .hmons2{padding:10px 0 0;margin-top:8px;border-top:1px solid var(--line2)}
-.hmon{padding:9px 0;border-top:1px solid var(--line2)}
+.hmon{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:10px 0;border-top:1px solid var(--line2)}
+.hmon-body{min-width:0}
+.hmon .resgrid{margin:6px 0 2px;max-width:430px}
 .hmon:first-of-type{border-top:0;padding-top:4px}
 .hmon-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
 .hmon-h .mlink{font-weight:600;font-size:15px}
@@ -503,9 +506,10 @@ const ELORD=["physical","earth","fire","death","energy","holy","ice"];  // ordem
 const ELICO={"physical": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAJCAYAAADgkQYQAAABS2lUWHRYTUw6Y29tLmFkb2JlLnhtcAAAAAAAPD94cGFja2V0IGJlZ2luPSLvu78iIGlkPSJXNU0wTXBDZWhpSHpyZVN6TlRjemtjOWQiPz4KPHg6eG1wbWV0YSB4bWxuczp4PSJhZG9iZTpuczptZXRhLyIgeDp4bXB0az0iQWRvYmUgWE1QIENvcmUgNS42LWMxMzggNzkuMTU5ODI0LCAyMDE2LzA5LzE0LTAxOjA5OjAxICAgICAgICAiPgogPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4KICA8cmRmOkRlc2NyaXB0aW9uIHJkZjphYm91dD0iIi8+CiA8L3JkZjpSREY+CjwveDp4bXBtZXRhPgo8P3hwYWNrZXQgZW5kPSJyIj8+IEmuOgAAAKFJREFUGJVdjbENhDAQBMfoM0pwCb7YiAAqoADX4AIoggLInbkAKqAGWqAEx/fBy/9vRjqtbnW3i6pSxzmnzjlNKTXaAYiIioiu6wrAPM+NdiKix3E0Zoyx0RfAeZ6Nue87lWVZPkc5Z/6JMWKtZZqmX1IIoamqe23oeGCt/T5UjPeeUoqO4wjAfd+EEADYto2+743x3gNQStFn6nVdZhgG3kmORkB769ekAAAAAElFTkSuQmCC", "earth": "data:image/gif;base64,R0lGODlhCQAJAMIGAB8zITR2PjaoRjzUUqj/te3/8P///////yH5BAEKAAcALAAAAAAJAAkAAAMdeHqwDqG9IOIbREgWSBkWI2CDpgDjUG7o6jDAlgAAOw==", "fire": "data:image/gif;base64,R0lGODlhCQAJAMIGAD0bH64QDdogBP2LAP7NC//fXf///////yH5BAEKAAcALAAAAAAJAAkAAAMheAcB+ks0yIYELpLRWi1WIGDCUGzCCJTFaTnrgGYLhikJADs=", "death": "data:image/gif;base64,R0lGODlhCQAJAKUlAAICAgQEBAYGBgkJCQoKCgsLCw4ODg8PDxERERQUFBkZGSAgICEhISIiIiQkJCkpKSwsLDAwMDg4ODs7O0ZGRlhYWGRkZGhoaHd3d319fX5+fX5+foaGhpCQkKSkpKmpqbe3t7m5ucXFxdLS0tvb2////////////////////////////////////////////////////////////////////////////////////////////////////////////yH5BAEKAD8ALAAAAAAJAAkAAAY+wJ/wRyAEhr/BwAMaHZMhjmRTsQQGIlLDMWE8CoMLZRFRJATJBSRBGAgAmOSAcAB0fmjh4PMzbJA/CBlJGkEAOw==", "energy": "data:image/gif;base64,R0lGODlhCQAJAMIHAEMVRpoyoMpwz85+081/0vGt9f7o/////yH5BAEKAAcALAAAAAAJAAkAAAMjWHCgEM+ANl2RTZ0RKVsAUXCAYAWXEhiGIjkVgAlPAQ0QkAAAOw==", "holy": "data:image/gif;base64,R0lGODlhCQAJAIQRADsbBLNRGed1Heh1HOyKEemPHO2SHOuVJfKZL/KfF/S3Yv3JM/fGef3YaP7xuv71y//1zf///////////////////////////////////////////////////////////yH5BAEKAB8ALAAAAAAJAAkAAAUq4CcCpGgCT7MAJwQEQMICDimQA8kEQh8YJISNVJgRXgAFa3Q43EyjkigEADs=", "ice": "data:image/gif;base64,R0lGODlhCQAJAOMIABwcHADI2GT//3///4D//5z//63//778/P///////////////////////////////yH5BAEKAA8ALAAAAAAJAAkAAAQg8MkHpgQ44EoJGIB3hYfHBUKBGEMwEoZ5eaBIZZtFWREAOw=="};
 // sprite do monstro: spritesheet 9 frames x 4 direcoes de 64px.
 // frame 0 (parado), direcao 2 (sul) = o bicho de frente.
-function monSpr(lt){
-  if(!lt) return `<div class="mspr mspr-off"></div>`;
-  return `<div class="mspr" style="background-image:url(https://baiakidle.com/api/things/outfit/${lt}.png)"></div>`;
+function monSpr(lt,sm){
+  const cls = "mspr"+(sm?" mspr-sm":"");
+  if(!lt) return `<div class="${cls} mspr-off"></div>`;
+  return `<div class="${cls}" style="background-image:url(https://baiakidle.com/api/things/outfit/${lt}.png)"></div>`;
 }
 function resGrid(r){
   // sem dado nenhum != neutro em tudo — nao inventar 100%
@@ -552,20 +556,19 @@ function huntMon(name, isBoss){
   for(const ab of m.a||[]) if(ab.el&&ab.el!=="healing") th[ab.el]=(th[ab.el]||0)+(ab.ch||0)*(((ab.mn||0)+(ab.mx||0))/2)/100;
   const tot=Object.values(th).reduce((a,b)=>a+b,0);
   const dmg=Object.entries(th).map(([el,v])=>({el,pct:tot?Math.round(v/tot*100):0})).filter(d=>d.pct>0).sort((a,b)=>b.pct-a.pct);
-  const wk = weak.length
-    ? weak.map(([el,v])=>`<span class="rchip wk">${dot(el)}${ELPT[el]||el} +${Math.abs(v)}%</span>`).join("")
-    : `<span class="hnone">sem fraqueza elemental</span>`;
   const dl = dmg.length
     ? dmg.map(d=>`<span class="dchip">${dot(d.el)}${ELPT[d.el]||d.el} <b>${d.pct}%</b></span>`).join("")
     : `<span class="hnone">só corpo a corpo</span>`;
   const ch = monCharms(m,isBoss).map((c,i)=>
     `<span class="charmchip${isBoss?" boss":(i===0?" top":"")}">${i&&!isBoss?`<em>${i+1}º</em> `:""}${esc(c)}</span>`).join("");
-  return `<div class="hmon${isBoss?" boss":""}"><div class="hmon-h">`
+  return `<div class="hmon${isBoss?" boss":""}">`
+    +monSpr(m.lt,true)
+    +`<div class="hmon-body"><div class="hmon-h">`
     +`<span class="hmon-lead"><span class="mlink" data-mon="${esc(m.n)}">${esc(m.n)}</span>${isBoss?'<span class="bosstag">👑 boss</span>':""}</span>`
     +`<span class="hmon-hp">HP ${m.hp.toLocaleString("pt-BR")}</span></div>`
-    +`<div class="hmon-r"><span class="rlbl wk">fraco a</span>${wk}</div>`
+    +resGrid(m.r)
     +`<div class="hmon-r"><span class="rlbl rs">dano</span>${dl}</div>`
-    +`<div class="hmon-r"><span class="rlbl ch">🔮 charm</span>${ch}</div></div>`;
+    +`<div class="hmon-r"><span class="rlbl ch">🔮 charm</span>${ch}</div></div></div>`;
 }
 // ---- Expedições: raid de até 30 jogadores, 3 stages + chefe ----
 function expedCard(e,qq,open){
