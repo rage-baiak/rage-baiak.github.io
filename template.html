@@ -730,19 +730,9 @@ function expedCard(e,qq,open){
   const def = e.def.length
     ? e.def.map(d=>`<span class="hchip def">${dot(d.el)}${ELPT[d.el]||d.el} <b>${d.pct}%</b></span>`).join("")
     : `<span class="hnote">sem dado</span>`;
-  // chefe: fraquezas e resistências próprias
-  const bw=[], br=[];
-  if(e.bossRes) for(const el in e.bossRes){const v=e.bossRes[el]; if(v<0)bw.push([el,v]); else if(v>0)br.push([el,v]);}
-  bw.sort((a,b)=>a[1]-b[1]); br.sort((a,b)=>b[1]-a[1]);
-  const bossChips = bw.map(([el,v])=>`<span class="rchip wk">${dot(el)}${ELPT[el]||el} +${Math.abs(v)}%</span>`).join("")
-    + br.map(([el,v])=>`<span class="rchip ${v>=100?"im":"rs"}">${dot(el)}${ELPT[el]||el} ${v>=100?"imune":"−"+v+"%"}</span>`).join("")
-    + (!bw.length&&!br.length?`<span class="hnone">dano normal em todos os elementos</span>`:"");
   const bossRow = e.boss
     ? `<div class="recrow"><span class="rlbl ch">👑 chefe</span>`
-      +`<span class="mlink bossname" data-mon="${esc(e.boss)}">${esc(e.boss)}</span>`
-      +`<span class="hchip">${fmtBig(e.bossHp)} hp</span>`
-      +(e.bossArm?`<span class="hchip">armor ${e.bossArm}</span>`:"")
-      +bossChips+`</div>`
+      +`<span class="mlink bossname" data-mon="${esc(e.boss)}">${esc(e.boss)}</span></div>`
     : "";
   // fases: só os nomes (vários mapas repetem o mesmo bicho em todas as fases)
   const chips = ms => ms.map(n=>`<span class="hchip">${esc(n)}</span>`).join("");
@@ -758,7 +748,12 @@ function expedCard(e,qq,open){
   const porNomeE = {};
   regsE.forEach((m,i)=>{ if(distE[i]) porNomeE[norm(m.n)] = distE[i]; });
   const stages = `<div class="expstage"><div class="expstage-h">Bichos (${unicos.length})</div>`
-    +`<div class="hmons2">${unicos.map(n=>huntMon(n,false,porNomeE[norm(n)])).join("")}</div></div>`;
+    +`<div class="hmons2">${unicos.map(n=>huntMon(n,false,porNomeE[norm(n)])).join("")}</div></div>`
+    // o chefe entra com a mesma ficha dos outros (antes so aparecia numa linha do resumo)
+    +(e.boss && byName[norm(e.boss)]
+      ? `<div class="expstage"><div class="expstage-h">Chefe</div>`
+        +`<div class="hmons2">${huntMon(e.boss,true)}</div></div>`
+      : "");
   return `<details${open}><summary><span class="name">${hl(e.name,qq)}</span>`
     +`<span class="meta">lv ${e.lv}+ · 👑 ${esc(e.boss||"?")} · <span class="chip">${fmtBig(e.xp)}</span> xp</span></summary>`
     +`<div class="body hbody"><div class="rec">`
