@@ -83,7 +83,18 @@ h1 .g{color:var(--accent)}
 .ohead code{font-size:12px;background:var(--card);padding:1px 5px;border-radius:4px}
 .ogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
 .ocard{border:1px solid var(--line);border-radius:10px;background:var(--card);padding:10px 8px 9px;text-align:center}
-.ocard.ok{border-color:color-mix(in srgb,var(--rc) 55%,transparent);background:color-mix(in srgb,var(--rc) 8%,transparent)}
+.ocard.oc-ok{border-color:color-mix(in srgb,var(--rc) 55%,transparent);background:color-mix(in srgb,var(--rc) 8%,transparent)}
+.ocard.oc-sem,.ocard.oc-outra{opacity:.62}
+.otag{margin-top:4px;font-size:11px;font-weight:700}
+.oc-ok .otag{color:var(--rc)}
+.oc-cand .otag{color:var(--accent)}
+.oc-outra .otag,.oc-sem .otag{color:var(--muted);font-weight:600}
+.ofilts{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ofilt{font:inherit;font-size:12.5px;padding:4px 11px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:var(--card);color:var(--muted)}
+.ofilt b{font-variant-numeric:tabular-nums}
+.ofilt.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.ofilt:hover{border-color:var(--accent)}
 .osprs{display:flex;justify-content:center;gap:0;min-height:92px;align-items:center}
 .ospr{--s:92px;--fw:64;--fh:64;--nf:9;--x0:1;--k:calc(var(--s)/var(--fh));
   width:calc(var(--fw)*var(--k));height:var(--s);image-rendering:pixelated;background-repeat:no-repeat;
@@ -92,7 +103,7 @@ h1 .g{color:var(--accent)}
   background-position-x:calc(var(--fw)*var(--k)*var(--x0)*-1)}
 .ospr-off{background:none}
 .oname{margin-top:7px;font-size:13px;font-weight:600;line-height:1.3}
-.otag{margin-top:4px;font-size:11px;font-weight:700;color:var(--rc)}
+
 .expstage{margin-top:14px}
 .expstage-h{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);border-bottom:1px solid var(--bd);padding-bottom:5px;margin-bottom:9px}
 .wchip.zero{border-color:var(--accent);color:var(--accent)}
@@ -566,6 +577,7 @@ function dmgGrid(dmg){
 // ---- Aba Casket: candidatos do addon casket ----
 // Cores neutras pro preview (no jogo cada um escolhe as suas).
 const OC_PREVIEW = [78, 88, 58, 76];
+let ocFiltro = "todos";
 function outfitSpr(id, sexo){
   if(!id) return `<div class="ospr ospr-off"></div>`;
   const o = OUTFIT[id] || [1,0,64,64,0];
@@ -578,22 +590,30 @@ function outfitSpr(id, sexo){
   const cls = "ospr" + (passos >= 2 ? ` anim-${passos}` : "");
   return `<div class="${cls}" style="${st}" title="${esc(sexo)}"${dc}></div>`;
 }
+const OC_CLS = {
+  ok:    { t:"✓ confirmado",     d:"já veio de um casket aberto" },
+  cand:  { t:"candidato",        d:"tem addon e não está à venda — pode vir" },
+  outra: { t:"outra origem",     d:"doação, staff ou ranking — não sai em caixa" },
+  sem:   { t:"sem addon",        d:"não tem addon nenhum, então não sai de um addon casket" },
+};
 function casketCard(o,qq){
   const dupla = o.m !== o.f;
-  return `<div class="ocard${o.ok?" ok":""}">`
+  const c = OC_CLS[o.c] || OC_CLS.cand;
+  return `<div class="ocard oc-${o.c}" title="${esc(c.d)}">`
     +`<div class="osprs">${outfitSpr(o.m,"masculino")}${dupla?outfitSpr(o.f,"feminino"):""}</div>`
     +`<div class="oname">${hl(o.n,qq)}</div>`
-    +(o.ok?`<div class="otag">✓ confirmado</div>`:"")
+    +`<div class="otag">${c.t}</div>`
     +`</div>`;
 }
 function casketHeader(){
-  const n = OUTFITS.length, ok = OUTFITS.filter(o=>o.ok).length;
-  return `<div class="ohead"><b>${n} outfits</b> que o addon casket pode entregar — `
-    +`lista por eliminação, não a tabela do servidor.`
-    +`<div class="ohead-sub">Entram só os que têm addon de verdade (o sprite <code>-a3</code> existe e é diferente do base) `
-    +`e que não estão à venda na loja de coins. Ficam de fora os de doação, staff e ranking. `
-    +`<b>${ok} confirmados</b> em aberturas reais; o resto é candidato. `
-    +`Os sprites aparecem com os 2 addons e cores neutras — no jogo você escolhe as suas.</div></div>`;
+  const ct = OUTFITS.reduce((a,o)=>(a[o.c]=(a[o.c]||0)+1,a),{});
+  const chip = (k,rot) => `<button class="ofilt" data-f="${k}">${rot} <b>${k==="todos"?OUTFITS.length:(ct[k]||0)}</b></button>`;
+  return `<div class="ohead"><b>${OUTFITS.length} outfits</b> que existem no jogo e <b>não estão à venda</b> na loja de coins.`
+    +`<div class="ohead-sub">O pool do addon casket é sorteado no servidor e não existe no cliente, `
+    +`então isto é o universo do que pode vir, com o que dá pra afirmar de cada um. `
+    +`Os sprites aparecem com os 2 addons e cores neutras — no jogo você escolhe as suas.</div>`
+    +`<div class="ofilts">${chip("todos","todos")}${chip("ok","✓ confirmado")}${chip("cand","candidato")}`
+    +`${chip("outra","outra origem")}${chip("sem","sem addon")}</div></div>`;
 }
 
 // ---- Colorização de outfit ----
@@ -1261,9 +1281,13 @@ function render(){
   if(mode==="forja"){ list.innerHTML=forjaHTML(); count.textContent=""; return; }
   if(mode==="casket"){
     const qc=norm(q.value.trim());
-    const res=OUTFITS.filter(o=>!qc||norm(o.n).includes(qc));
+    const res=OUTFITS.filter(o=>(ocFiltro==="todos"||o.c===ocFiltro) && (!qc||norm(o.n).includes(qc)));
     list.innerHTML=casketHeader()+`<div class="ogrid">`+res.map(o=>casketCard(o,qc)).join("")+`</div>`;
     count.textContent=`${res.length} ${res.length===1?"outfit":"outfits"}`;
+    list.querySelectorAll(".ofilt").forEach(b=>{
+      b.classList.toggle("on", b.dataset.f===ocFiltro);
+      b.onclick=()=>{ ocFiltro=b.dataset.f; render(); };
+    });
     setTimeout(pintaSprites,0);
     return;
   }

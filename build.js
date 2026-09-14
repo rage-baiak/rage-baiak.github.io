@@ -560,19 +560,24 @@ function diff(oldD, newD) {
         } catch (_) { }
       }));
     }
+    // Entram TODOS os que nao estao a venda na loja de coins. A classificacao diz o que
+    // cada um e: quem nao tem addon nao pode sair de um *addon* casket, e quem tem origem
+    // conhecida (doacao/staff/ranking) tambem nao.
     for (const o of lista) {
-      const add = Math.max(meta[o.maleId] ?? 0, meta[o.femaleId] ?? 0);
-      if (!add) continue;                                  // sem addon: fora por definicao
       if (o.store) continue;                               // a venda na loja de coins
-      if (CASKET_FORA.test(o.name)) continue;              // doacao/staff/ranking
-      OUTFITS.push({
-        n: o.name, m: o.maleId, f: o.femaleId,
-        ok: CASKET_CONFIRMADOS.includes(o.name.toLowerCase()) ? 1 : 0,
-      });
+      const add = Math.max(meta[o.maleId] ?? 0, meta[o.femaleId] ?? 0);
+      const cls = CASKET_CONFIRMADOS.includes(o.name.toLowerCase()) ? "ok"
+                : !add ? "sem"                             // sem addon nenhum
+                : CASKET_FORA.test(o.name) ? "outra"       // doacao, staff, ranking
+                : "cand";                                  // candidato
+      OUTFITS.push({ n: o.name, m: o.maleId, f: o.femaleId, c: cls });
     }
-    OUTFITS.sort((a, b) => (b.ok - a.ok) || a.n.localeCompare(b.n, "pt-BR"));
-    console.log("outfits candidatos do casket:", OUTFITS.length,
-      "| confirmados em campo:", OUTFITS.filter(o => o.ok).length);
+    const ordem = { ok: 0, cand: 1, outra: 2, sem: 3 };
+    OUTFITS.sort((a, b) => (ordem[a.c] - ordem[b.c]) || a.n.localeCompare(b.n, "pt-BR"));
+    const ct = OUTFITS.reduce((a, o) => (a[o.c] = (a[o.c] || 0) + 1, a), {});
+    console.log("outfits fora da loja:", OUTFITS.length,
+      "| confirmados:", ct.ok || 0, "· candidatos:", ct.cand || 0,
+      "· sem addon:", ct.sem || 0, "· outra origem:", ct.outra || 0);
   } catch (e) { console.log("outfits indisponiveis:", e.message); }
 
   const lookTypes = [...new Set([
