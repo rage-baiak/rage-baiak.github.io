@@ -535,6 +535,42 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const HUNTS = __HUNTS__;", "const HUNTS = " + JSON.stringify(hunts) + ";");
 
 
+
+  // ---- Auras ----
+  // O clientId da aura aponta pra um efeito do jogo (/api/things/effect/{id}.png), que e
+  // uma tira horizontal de frames. Buscar o effectmeta porque tamanho e nº de frames
+  // variam bastante (64x64 com 5 frames ate 160x160 com 9).
+  let AURAS = [];
+  try {
+    const ra = await fetch("https://baiakidle.com/api/trpc/admin.cosmeticsOverrides?input=%7B%7D");
+    const lista = (await ra.json())?.result?.data?.aura ?? [];
+    // Sequencial de proposito: em paralelo, depois das centenas de requisicoes dos
+    // outfits, o servidor passa a recusar parte e ficavam auras sem efeito.
+    const metas = {};
+    const ids = [...new Set(lista.map(a => a.clientId).filter(Boolean))];
+    for (const id of ids) {
+      for (let tent = 1; tent <= 3 && !metas[id]; tent++) {
+        try {
+          const r = await fetch(`https://baiakidle.com/api/things/effectmeta/${id}`);
+          if (!r.ok) { await new Promise(x => setTimeout(x, 200)); continue; }
+          const j = await r.json();
+          // [frames, frameW, frameH, duracao total em ms]
+          metas[id] = [j.frames || 1, j.frameW || 64, j.frameH || 64,
+                       (j.durations || []).reduce((s, d) => s + d, 0) || (j.frames || 1) * 100];
+        } catch (_) { await new Promise(x => setTimeout(x, 200)); }
+      }
+    }
+    // Entram todas. As de clientId alto respondem effectmeta = null e o PNG da 404:
+    // estao cadastradas mas sem asset no servidor, entao nao ha preview pra mostrar.
+    for (const a of lista) {
+      const m = metas[a.clientId] || null;
+      AURAS.push({ n: a.name, cid: a.clientId, p: a.price ?? 0, st: a.store ? 1 : 0, m });
+    }
+    AURAS.sort((x, y) => (Number(!!y.m) - Number(!!x.m)) || (y.st - x.st) || x.n.localeCompare(y.n, "pt-BR"));
+    console.log("auras:", AURAS.length, "|", AURAS.filter(a => a.m).length, "com efeito servido,",
+      AURAS.filter(a => !a.m).length, "sem asset |", AURAS.filter(a => a.st).length, "a venda");
+  } catch (e) { console.log("auras indisponiveis:", e.message); }
+
   // ---- Outfits do addon casket ----
   // O pool do casket e sorteado no servidor e nao existe no bundle. O que da pra fazer
   // e eliminar por evidencia: so entra outfit que TEM addon de verdade (o outfitmeta diz,
@@ -588,6 +624,7 @@ function diff(oldD, newD) {
   console.log("outfits:", Object.keys(OUTFIT).length + "/" + lookTypes.length, "com metadados de animacao");
   tpl = tpl.replace("const OUTFIT = __OUTFIT__;", "const OUTFIT = " + JSON.stringify(OUTFIT) + ";");
   tpl = tpl.replace("const OUTFITS = __OUTFITS__;", "const OUTFITS = " + JSON.stringify(OUTFITS) + ";");
+  tpl = tpl.replace("const AURAS = __AURAS__;", "const AURAS = " + JSON.stringify(AURAS) + ";");
   tpl = tpl.replace("const EXPED = __EXPED__;", "const EXPED = " + JSON.stringify(exped) + ";");
   tpl = tpl.replace("const CHARMS = __CHARMS__;", "const CHARMS = " + JSON.stringify(CHARMS) + ";");
   tpl = tpl.replace("const EQUIP = __EQUIP__;", "const EQUIP = " + JSON.stringify(equip) + ";");

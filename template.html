@@ -77,6 +77,20 @@ h1 .g{color:var(--accent)}
 .wrow .wlbl{color:var(--muted);display:inline-block;min-width:74px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
 .wchip{display:inline-block;border:1px solid var(--line);border-radius:7px;padding:1px 7px;margin:2px 3px 2px 0;font-size:12px}
 .wchip.weak{border-color:var(--rc);color:var(--rc);font-weight:700}
+/* aba Auras: efeito animado */
+.agrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.acard{border:1px solid var(--line);border-radius:10px;background:var(--card);padding:9px 8px;text-align:center}
+.abox{height:104px;display:flex;align-items:center;justify-content:center;overflow:hidden;
+  border-radius:8px;background:color-mix(in srgb,var(--fg) 6%,transparent)}
+.aefx{--fw:64;--fh:64;--nf:8;--ms:800ms;--s:96px;--k:calc(var(--s)/var(--fh));
+  width:calc(var(--fw)*var(--k));height:var(--s);image-rendering:pixelated;background-repeat:no-repeat;
+  background-size:calc(var(--fw)*var(--nf)*var(--k)) var(--s);background-position:0 0}
+.aanim{animation:aurafx var(--ms) steps(var(--nf)) infinite}
+@keyframes aurafx{to{background-position-x:calc(var(--fw)*var(--k)*var(--nf)*-1)}}
+@media(prefers-reduced-motion:reduce){.aefx{animation:none}}
+.aprice{margin-top:3px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.acard.nopv{opacity:.6}
+.asem{font-size:12px;color:var(--muted);font-style:italic}
 /* aba Casket: grade de outfits candidatos */
 .ohead{padding:12px 14px;border:1px solid var(--line);border-radius:10px;background:var(--line2);margin-bottom:12px;font-size:14px}
 .ohead-sub{margin-top:6px;font-size:13px;color:var(--muted);line-height:1.55}
@@ -416,6 +430,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
       <button class="mode" id="mForja" aria-pressed="false">Forja</button>
       <button class="mode" id="mExped" aria-pressed="false">🗺️ Expedição</button>
       <button class="mode" id="mCasket" aria-pressed="false">🎁 Casket</button>
+      <button class="mode" id="mAura" aria-pressed="false">✨ Auras</button>
       <button class="mode" id="mWar" aria-pressed="false">⚔️ Guerra</button>
     </div>
   </div>
@@ -459,6 +474,7 @@ const HUNTS = __HUNTS__;
 const EXPED = __EXPED__;
 const OUTFIT = __OUTFIT__;
 const OUTFITS = __OUTFITS__;
+const AURAS = __AURAS__;
 const CHARMS = __CHARMS__;
 const EQUIP = __EQUIP__;
 const ITEMID = __ITEMID__;
@@ -510,7 +526,7 @@ const qty = mx => mx>1 ? "1–"+mx : "";
 
 let mode="mon";
 const q=document.getElementById("q"), list=document.getElementById("list"), count=document.getElementById("count");
-const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), mExped=document.getElementById("mExped"), mCasket=document.getElementById("mCasket"), mWar=document.getElementById("mWar"), legend=document.getElementById("legend");
+const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), mExped=document.getElementById("mExped"), mCasket=document.getElementById("mCasket"), mAura=document.getElementById("mAura"), mWar=document.getElementById("mWar"), legend=document.getElementById("legend");
 
 const ELPT={physical:"Físico",fire:"Fogo",ice:"Gelo",earth:"Terra",energy:"Energia",holy:"Sagrado",death:"Morte",healing:"Cura"};
 const byName={}; for(const m of M) byName[norm(m.n)]=m;
@@ -574,6 +590,33 @@ function dmgGrid(dmg){
     +`<img src="${ELICO[d.el]}" alt="${ELPT[d.el]||d.el}" width="11" height="11"></span>`
     +`<b>${d.pct}%</b></span>`).join("")+`</div>`;
 }
+// ---- Aba Auras ----
+// O efeito é uma tira horizontal de frames; a animação percorre com steps().
+function auraCard(a,qq){
+  let vis;
+  if(a.m){
+    const [nf,fw,fh,ms] = a.m;
+    const url = `https://baiakidle.com/api/things/effect/${a.cid}.png`;
+    const st = `--fw:${fw};--fh:${fh};--nf:${nf};--ms:${ms}ms;background-image:url(${url})`;
+    vis = `<div class="aefx${nf>1?" aanim":""}" style="${st}"></div>`;
+  } else {
+    vis = `<div class="asem" title="o servidor não serve o sprite deste efeito">sem preview</div>`;
+  }
+  return `<div class="acard${a.m?"":" nopv"}">`
+    +`<div class="abox">${vis}</div>`
+    +`<div class="oname">${hl(a.n,qq)}</div>`
+    +`<div class="aprice">${a.st?`${a.p} coins`:"fora da loja"}</div>`
+    +`</div>`;
+}
+function aurasHeader(){
+  const v = AURAS.filter(a=>a.st).length, sp = AURAS.filter(a=>!a.m).length;
+  return `<div class="ohead"><b>${AURAS.length} auras</b> do jogo, com o efeito animado.`
+    +`<div class="ohead-sub">${v} estão à venda na loja de coins; o preço é o de lá. `
+    +(sp?`<b>${sp}</b> aparecem sem preview: estão cadastradas, mas o servidor não serve o sprite do efeito delas `
+        +`(o endpoint devolve vazio e a imagem dá 404), então não há o que mostrar.`:"")
+    +`</div></div>`;
+}
+
 // ---- Aba Casket: candidatos do addon casket ----
 // Cores neutras pro preview (no jogo cada um escolhe as suas).
 const OC_PREVIEW = [78, 88, 58, 76];
@@ -1279,6 +1322,13 @@ function warCard(a,qq,open){
 function render(){
   setTimeout(pintaSprites,0);   // sprites de humanoide precisam de cor
   if(mode==="forja"){ list.innerHTML=forjaHTML(); count.textContent=""; return; }
+  if(mode==="aura"){
+    const qa=norm(q.value.trim());
+    const res=AURAS.filter(a=>!qa||norm(a.n).includes(qa));
+    list.innerHTML=aurasHeader()+`<div class="agrid">`+res.map(a=>auraCard(a,qa)).join("")+`</div>`;
+    count.textContent=`${res.length} ${res.length===1?"aura":"auras"}`;
+    return;
+  }
   if(mode==="casket"){
     const qc=norm(q.value.trim());
     const res=OUTFITS.filter(o=>(ocFiltro==="todos"||o.c===ocFiltro) && (!qc||norm(o.n).includes(qc)));
@@ -1407,18 +1457,19 @@ for(const el of [stLvl,stMag,stDist,stMelee,stBonus]) el.addEventListener("input
 
 function setMode(m){
   mode=m; limit=CHUNK;
-  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["casket",mCasket],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
+  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["casket",mCasket],["aura",mAura],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   lvfilter.style.display = m==="hunt" ? "flex" : "none";
   slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
   spellstats.style.display = m==="magia" ? "flex" : "none";
   spellnote.style.display = m==="magia" ? "block" : "none";
-  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war"||m==="exped"||m==="casket") ? "none" : "flex";
+  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war"||m==="exped"||m==="casket"||m==="aura") ? "none" : "flex";
   q.style.display = m==="forja" ? "none" : "";
   q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
     : m==="magia" ? "Buscar magia (nome ou words: exori, exura…)…"
     : m==="equip" ? "Buscar equip (nome, voc: knight, sorc…)…"
     : m==="item" ? "Buscar item (ex: crystal coin, crossbow)…"
+    : m==="aura" ? "Buscar aura…"
     : m==="casket" ? "Buscar outfit…"
     : m==="exped" ? "Buscar expedição (nome, chefe ou bicho)…"
     : m==="war" ? "Buscar conta ou personagem inimigo…"
@@ -1435,10 +1486,12 @@ mItem.onclick=()=>setMode("item");
 mForja.onclick=()=>setMode("forja");
 mExped.onclick=()=>setMode("exped");
 mCasket.onclick=()=>setMode("casket");
+mAura.onclick=()=>setMode("aura");
 mWar.onclick=()=>setMode("war");
 if(!WAR||!WAR.meta||!WAR.contas.length) mWar.style.display="none";
 if(!EXPED||!EXPED.length) mExped.style.display="none";
 if(!OUTFITS||!OUTFITS.length) mCasket.style.display="none";
+if(!AURAS||!AURAS.length) mAura.style.display="none";
 // links cruzados: monstro <-> item <-> hunt
 list.addEventListener("click",ev=>{
   const ml=ev.target.closest(".mlink"), il=ev.target.closest(".ilink"), hk=ev.target.closest(".hlink");
