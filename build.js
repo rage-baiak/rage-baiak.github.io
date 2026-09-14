@@ -535,54 +535,6 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const HUNTS = __HUNTS__;", "const HUNTS = " + JSON.stringify(hunts) + ";");
 
 
-  // ---- Reward bags ----
-  // O jogo traz a tabela de conteudo de 12 caixas no proprio cliente (ao contrario do
-  // addon casket, que e sorteado so no servidor). A glooth bag usa faixas 0..10000 em
-  // vez de chance, entao converte pra % pra ficar na mesma unidade das outras.
-  let BAGS = [];
-  try {
-    // ancora no conteudo: a tabela comeca com a "random bis bag"
-    const tm = /\{"random bis bag":/.exec(src);
-    if (!tm) throw new Error("tabela de bags nao encontrada");
-    const tbl = (0, eval)("(" + matchBalanced(src, tm.index) + ")");
-    // so as bags que existem no jogo hoje; as outras da tabela nao estao implementadas
-    const NO_JOGO = new Set(["bag you desire", "bag you covet", "primal bag"]);
-    for (const [nome, v] of Object.entries(tbl)) {
-      if (!NO_JOGO.has(nome)) continue;
-      const itens = v.items || [];
-      // essas tres nao trazem peso nenhum no dado — so a lista. Sem peso, a leitura
-      // natural e sorteio uniforme; fica marcado como estimativa, nao como dado do jogo.
-      const unif = itens.length ? +(100 / itens.length).toFixed(2) : null;
-      BAGS.push({
-        n: nome,
-        it: itens.map(i => ({ n: i.name, c: i.chance ?? null })),
-        tier: v.class4Tier || null,
-        unif,                                   // chance se o sorteio for uniforme
-      });
-    }
-    // glooth bag: array de faixas { name, count, from, to }
-    const gm = /(\w+)=\[\{name:"glooth spear",count:\d+,from:\d+,to:\d+\}/.exec(src);
-    if (gm) {
-      const arr = (0, eval)("(" + matchBalanced(src, src.indexOf("[", gm.index)) + ")");
-      const teto = Math.max(...arr.map(x => x.to)) + 1;
-      BAGS.push({
-        n: "glooth bag",
-        it: arr.map(x => ({ n: x.name, c: +((x.to - x.from + 1) / teto * 100).toFixed(2) })),
-        tier: null,
-      });
-    }
-    BAGS.sort((a, b) => b.it.length - a.it.length);
-    // os itens de bag em geral nao dropam de monstro, entao nao entraram no ITEMID.
-    // Sem isso o sprite some na tabela (soul*, sanguine*, glooth*).
-    let add = 0;
-    for (const b of BAGS) for (const i of b.it) {
-      const k = norm(i.n);
-      if (!ITEMID[k] && idByName[k]) { ITEMID[k] = idByName[k]; add++; }
-    }
-    console.log("reward bags:", BAGS.length, "|", BAGS.map(b => `${b.n}(${b.it.length})`).join(" "),
-      "| +" + add + " sprites no indice");
-  } catch (e) { console.log("bags indisponiveis:", e.message); }
-
   // ---- Outfits do addon casket ----
   // O pool do casket e sorteado no servidor e nao existe no bundle. O que da pra fazer
   // e eliminar por evidencia: so entra outfit que TEM addon de verdade (o outfitmeta diz,
@@ -631,7 +583,6 @@ function diff(oldD, newD) {
   console.log("outfits:", Object.keys(OUTFIT).length + "/" + lookTypes.length, "com metadados de animacao");
   tpl = tpl.replace("const OUTFIT = __OUTFIT__;", "const OUTFIT = " + JSON.stringify(OUTFIT) + ";");
   tpl = tpl.replace("const OUTFITS = __OUTFITS__;", "const OUTFITS = " + JSON.stringify(OUTFITS) + ";");
-  tpl = tpl.replace("const BAGS = __BAGS__;", "const BAGS = " + JSON.stringify(BAGS) + ";");
   tpl = tpl.replace("const EXPED = __EXPED__;", "const EXPED = " + JSON.stringify(exped) + ";");
   tpl = tpl.replace("const CHARMS = __CHARMS__;", "const CHARMS = " + JSON.stringify(CHARMS) + ";");
   tpl = tpl.replace("const EQUIP = __EQUIP__;", "const EQUIP = " + JSON.stringify(equip) + ";");
