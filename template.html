@@ -182,19 +182,14 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .stats b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
 .rline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0}
 .reshd{margin:6px 0 5px}
-.resgrid{display:grid;grid-template-columns:auto 1fr auto;gap:3px 12px;align-items:center;margin-bottom:6px}
-.resel{display:flex;align-items:center;gap:7px;font-size:13.5px;white-space:nowrap;color:var(--muted)}
-.resbar{position:relative;height:10px;border-radius:5px;background:var(--line2);min-width:80px}
-.resbar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--muted);opacity:.55}
-.resbar::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line)}
-.resval{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;min-width:52px;text-align:right;color:var(--muted)}
-.resrow{display:contents}
-.resrow.wk .resbar i{background:var(--rc);opacity:1}
-.resrow.wk .resval,.resrow.wk .resel{color:var(--rc)}
-.resrow.rs .resbar i{background:var(--rr);opacity:.75}
-.resrow.rs .resval{color:var(--rr)}
-.resrow.im .resbar i{background:var(--rx)}
-.resrow.im .resval,.resrow.im .resel{color:var(--rx);font-weight:700}
+.resgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:5px;margin-bottom:7px}
+.reschip{display:flex;align-items:center;gap:7px;font-size:13.5px;padding:4px 10px;border-radius:7px;
+  border:1px solid var(--line);background:var(--line2);color:var(--muted)}
+.reschip .resnm{flex:1}
+.reschip b{font-weight:700;font-variant-numeric:tabular-nums}
+.reschip.wk{color:var(--rc);border-color:color-mix(in srgb,var(--rc) 50%,transparent);background:color-mix(in srgb,var(--rc) 12%,transparent)}
+.reschip.rs{color:var(--rr);border-color:color-mix(in srgb,var(--rr) 45%,transparent);background:color-mix(in srgb,var(--rr) 9%,transparent)}
+.reschip.im{color:var(--rx);border-color:color-mix(in srgb,var(--rx) 55%,transparent);background:color-mix(in srgb,var(--rx) 13%,transparent);font-weight:700}
 .rlbl{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-right:2px}
 .rlbl.wk{color:var(--rc)} .rlbl.rs{color:var(--rr)}
 .rchip,.atk{font-size:13.5px;border-radius:7px;padding:3px 9px;border:1px solid var(--line);white-space:nowrap}
@@ -488,7 +483,7 @@ function monRows(arr,qq){
 // Grade de resistências no estilo TibiaWiki: TODOS os elementos, sempre na mesma ordem,
 // mostrando o dano que o bicho RECEBE (100% = normal). No dado, r[el] e o quanto ele
 // reduz: negativo = fraqueza. Elemento ausente = neutro. Entao recebido = 100 - r[el].
-const ELORD=["physical","fire","earth","energy","ice","holy","death"];
+const ELORD=["physical","earth","fire","death","energy","holy","ice"];  // ordem do TibiaWiki
 function resGrid(r){
   // sem dado nenhum != neutro em tudo — nao inventar 100%
   if(!r || !Object.keys(r).length) return `<div class="rline"><span class="rchip rs">sem dado de resistência</span></div>`;
@@ -496,9 +491,8 @@ function resGrid(r){
     const v=Number((r||{})[el]||0), dano=100-v;
     const cls = dano<=0 ? "im" : dano>100 ? "wk" : dano<100 ? "rs" : "nt";
     const txt = dano<=0 ? "imune" : dano+"%";
-    return `<div class="resrow ${cls}"><span class="resel"><i class="edot e-${el}"></i>${ELPT[el]||el}</span>`
-      +`<span class="resbar"><i style="width:${Math.max(0,Math.min(100,dano/2))}%"></i></span>`
-      +`<b class="resval">${txt}</b></div>`;
+    return `<span class="reschip ${cls}"><i class="edot e-${el}"></i>`
+      +`<span class="resnm">${ELPT[el]||el}</span><b>${txt}</b></span>`;
   }).join("");
   return `<div class="resgrid">${linhas}</div>`;
 }
