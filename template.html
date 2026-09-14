@@ -574,7 +574,9 @@ function outfitSpr(id, sexo){
   const url = `https://baiakidle.com/api/things/outfit/${id}-a3.png`;
   const st = `--fw:${fw};--fh:${fh};--nf:${nf};--x0:${ws};background-image:url(${url})`;
   const dc = mask ? ` data-lt="${id}" data-oc="${OC_PREVIEW.join(",")}" data-a3="1"` : "";
-  return `<div class="ospr" style="${st}" title="${esc(sexo)}"${dc}></div>`;
+  const passos = Math.max(0, nf - ws);
+  const cls = "ospr" + (passos >= 2 ? ` anim-${passos}` : "");
+  return `<div class="${cls}" style="${st}" title="${esc(sexo)}"${dc}></div>`;
 }
 function casketCard(o,qq){
   const dupla = o.m !== o.f;
