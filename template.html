@@ -181,6 +181,20 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .stats{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:14px;color:var(--muted);padding:8px 0 10px}
 .stats b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}
 .rline{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0}
+.reshd{margin:6px 0 5px}
+.resgrid{display:grid;grid-template-columns:auto 1fr auto;gap:3px 12px;align-items:center;margin-bottom:6px}
+.resel{display:flex;align-items:center;gap:7px;font-size:13.5px;white-space:nowrap;color:var(--muted)}
+.resbar{position:relative;height:10px;border-radius:5px;background:var(--line2);min-width:80px}
+.resbar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--muted);opacity:.55}
+.resbar::after{content:"";position:absolute;left:50%;top:-3px;bottom:-3px;width:1px;background:var(--line)}
+.resval{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;min-width:52px;text-align:right;color:var(--muted)}
+.resrow{display:contents}
+.resrow.wk .resbar i{background:var(--rc);opacity:1}
+.resrow.wk .resval,.resrow.wk .resel{color:var(--rc)}
+.resrow.rs .resbar i{background:var(--rr);opacity:.75}
+.resrow.rs .resval{color:var(--rr)}
+.resrow.im .resbar i{background:var(--rx)}
+.resrow.im .resval,.resrow.im .resel{color:var(--rx);font-weight:700}
 .rlbl{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-right:2px}
 .rlbl.wk{color:var(--rc)} .rlbl.rs{color:var(--rr)}
 .rchip,.atk{font-size:13.5px;border-radius:7px;padding:3px 9px;border:1px solid var(--line);white-space:nowrap}
@@ -444,15 +458,7 @@ function monStats(m){
   if(m.sp) st.push(`Vel <b>${m.sp}</b>`);
   if(m.dm) st.push(`Dano <b>${m.dm[0]}–${m.dm[1]}</b>`);
   h+=`<div class="stats">${st.map(x=>`<span>${x}</span>`).join("")}</div>`;
-  const weak=[],res=[];
-  if(m.r) for(const el in m.r){const v=m.r[el]; if(v<0)weak.push([el,v]); else if(v>0)res.push([el,v]);}
-  weak.sort((a,b)=>a[1]-b[1]); res.sort((a,b)=>b[1]-a[1]);
-  if(weak.length) h+=`<div class="rline"><span class="rlbl wk">▲ fraco a</span>`
-    +weak.map(([el,v])=>`<span class="rchip wk">${ELPT[el]||el} +${Math.abs(v)}%</span>`).join("")+`</div>`;
-  if(res.length) h+=`<div class="rline"><span class="rlbl rs">▼ forte a</span>`
-    +res.map(([el,v])=>`<span class="rchip ${v>=100?"im":"rs"}">${ELPT[el]||el} ${v>=100?"imune":"−"+v+"%"}</span>`).join("")+`</div>`;
-  if(!weak.length && !res.length)
-    h+=`<div class="rline"><span class="rlbl">defesa</span><span class="rchip rs">dano normal · sem fraqueza/resistência</span></div>`;
+  h+=`<div class="rlbl reshd">dano que recebe <span class="hint">· 100% = normal</span></div>`+resGrid(m.r);
   if(m.a&&m.a.length){
     h+=`<div class="atksec"><div class="rlbl">ataques <span class="hint">· % = chance de sair</span></div><div class="atks">`
       +m.a.map(x=>{
@@ -479,6 +485,23 @@ function monRows(arr,qq){
   ).join("");
 }
 
+// Grade de resistências no estilo TibiaWiki: TODOS os elementos, sempre na mesma ordem,
+// mostrando o dano que o bicho RECEBE (100% = normal). No dado, r[el] e o quanto ele
+// reduz: negativo = fraqueza. Elemento ausente = neutro. Entao recebido = 100 - r[el].
+const ELORD=["physical","fire","earth","energy","ice","holy","death"];
+function resGrid(r){
+  // sem dado nenhum != neutro em tudo — nao inventar 100%
+  if(!r || !Object.keys(r).length) return `<div class="rline"><span class="rchip rs">sem dado de resistência</span></div>`;
+  const linhas=ELORD.map(el=>{
+    const v=Number((r||{})[el]||0), dano=100-v;
+    const cls = dano<=0 ? "im" : dano>100 ? "wk" : dano<100 ? "rs" : "nt";
+    const txt = dano<=0 ? "imune" : dano+"%";
+    return `<div class="resrow ${cls}"><span class="resel"><i class="edot e-${el}"></i>${ELPT[el]||el}</span>`
+      +`<span class="resbar"><i style="width:${Math.max(0,Math.min(100,dano/2))}%"></i></span>`
+      +`<b class="resval">${txt}</b></div>`;
+  }).join("");
+  return `<div class="resgrid">${linhas}</div>`;
+}
 function monCard(m,qq,open){
   const dropMeta = m.l.length ? `<span class="chip">${m.l.length}</span> drops` : `sem loot`;
   const hs = monHunts[norm(m.n)]||[];
