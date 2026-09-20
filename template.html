@@ -65,13 +65,13 @@ h1 .g{color:var(--accent)}
 .wbtn{display:block;margin:2px 0 3px;padding:5px 12px;border:1px solid var(--accent);border-radius:8px;background:transparent;color:var(--accent);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .wbtn:hover:not(:disabled){background:var(--accent);color:var(--bg)}
 .wbtn:disabled{opacity:.55;cursor:progress}
-.wchar{border-top:1px solid var(--line);padding:9px 0}.warbody{display:flex;flex-wrap:wrap;gap:7px;align-items:flex-start}.warbody .wchar{border-top:0;padding:6px 9px;border:1px solid var(--line);border-radius:9px;background:#1c1c22}.warbody .whead{margin-bottom:0;gap:7px}.warbody .whead .wlv{font-size:16px}.warbody .whead .wvoc{margin-left:2px}.warbody .wrow{width:100%}
+.wchar{border-top:1px solid var(--line);padding:9px 0}.warbody{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}.warbody .wchar{border-top:0;padding:7px 11px 7px 9px;border:1px solid var(--line);border-left:3px solid color-mix(in srgb,var(--vc,var(--line)) 70%,var(--line));border-radius:9px;background:var(--panel2);transition:transform .08s ease,box-shadow .08s ease}.warbody .wchar:hover{transform:translateY(-1px);box-shadow:var(--shadow)}.warbody .whead{margin-bottom:0;gap:8px;align-items:center}.warbody .whead .wlv{font-size:16px}.warbody .whead .wvoc{margin-left:2px}.warbody .wrow{width:100%}
 .wchar:first-child{border-top:0}
 .whead{font-weight:700;margin-bottom:4px}
 .whead{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
 .whead .wlv{color:var(--accent);font-weight:800;font-size:19px;font-variant-numeric:tabular-nums;margin:0}
-.whead .wvoc{margin-left:auto;font-weight:700;font-size:12px;padding:2px 8px;border-radius:999px;letter-spacing:.02em;background:#2a2a33;color:#cfd2da;border:1px solid #3a3a45}.wvoc-knight{background:#3a1f22;color:#ff8f8f;border-color:#5a2b2f}.wvoc-paladin{background:#3a3416;color:#ffd86b;border-color:#5a5024}.wvoc-druid{background:#173625;color:#78e0a8;border-color:#245239}.wvoc-sorcerer{background:#2a2148;color:#b79bff;border-color:#3d3168}.wvoc-monk{background:#3a2a16;color:#ffb46b;border-color:#5a4224}
-.wbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 12px}
+.wvoc-knight{--vc:#d64550}.wvoc-paladin{--vc:#c99a2e}.wvoc-druid{--vc:#2fa15f}.wvoc-sorcerer{--vc:#8257e6}.wvoc-monk{--vc:#d97b2e}.whead .wvoc{margin-left:auto;font-weight:700;font-size:11px;padding:1px 8px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;background:color-mix(in srgb,var(--vc,var(--muted)) 15%,transparent);color:var(--vc,var(--muted));border:1px solid color-mix(in srgb,var(--vc,var(--muted)) 42%,transparent)}
+.wbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 12px}.whero{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 7%,var(--panel)),var(--panel));border:1px solid var(--line);border-radius:14px;padding:16px;margin:6px 0 14px;box-shadow:var(--shadow)}.wversus{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;text-align:center}.wteam{display:flex;flex-direction:column;gap:1px;min-width:0}.wteam-n{font-family:"Cinzel",Georgia,serif;font-weight:700;font-size:clamp(19px,4.5vw,28px);line-height:1.05}.wteam.us .wteam-n{color:var(--accent)}.wteam-t{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.12em}.wx{display:flex;flex-direction:column;align-items:center;line-height:1;font-family:"Cinzel",serif;font-weight:800;color:var(--muted);font-size:14px}.wx small{font-size:11px;font-weight:600;opacity:.75;margin-top:3px}.wcompbar{display:flex;height:11px;border-radius:999px;overflow:hidden;margin:15px 0 9px;border:1px solid var(--line);background:var(--panel2)}.wseg{background:var(--vc);min-width:2px}.wcomplegend{display:flex;flex-wrap:wrap;gap:7px 15px;justify-content:center;font-size:12.5px;color:var(--muted)}.wleg{display:inline-flex;align-items:center;gap:5px}.wleg b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:700}.wdot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:0 0 auto;background:var(--vc)}.whero .wbar{justify-content:center;margin:13px 0 0;border-top:1px solid var(--line2);padding-top:12px}.warcard summary{align-items:center}.wlead{display:flex;align-items:center;gap:10px;min-width:0}.wrank{flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;background:var(--panel2);color:var(--muted);border:1px solid var(--line)}.wrank.r1{background:color-mix(in srgb,#e6b352 22%,transparent);color:#c69328;border-color:#e6b352}.wrank.r2{background:color-mix(in srgb,#9aa3b2 22%,transparent);color:#8b93a1;border-color:#aeb6c2}.wrank.r3{background:color-mix(in srgb,#cd7f45 22%,transparent);color:#cd7f45;border-color:#cd7f45}.wdots{display:inline-flex;gap:3px;align-items:center}.warcard .wtot b{color:var(--accent);font-weight:800;font-variant-numeric:tabular-nums}
 .wsrc{color:var(--muted);font-size:12px}
 .wrow{font-size:13px;margin:3px 0;line-height:1.6}
 .wrow .wlbl{color:var(--muted);display:inline-block;min-width:74px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
@@ -964,6 +964,7 @@ function huntCard(h,qq,open){
 
 // ---- equipamento ----
 const VOCPT={sorcerer:"Sorc",druid:"Druid",paladin:"Pala",knight:"Knight",monk:"Monk"};
+const VOCORD=["knight","paladin","druid","sorcerer","monk"];
 const SLOTPT={weapon:"Arma",shield:"Escudo",armor:"Armadura",helmet:"Elmo",legs:"Pernas",boots:"Botas",ring:"Anel",amulet:"Amuleto"};
 const WTPT={sword:"Espada",axe:"Machado",club:"Maça",distance:"Distância",wand:"Wand",rod:"Rod",fist:"Punho"};
 const SKPT={sword:"Espada",axe:"Machado",club:"Maça",distance:"Distância",fist:"Punho",shielding:"Shielding",magic:"Magic"};
@@ -1242,12 +1243,31 @@ async function warUpdate(){
 // ---- Modo Guerra: dossie da guild adversaria ----
 const WEL={fisico:"physical",fogo:"fire",gelo:"ice",energia:"energy",terra:"earth",sagrado:"holy",morte:"death"};
 const WORD=["fisico","fogo","gelo","energia","terra","sagrado","morte"];
+function warComp(){
+  const cnt={}; let tot=0;
+  WAR.contas.forEach(a=>a.ch.forEach(c=>{ if(c.v){ cnt[c.v]=(cnt[c.v]||0)+1; tot++; } }));
+  if(!tot) return "";
+  const ord=VOCORD.filter(v=>cnt[v]);
+  const seg=ord.map(v=>`<span class="wseg wvoc-${v}" style="flex:${cnt[v]}" title="${VOCPT[v]} ${cnt[v]}"></span>`).join("");
+  const leg=ord.map(v=>`<span class="wleg"><i class="wdot wvoc-${v}"></i>${VOCPT[v]} <b>${cnt[v]}</b></span>`).join("");
+  return `<div class="wcompbar">${seg}</div><div class="wcomplegend">${leg}</div>`;
+}
 function warHeader(){
   const m=WAR.meta;
-  return `<div class="wbar">`
-    +`<span class="wsrc">${esc(m.foe)} · coletado ${esc(m.at)}</span>`
-    +`<button id="warRefresh" class="wbtn">↻ Atualizar fichas</button>`
-    +`<span id="warStatus" class="wsrc">${warAt?"atualizado "+esc(warAt):""}</span></div>`;
+  const us=(m.us&&m.us.n)||"RAGE";
+  const nC=WAR.contas.length, nCh=WAR.contas.reduce((t,a)=>t+a.ch.length,0);
+  return `<div class="whero">`
+    +`<div class="wversus">`
+      +`<div class="wteam us"><span class="wteam-n">${esc(us)}</span><span class="wteam-t">NOSSA GUILD</span></div>`
+      +`<div class="wx">VS${m.size?`<small>${m.size}×${m.size}</small>`:""}</div>`
+      +`<div class="wteam them"><span class="wteam-n">${esc(m.foe)}</span>${m.tag?`<span class="wteam-t">[${esc(m.tag)}]</span>`:""}</div>`
+    +`</div>`
+    +warComp()
+    +`<div class="wbar">`
+      +`<span class="wsrc">${nC} contas · ${nCh} chars · coletado ${esc(m.at)}</span>`
+      +`<button id="warRefresh" class="wbtn">↻ Atualizar fichas</button>`
+      +`<span id="warStatus" class="wsrc">${warAt?"atualizado "+esc(warAt):""}</span>`
+    +`</div></div>`;
 }
 
 // So aparece quem pode entrar em campo: a party e de 3, e char muito abaixo do
@@ -1257,21 +1277,28 @@ function warChars(a){
   const max=Math.max.apply(null,c.map(x=>x.lv));
   return c.filter(x=>x.lv*2>=max).sort((x,y)=>y.lv-x.lv);
 }
-function warCard(a,qq,open){
+function warCard(a,qq,open,rank){
   const rel=warChars(a);
   const chars=rel.map(c=>{
     const sk=Object.entries(c.sk).sort((x,y)=>y[1]-x[1]).map(([k,v])=>`${k} ${v}`).join(" · ");
     const at=Object.entries(c.at).filter(([k])=>!/^Regen|^Ruse|Amplification/.test(k))
       .sort((x,y)=>y[1]-x[1]).slice(0,6).map(([k,v])=>`<span class="wchip">${esc(k)} <b>+${v}</b></span>`).join("");
-    const voc=c.v?`<span class="wvoc wvoc-${esc(c.v)}">${esc(VOCPT[c.v]||c.v)}</span>`:"";
-    return `<div class="wchar"><div class="whead"><span class="wlv">${c.lv}</span>${hl(c.n,qq)}${voc}</div>`
+    const vc=c.v?" wvoc-"+esc(c.v):"";
+    const voc=c.v?`<span class="wvoc">${esc(VOCPT[c.v]||c.v)}</span>`:"";
+    return `<div class="wchar${vc}"><div class="whead"><span class="wlv">${c.lv}</span>${hl(c.n,qq)}${voc}</div>`
       +(sk?`<div class="wrow"><span class="wlbl">skills</span>${esc(sk)}</div>`:"")
       +(at?`<div class="wrow"><span class="wlbl">atributos</span>${at}</div>`:"")
       +`</div>`;
   }).join("");
-  return `<details${open}><summary><span class="name">${hl(a.c,qq)}</span>`
-    +`<span class="wtot">${rel.reduce((t,c)=>t+c.lv,0).toLocaleString("pt-BR")} níveis · ${rel.length} chars</span></summary>`
-    +`<div class="body warbody">${chars}</div></details>`;
+  const cnt={}; a.ch.forEach(c=>{ if(c.v) cnt[c.v]=(cnt[c.v]||0)+1; });
+  const dots=VOCORD.filter(v=>cnt[v]).map(v=>`<i class="wdot wvoc-${v}" title="${VOCPT[v]} ${cnt[v]}"></i>`).join("");
+  const rk=rank<=3?` r${rank}`:"";
+  return `<details class="warcard"${open}><summary>`
+    +`<span class="wlead"><span class="wrank${rk}">${rank}</span>`
+    +`<span class="name">${hl(a.c,qq)}</span>`
+    +`<span class="wdots">${dots}</span></span>`
+    +`<span class="wtot"><b>${rel.reduce((t,c)=>t+c.lv,0).toLocaleString("pt-BR")}</b> níveis · ${rel.length} chars</span>`
+    +`</summary><div class="body warbody">${chars}</div></details>`;
 }
 function render(){
   setTimeout(pintaSprites,0);   // sprites de humanoide precisam de cor
@@ -1292,7 +1319,7 @@ function render(){
     const qw=norm(q.value.trim());
     const res=WAR.contas.filter(a=>!qw||norm(a.c).includes(qw)||a.ch.some(c=>norm(c.n).includes(qw)));
     const op=q.value.trim()&&res.length<=4?" open":"";
-    list.innerHTML=warHeader()+res.map(a=>warCard(a,qw,op)).join("");
+    list.innerHTML=warHeader()+res.map((a,i)=>warCard(a,qw,op,i+1)).join("");
     const rb=document.getElementById("warRefresh");
     if(rb){
       rb.onclick=warUpdate;
