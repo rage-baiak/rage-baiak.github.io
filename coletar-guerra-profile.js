@@ -107,6 +107,30 @@
   }
   const ovf = document.getElementById('profile-overlay'); if (ovf) ovf.remove();
 
+  // ---- 3b) vocacao de cada char (characters.profile, REST publico) ----
+  const todos = [];
+  for (const c of res) for (const ch of c.ch) todos.push(ch);
+  console.log('Buscando vocacao de ' + todos.length + ' chars...');
+  async function voc(nome) {
+    for (let t = 0; t < 2; t++) {
+      try {
+        const u = '/api/trpc/characters.profile?batch=1&input=' + encodeURIComponent(JSON.stringify({ 0: { name: nome } }));
+        const r = await fetch(u); const j = await r.json();
+        const d = j && j[0] && j[0].result && j[0].result.data; if (d) return d;
+      } catch (_) {}
+      await sleep(300);
+    }
+    return null;
+  }
+  { let d2 = 0;
+    for (const ch of todos) {
+      const p = await voc(ch.n);
+      if (p && p.vocation) { ch.v = p.vocation; if (p.level) ch.lv = p.level; }
+      if (++d2 % 50 === 0) console.log('vocacao ' + d2 + '/' + todos.length);
+      await sleep(120);
+    }
+  }
+
   // ---- 4) monta war.json (so contas com chars) ----
   const contasOut = res.filter(c => c.ch.length).map(c => ({
     c: c.c,

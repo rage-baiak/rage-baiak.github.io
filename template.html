@@ -70,7 +70,7 @@ h1 .g{color:var(--accent)}
 .whead{font-weight:700;margin-bottom:4px}
 .whead{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
 .whead .wlv{color:var(--accent);font-weight:800;font-size:19px;font-variant-numeric:tabular-nums;margin:0}
-.whead .wvoc{color:var(--muted);font-weight:400;font-size:13px}
+.whead .wvoc{margin-left:auto;font-weight:700;font-size:12px;padding:2px 8px;border-radius:999px;letter-spacing:.02em;background:#2a2a33;color:#cfd2da;border:1px solid #3a3a45}.wvoc-knight{background:#3a1f22;color:#ff8f8f;border-color:#5a2b2f}.wvoc-paladin{background:#3a3416;color:#ffd86b;border-color:#5a5024}.wvoc-druid{background:#173625;color:#78e0a8;border-color:#245239}.wvoc-sorcerer{background:#2a2148;color:#b79bff;border-color:#3d3168}.wvoc-monk{background:#3a2a16;color:#ffb46b;border-color:#5a4224}
 .wbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 12px}
 .wsrc{color:var(--muted);font-size:12px}
 .wrow{font-size:13px;margin:3px 0;line-height:1.6}
@@ -1263,14 +1263,11 @@ function warCard(a,qq,open){
     const sk=Object.entries(c.sk).sort((x,y)=>y[1]-x[1]).map(([k,v])=>`${k} ${v}`).join(" · ");
     const at=Object.entries(c.at).filter(([k])=>!/^Regen|^Ruse|Amplification/.test(k))
       .sort((x,y)=>y[1]-x[1]).slice(0,6).map(([k,v])=>`<span class="wchip">${esc(k)} <b>+${v}</b></span>`).join("");
-    const res=WORD.filter(e=>e in c.res||true).map(e=>{
-      const v=c.res[e]||0, cls=v<0?" weak":(v===0?" zero":"");
-      return `<span class="wchip${cls}"><i class="edot e-${WEL[e]}"></i>${e} <b>${v>0?"+":""}${v}%</b></span>`;
-    }).join("");
-    return `<div class="wchar"><div class="whead"><span class="wlv">${c.lv}</span>${hl(c.n,qq)}<span class="wvoc">${esc(c.v)}</span></div>`
+    const voc=c.v?`<span class="wvoc wvoc-${esc(c.v)}">${esc(VOCPT[c.v]||c.v)}</span>`:"";
+    return `<div class="wchar"><div class="whead"><span class="wlv">${c.lv}</span>${hl(c.n,qq)}${voc}</div>`
       +(sk?`<div class="wrow"><span class="wlbl">skills</span>${esc(sk)}</div>`:"")
       +(at?`<div class="wrow"><span class="wlbl">atributos</span>${at}</div>`:"")
-      +`<div class="wrow"><span class="wlbl">resistência</span>${res}</div></div>`;
+      +`</div>`;
   }).join("");
   return `<details${open}><summary><span class="name">${hl(a.c,qq)}</span>`
     +`<span class="wtot">${rel.reduce((t,c)=>t+c.lv,0).toLocaleString("pt-BR")} níveis · ${rel.length} chars</span></summary>`
