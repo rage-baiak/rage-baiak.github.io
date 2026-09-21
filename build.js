@@ -76,8 +76,14 @@ function assembleCatalog(src) {
   const ixName = need(/([A-Za-z_$][\w$]*)=\{troll:\{name:"Troll"/, "catalogo base ix")[1];
   const DbName = need(new RegExp("=" + ixName + "\\[\\w+\\],\\w+=([\\w$]+)\\[\\w+\\.name\\.toLowerCase"), "override Db")[1];
   const gdeName = need(/const ([\w$]+)=\{training_machine/, "escala gde")[1];
-  const w = need(/([\w$]+)=Object\.fromEntries\(([\w$]+)\.map\(\w+=>\[\w+,([\w$]+)\[([\w$]+)\[\w+\]\?\?""\]\?\?1\]\)\)/, "wde/IG/yde/NG");
-  const IGName = w[2], ydeName = w[3], NGName = w[4];
+  // A atualizacao skyhold/ascendancy fez o mapa de XP virar dois grupos concatenados:
+  //   Object.fromEntries([...IG.map(e=>[e,yde[NG[e]??""]??1]), ...EE.map(e=>[e,MU[fn(e)]])])
+  // 1o grupo = tier normal (como antes); 2o grupo = tier novo (mult proprio via fn de categoria).
+  const w = need(/=Object\.fromEntries\(\[\.\.\.([\w$]+)\.map\(\w+=>\[\w+,([\w$]+)\[([\w$]+)\[\w+\]\?\?""\]\?\?1\]\),\.\.\.([\w$]+)\.map\(\w+=>\[\w+,([\w$]+)\[([\w$]+)\(\w+\)\]/, "wde XP mult (skyhold/ascendancy)");
+  const IGName = w[1], ydeName = w[2], NGName = w[3], eeName = w[4], muName = w[5], fnName = w[6];
+  // funcao de categoria do tier novo (ex: e=>/acolyte|paragon|warden/.test(e)?"skyhold":"ascendancy")
+  const fnRx = fnName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const fnSrc = need(new RegExp("(?<![\\w$])" + fnRx + "=(\\w+=>[^;]+?)(?=,[A-Za-z_$][\\w$]*=)"), "fn categoria XP")[1];
 
   // helpers chamados dentro do gde (nomes de funcao, ex: gn/Pt/At) — extrai o source de cada
   const gdeSrc = matchBalanced(src, src.indexOf("{", src.indexOf("const " + gdeName + "=")));
@@ -95,7 +101,8 @@ function assembleCatalog(src) {
     ${helperSrc}
     const ${gdeName}=${gdeSrc};
     const ${IGName}=${objByName(IGName)}, ${ydeName}=${objByName(ydeName)}, ${NGName}=${objByName(NGName)};
-    const __wm=Object.fromEntries(${IGName}.map(e=>[e,${ydeName}[${NGName}[e]??""]??1]));
+    const ${eeName}=${objByName(eeName)}, ${muName}=${objByName(muName)}, ${fnName}=${fnSrc};
+    const __wm=Object.fromEntries([...${IGName}.map(e=>[e,${ydeName}[${NGName}[e]??""]??1]),...${eeName}.map(e=>[e,${muName}[${fnName}(e)]])]);
     return { ix:${ixName}, Db:${DbName}, gde:${gdeName}, wde:__wm };
   `;
   const G = new Function(blob)();
