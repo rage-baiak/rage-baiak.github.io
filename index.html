@@ -416,6 +416,15 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .mgt tr.heal{--barcol:linear-gradient(90deg,color-mix(in srgb,var(--rc) 35%,transparent),var(--rc))}
 .mgt tr.area{--barcol:linear-gradient(90deg,color-mix(in srgb,#8257e6 35%,transparent),#8257e6)}
 .mgt tr.dmg{--barcol:linear-gradient(90deg,color-mix(in srgb,var(--rr) 35%,transparent),var(--rr))}
+.recmag{margin:2px 0 4px}
+.recmagh{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;margin:9px 0 5px}
+.recmagrow{display:flex;gap:8px;align-items:flex-start;padding:3px 0}
+.recvoc{flex:0 0 auto;width:58px;font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:3px 0;border-radius:6px;text-align:center;background:color-mix(in srgb,var(--vc,var(--muted)) 15%,transparent);color:var(--vc,var(--muted));border:1px solid color-mix(in srgb,var(--vc,var(--muted)) 40%,transparent)}
+.recmags{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
+.reccast{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;padding:2px 8px;border:1px solid var(--line);border-radius:999px;background:var(--panel2)}
+.reccast small{color:var(--muted);font-weight:600;font-size:9.5px}
+.reccast .rmark{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:var(--accent);background:color-mix(in srgb,var(--accent) 16%,transparent);border-radius:4px;padding:0 3px}
+.reccast .amark{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:.03em;color:#8257e6;background:color-mix(in srgb,#8257e6 16%,transparent);border-radius:4px;padding:0 3px}
 
 .more{display:block;width:100%;margin:12px 0 4px;padding:11px;font:inherit;font-size:13px;font-weight:600;
   color:var(--accent);background:transparent;border:1px solid var(--line);border-radius:9px;cursor:pointer}
@@ -990,7 +999,10 @@ function huntCard(h,qq,open){
     +`<div class="recrow"><span class="rlbl rs">🛡 proteção</span>${def}</div>`
     
     +bossRow
-    +`<div class="recnote">Cada charm ocupa um slot e vai pra um monstro só, então dois bichos da hunt não podem levar o mesmo. A distribuição abaixo é a que rende mais no conjunto — não é o melhor de cada um isolado. O boss leva ${esc(CHARMS.boss.join(" + "))}.</div></div>`
+    +`<div class="recnote">Cada charm ocupa um slot e vai pra um monstro só, então dois bichos da hunt não podem levar o mesmo. A distribuição abaixo é a que rende mais no conjunto — não é o melhor de cada um isolado. O boss leva ${esc(CHARMS.boss.join(" + "))}.</div>`
+    +recTable("🌐 Hunt (pack) — área: runas + magias, 4 por vocação", bestSpells(regs, false))
+    +(h.boss&&byName[norm(h.boss)]?recTable("👑 Boss (single-target) — 4 por vocação", bestSpells([byName[norm(h.boss)]], true)):"")
+    +`<div class="recnote">4 slots de ataque por vocação. Na hunt prioriza <b>área</b> (runas + magias) pra pegar o pack, cobrindo os elementos que os bichos mais tomam; no boss, single-target por dano ÷ cooldown. Estimativa pra orientar o loadout.</div></div>`
     +`<div class="hmons2"><div class="lootlbl" style="margin-top:0;border:0;padding-top:0">Monstros</div>${mons}</div></div></details>`;
 }
 
@@ -1123,6 +1135,45 @@ function spellSection(g, rows, top, qq){
     +`<div class="mgtwrap"><table class="mgt"><thead><tr>${head}</tr></thead><tbody>`
     +rows.map(x=>spellRowT(x,top,qq,showEl)).join("")
     +`</tbody></table></div></div>`;
+}
+// ---- recomendação de magias por hunt/boss ----
+// 4 slots de ataque por vocação (bundle: os=4). Rankeia por dano-base/cd ajustado
+// pelo dano-tomado do elemento nos alvos; em pack, magia de área pesa mais.
+const SPELL_REF=[300,120,120,120];               // lvl/magic/dist/melee de referência
+const SREC_VOCS=["knight","paladin","sorcerer","druid","monk"];
+function spellBaseAvg(s){ const f=s.dmg; if(!f) return 0; const r=f(SPELL_REF[0],SPELL_REF[1],SPELL_REF[2],SPELL_REF[3]); return (r[0]+r[1])/2; }
+function takenAvg(targets, el){ if(!targets.length) return 1; let a=0;
+  for(const m of targets){ const v=Number((m.r||{})[el]||0); a+=Math.max(0,(100-v))/100; } return a/targets.length; }
+function bestSpells(targets, isBoss){
+  const out={};
+  for(const voc of SREC_VOCS){
+    // candidatos: magias da vocação + RUNAS (qualquer vocação usa runa)
+    const cands=SPELLS.filter(x=>x.dmg && ((x.vocs||[]).includes(voc) || x.goldCost!=null)).map(x=>{
+      const el=spellEl(x.words), base=spellBaseAvg(x), ef=takenAvg(targets,el);
+      return {s:x, el, isArea:x.type==="area", isRune:x.goldCost!=null, score: base/((x.cd||2000)/1000)*ef};
+    }).filter(x=>x.score>0);
+    // hunt = pack: prioriza ÁREA (runa/magia de área pega mais mobs); boss = single-target/DPS
+    if(!isBoss) cands.sort((a,b)=> (b.isArea-a.isArea) || (b.score-a.score));
+    else cands.sort((a,b)=> b.score-a.score);
+    // dedupe: na hunt por elemento (4 áreas de elementos diferentes = cobre resistências);
+    // no boss por elemento+tipo. Backfill garante 4.
+    const key=c=> isBoss ? (c.el+"|"+c.s.type) : (c.isArea ? c.el : "st|"+c.el+"|"+c.s.type);
+    const seen=new Set(), pick=[];
+    for(const c of cands){ const k=key(c); if(seen.has(k)) continue; seen.add(k); pick.push(c); if(pick.length>=4) break; }
+    if(pick.length<4){ const nm=new Set(pick.map(x=>x.s.name));
+      for(const c of cands){ if(nm.has(c.s.name)) continue; pick.push(c); if(pick.length>=4) break; } }
+    out[voc]=pick;
+  }
+  return out;
+}
+function recTable(title, picks){
+  let rows="";
+  for(const voc of SREC_VOCS){
+    const ps=picks[voc]||[]; if(!ps.length) continue;
+    const chips=ps.map(x=>`<span class="reccast${x.isRune?" isrune":""}${x.isArea?" isarea":""}" title="${esc(x.s.name)} · ${esc(x.s.words)} · lvl ${x.s.level} · cd ${x.s.cd/1000}s${x.isRune?" · runa":""}${x.isArea?" · área":""}"><i class="edot e-${x.el}"></i>${esc(x.s.name)}${x.isRune?`<b class="rmark">runa</b>`:""}${x.isArea?`<b class="amark">área</b>`:""}</span>`).join("");
+    rows+=`<div class="recmagrow"><span class="recvoc wvoc-${voc}">${VOCPT[voc]||voc}</span><span class="recmags">${chips}</span></div>`;
+  }
+  return rows?`<div class="recmag"><div class="recmagh">${title}</div>${rows}</div>`:"";
 }
 // número grande em k/M/B
 const fmtBig = n => n>=1e9 ? +(n/1e9).toFixed(n%1e9?2:0)+"B" : n>=1e6 ? +(n/1e6).toFixed(n%1e6?1:0)+"M" : n>=1e3 ? +(n/1e3).toFixed(0)+"k" : String(n);
