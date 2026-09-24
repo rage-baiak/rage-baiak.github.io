@@ -1000,9 +1000,9 @@ function huntCard(h,qq,open){
     
     +bossRow
     +`<div class="recnote">Cada charm ocupa um slot e vai pra um monstro só, então dois bichos da hunt não podem levar o mesmo. A distribuição abaixo é a que rende mais no conjunto — não é o melhor de cada um isolado. O boss leva ${esc(CHARMS.boss.join(" + "))}.</div>`
-    +recTable(`🌐 Hunt (pack de ${h.ma||4}) — área: runas + magias, 4 por vocação`, bestSpells(regs, false, h.ma||4))
+    +recTable("🌐 Hunt (pack) — área: runas + magias, 4 por vocação", bestSpells(regs, false, h.ma||4))
     +(h.boss&&byName[norm(h.boss)]?recTable("👑 Boss (single-target) — 4 por vocação", bestSpells([byName[norm(h.boss)]], true)):"")
-    +`<div class="recnote">4 slots de ataque por vocação, cooldown global. Ranking = <b>dano × fraqueza (100−resist) × alvos ÷ cooldown</b> — a combinação que limpa mais rápido. Na hunt a área conta pelo pack real da sala (${h.ma||4} mobs vivos, do bundle); no boss, alvo único. Estimativa pra orientar o loadout.</div></div>`
+    +`<div class="recnote">4 slots de ataque por vocação, cooldown global. Ranking = <b>dano × fraqueza (100−resist) × alvos ÷ cooldown</b> — a combinação que limpa mais rápido. Na hunt prioriza área (runas + magias) pra pegar o pack — que cresce ao longo das waves; no boss, alvo único. Estimativa pra orientar o loadout.</div></div>`
     +`<div class="hmons2"><div class="lootlbl" style="margin-top:0;border:0;padding-top:0">Monstros</div>${mons}</div></div></details>`;
 }
 
