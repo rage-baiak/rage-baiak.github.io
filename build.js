@@ -610,7 +610,7 @@ function diff(oldD, newD) {
   // guerra: so aparece quando a guild esta em guerra. Pra religar, troque GUERRA_ATIVA
   // pra true e rode o build — o war.json continua no repo, so nao e injetado.
   // (se o arquivo nao existir, a aba some do mesmo jeito e o build nao quebra)
-  const GUERRA_ATIVA = true;
+  const GUERRA_ATIVA = false;
   let war = { meta: null, contas: [] };
   if (GUERRA_ATIVA) { try { war = JSON.parse(fs.readFileSync(HERE + "/war.json", "utf8")); } catch (_) {} }
   console.log("guerra:", GUERRA_ATIVA ? `${war.contas.length} contas` : "desligada (aba oculta)");
