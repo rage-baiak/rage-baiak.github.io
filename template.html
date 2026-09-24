@@ -394,14 +394,20 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .mgtwrap{overflow-x:auto;border:1px solid var(--line);border-radius:11px;background:var(--panel);box-shadow:var(--shadow)}
 .mgt{width:100%;border-collapse:collapse;font-size:12.5px}
 .mgt th{text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;padding:7px 9px;border-bottom:1px solid var(--line);background:var(--panel2)}
-.mgt th:first-child,.mgt th:nth-child(2){text-align:left}
+.mgt th.thl{text-align:left}
 .mgt td{padding:5px 9px;border-bottom:1px solid var(--line2);white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right;color:var(--muted)}
 .mgt tr:last-child td{border-bottom:0}
 .mgt tbody tr:hover td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
 .mgt .mg-nm{white-space:normal;min-width:150px;text-align:left;color:var(--ink)}
 .mgt .mg-nm b{font-weight:700;font-family:"Cinzel",Georgia,serif;font-size:13.5px}
 .mgt .mg-nm i{color:var(--muted);font-style:italic;font-size:11px;margin-left:5px}
-.mgt .mg-vc{text-align:left;font-size:11px}
+.mgt .mg-el{text-align:left;white-space:nowrap;color:var(--ink)}
+.mgt .mg-el .edot{margin-right:5px}
+.spellres{display:none;flex-wrap:wrap;gap:6px 10px;justify-content:center;align-items:center;margin:9px 0 0}
+.spellres .rez{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:var(--muted)}
+.spellres .rez .edot{margin:0}
+.spellres .rez input{width:50px;font:inherit;font-size:13px;font-weight:600;color:var(--ink);text-align:center;border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:3px 4px}
+.spellres .rez input:focus{outline:2px solid var(--accent);outline-offset:1px}
 .vcab{font-weight:800;font-size:10.5px;margin-right:3px;color:var(--vc,var(--muted))}
 .mgt .mg-d{min-width:130px}
 .mg-track{position:relative;height:19px;display:flex;align-items:center;border-radius:6px;background:var(--panel2);overflow:hidden}
@@ -459,7 +465,8 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     <label>melee <input id="stMelee" type="number" min="0" value="50" inputmode="numeric"></label>
     <label title="% dano/cura de magia do teu gear/build/boosts">% mag <input id="stBonus" type="number" min="0" value="0" inputmode="numeric"></label>
   </div>
-  <div class="spellnote" id="spellnote">Base × (1 + % mag). Estimativa — <b>crítico, augments e eventos</b> entram por cima. Sem gear (% mag = 0) é o dano base da magia.</div>
+  <div class="spellres" id="spellres"></div>
+  <div class="spellnote" id="spellnote">Dano = base × (1 + % mag) × <b>defesa do alvo</b>. Defesa <b>100</b> = normal, <b>0</b> = imune, <b>&gt;100</b> = fraco. Crítico/augments/eventos entram por cima.</div>
   <div class="count" id="count"></div>
   <div class="list" id="list"></div>
 
@@ -1051,8 +1058,20 @@ let equipShop=0;
 // filtros da aba Magias
 const MVOC=[["Todas",null],["Knight","knight"],["Pala","paladin"],["Sorc","sorcerer"],["Druid","druid"],["Monk","monk"]];
 let magiaVoc=0;
-const MTYPE=[["Todas",null],["Dano","dmg"],["Cura","heal"],["Área","area"]];
-let magiaType=0;
+const MELEM=[["Todos",null],["Físico","physical"],["Fogo","fire"],["Gelo","ice"],["Energia","energy"],["Terra","earth"],["Sagrado","holy"],["Morte","death"]];
+let magiaEl=0;
+// elemento de cada magia: o jogo nao guarda, infere-se pela raiz do encantamento
+function spellEl(w){
+  if(/flam/.test(w))return"fire";
+  if(/frigo/.test(w))return"ice";
+  if(/tera/.test(w)||/pox/.test(w))return"earth";
+  if(/mort/.test(w))return"death";
+  if(/san/.test(w))return"holy";
+  if(/vis/.test(w))return"energy";
+  return"physical";
+}
+const ELCOL={physical:"#8b93a1",fire:"#e0642e",ice:"#35a3cf",earth:"#6a9a3a",energy:"#9b63e0",holy:"#d3a52a",death:"#a86fb5"};
+const RES_EL=["physical","fire","ice","energy","earth","holy","death"];
 // lê os stats do char (level/magic/distance/melee) dos inputs
 const stLvl=document.getElementById("stLvl"), stMag=document.getElementById("stMag"),
       stDist=document.getElementById("stDist"), stMelee=document.getElementById("stMelee"),
@@ -1083,24 +1102,26 @@ function vocAbbr(vocs){
   if(vocs.length>=5) return `<span class="mut">todas</span>`;
   return vocs.map(v=>`<span class="vcab wvoc-${v}">${VOCAB[v]||v}</span>`).join("");
 }
-function spellRowT(x, top, qq){
+function spellRowT(x, top, qq, showEl){
   const s=x.s;
   const w=top>0?Math.max(4,Math.round(x.max/top*100)):4;
-  const cls=x.isHeal?"heal":(s.type==="area"?"area":"dmg");
+  const col=x.isHeal?"var(--rc)":(ELCOL[x.el]||"var(--muted)");
   const val=x.min.toLocaleString("pt-BR")+"–"+x.max.toLocaleString("pt-BR");
-  const cd=(s.cd/1000);
-  return `<tr class="${cls}">`
-    +`<td class="mg-nm"><b>${hl(s.name,qq)}</b><i>${esc(s.words)}</i></td>`
-    +`<td class="mg-vc">${vocAbbr(s.vocs)}</td>`
-    +`<td>${s.level}</td><td>${s.mana}</td><td>${cd}s</td>`
-    +`<td class="mg-d"><div class="mg-track"><span class="mg-f" style="width:${w}%"></span><span class="mg-vv">${val}</span></div></td>`
-    +`</tr>`;
+  let tds=`<td class="mg-nm"><b>${hl(s.name,qq)}</b><i>${esc(s.words)}</i></td>`;
+  if(showEl) tds+= x.isHeal ? `<td class="mg-el mut">—</td>`
+    : `<td class="mg-el"><span class="edot e-${x.el}"></span>${ELPT[x.el]}</td>`;
+  tds+=`<td>${s.cd/1000}s</td>`;
+  tds+=`<td class="mg-d"><div class="mg-track"><span class="mg-f" style="width:${w}%;background:${col}"></span><span class="mg-vv">${val}</span></div></td>`;
+  return `<tr>${tds}</tr>`;
 }
 function spellSection(g, rows, top, qq){
-  const head=`<th>Magia</th><th>Classe</th><th>Lvl</th><th>Mana</th><th>CD</th><th>${g.key==="cura"?"Cura":"Dano"}</th>`;
+  const showEl = g.key!=="cura";
+  const head = showEl
+    ? `<th class="thl">Magia</th><th class="thl">Elem</th><th>CD</th><th>Dano</th>`
+    : `<th class="thl">Magia</th><th>CD</th><th>Cura</th>`;
   return `<div class="mgsec"><h3 class="mgh"><span class="mgi">${g.icon}</span>${g.title}<span class="mgc">(${rows.length})</span></h3>`
     +`<div class="mgtwrap"><table class="mgt"><thead><tr>${head}</tr></thead><tbody>`
-    +rows.map(x=>spellRowT(x,top,qq)).join("")
+    +rows.map(x=>spellRowT(x,top,qq,showEl)).join("")
     +`</tbody></table></div></div>`;
 }
 // número grande em k/M/B
@@ -1418,21 +1439,24 @@ function render(){
     cards = res.map(e=>()=>equipCard(e,qq,open));
     noun = res.length===1?"equip":"equips";
   } else if(mode==="magia"){
-    const vk=MVOC[magiaVoc][1], tk=MTYPE[magiaType][1], st=spellStats();
+    const vk=MVOC[magiaVoc][1], ek=MELEM[magiaEl][1], st=spellStats(), res=readRes();
     const mult=1+(st[4]||0)/100;
     const match=s=> (!vk||(s.vocs||[]).includes(vk)) &&
-      (!tk||(tk==="dmg"?!!s.dmg:tk==="heal"?!!s.heal:s.type===tk)) &&
       (!qq||norm(s.name).includes(qq)||norm(s.words).includes(qq));
     const valOf=s=>{ const f=s.dmg||s.heal; const r=f?f(st[0],st[1],st[2],st[3]):[0,0];
-      return {s, isHeal:!!s.heal, min:Math.round(r[0]*mult), max:Math.round(r[1]*mult)}; };
+      const isHeal=!!s.heal, el=isHeal?null:spellEl(s.words);
+      const rf=isHeal?1:(res[el]??100)/100;                       // defesa elemental do alvo
+      return {s, isHeal, el, min:Math.round(r[0]*mult*rf), max:Math.round(r[1]*mult*rf)}; };
     const GRP=[
-      {key:"runa", icon:"🔮", title:"Runas",            test:s=>s.goldCost!=null},
-      {key:"ofe",  icon:"⚔️", title:"Magias ofensivas", test:s=>s.goldCost==null && (s.type==="strike"||s.type==="area")},
-      {key:"cura", icon:"🩹", title:"Magias de cura",   test:s=>s.goldCost==null && s.type==="heal"},
+      {key:"runa", icon:"🔮", title:"Runas",            test:s=>s.goldCost!=null && s.type!=="heal"},
+      {key:"ofe",  icon:"⚔️", title:"Magias ofensivas", test:s=>s.goldCost==null && s.type!=="heal"},
+      {key:"cura", icon:"🩹", title:"Magias de cura",   test:s=>s.type==="heal"},
     ];
     let total=0, out="";
     for(const g of GRP){
-      const rows=SPELLS.filter(s=>match(s)&&g.test(s)).map(valOf).sort((a,b)=>b.max-a.max);
+      let rows=SPELLS.filter(s=>match(s)&&g.test(s)).map(valOf);
+      if(ek) rows = g.key==="cura" ? [] : rows.filter(x=>x.el===ek);   // filtro de elemento nao vale pra cura
+      rows.sort((a,b)=>b.max-a.max);
       if(!rows.length) continue;
       total+=rows.length;
       out+=spellSection(g, rows, rows[0].max||1, qq);
@@ -1481,7 +1505,12 @@ wireFilter(document.getElementById("eqshopfilter"), EQSHOP, "loja", i=>equipShop
 const mvocfilter=document.getElementById("mvocfilter");
 const mtypefilter=document.getElementById("mtypefilter");
 wireFilter(mvocfilter, MVOC, "voc", i=>magiaVoc=i);
-wireFilter(mtypefilter, MTYPE, "tipo", i=>magiaType=i);
+wireFilter(mtypefilter, MELEM, "elem", i=>magiaEl=i);
+// inputs de resistencia elemental do alvo (default 100 = dano normal)
+const spellres=document.getElementById("spellres");
+spellres.innerHTML=RES_EL.map(e=>`<label class="rez" title="${ELPT[e]}: % do dano que o alvo toma"><span class="edot e-${e}"></span>${ELPT[e]}<input id="rz_${e}" type="number" min="0" value="100" inputmode="numeric"></label>`).join("");
+function readRes(){ const o={}; for(const e of RES_EL){ const el=document.getElementById("rz_"+e); const n=parseInt(el.value,10); o[e]=isNaN(n)?100:Math.max(0,n); } return o; }
+for(const e of RES_EL) document.getElementById("rz_"+e).addEventListener("input",()=>{ if(mode==="magia") render(); });
 
 // stats do char: restaura do localStorage, salva ao digitar, re-renderiza
 const spellstats=document.getElementById("spellstats");
@@ -1501,6 +1530,7 @@ function setMode(m){
   slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
   spellstats.style.display = m==="magia" ? "flex" : "none";
+  document.getElementById("spellres").style.display = m==="magia" ? "flex" : "none";
   spellnote.style.display = m==="magia" ? "block" : "none";
   legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war"||m==="exped"||m==="casket") ? "none" : "flex";
   q.style.display = m==="forja" ? "none" : "";
