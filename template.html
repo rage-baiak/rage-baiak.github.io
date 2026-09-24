@@ -1000,9 +1000,9 @@ function huntCard(h,qq,open){
     
     +bossRow
     +`<div class="recnote">Cada charm ocupa um slot e vai pra um monstro só, então dois bichos da hunt não podem levar o mesmo. A distribuição abaixo é a que rende mais no conjunto — não é o melhor de cada um isolado. O boss leva ${esc(CHARMS.boss.join(" + "))}.</div>`
-    +recTable("🌐 Hunt (pack) — área: runas + magias, 4 por vocação", bestSpells(regs, false))
+    +recTable(`🌐 Hunt (pack de ${h.ma||4}) — área: runas + magias, 4 por vocação`, bestSpells(regs, false, h.ma||4))
     +(h.boss&&byName[norm(h.boss)]?recTable("👑 Boss (single-target) — 4 por vocação", bestSpells([byName[norm(h.boss)]], true)):"")
-    +`<div class="recnote">4 slots de ataque por vocação, cooldown global. Ranking = <b>dano × fraqueza (100−resist) × alvos ÷ cooldown</b> — a combinação que limpa mais rápido. Na hunt a área conta por ~${PACK} mobs (runas + magias); no boss, alvo único. Estimativa pra orientar o loadout.</div></div>`
+    +`<div class="recnote">4 slots de ataque por vocação, cooldown global. Ranking = <b>dano × fraqueza (100−resist) × alvos ÷ cooldown</b> — a combinação que limpa mais rápido. Na hunt a área conta pelo pack real da sala (${h.ma||4} mobs vivos, do bundle); no boss, alvo único. Estimativa pra orientar o loadout.</div></div>`
     +`<div class="hmons2"><div class="lootlbl" style="margin-top:0;border:0;padding-top:0">Monstros</div>${mons}</div></div></details>`;
 }
 
@@ -1148,8 +1148,8 @@ function takenAvg(targets, el){ if(!targets.length) return 1; let a=0;
 // Melhor loadout pra limpar rápido = maior DANO EFETIVO por cast, limitado pelo cd:
 //   score = dano_base × fraqueza(100-resist) × alvos(área no pack) ÷ max(cd, gcd)
 const GCD_MS=2000;     // piso de cast (as magias/runas mais rápidas são ~2s)
-const PACK=5;          // estimativa de mobs por sala (peso da área)
-function bestSpells(targets, isBoss){
+function bestSpells(targets, isBoss, pack){
+  const PACK=pack||4;   // monstros vivos ao mesmo tempo (maxAlive da hunt)
   const out={};
   for(const voc of SREC_VOCS){
     const cands=SPELLS.filter(x=>x.dmg && ((x.vocs||[]).includes(voc) || x.goldCost!=null)).map(x=>{

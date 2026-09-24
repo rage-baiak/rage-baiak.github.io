@@ -377,6 +377,7 @@ function diff(oldD, newD) {
       off: off.slice(0, 3).map(x => x.el),
       ofw: off.length && off[0].avg < 0,          // true = fraqueza real (toma dano extra)
       def,                                         // [{el, pct}] ameaca agregada da hunt
+      ma: h.maxAlive || 4,                         // monstros vivos ao mesmo tempo (tamanho do pack)
     });
   }
   hunts.sort((a, b) => a.lv - b.lv);
