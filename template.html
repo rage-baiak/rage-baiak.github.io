@@ -386,27 +386,30 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .sp-val.dmg{color:var(--rx)} .sp-val.heal{color:var(--rc)}
 .sp-tag{font-size:10.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);
   border:1px solid var(--line);border-radius:6px;padding:1px 7px}
-/* magias: lista ranqueada por dano, com barra proporcional */
-.mglist{display:flex;flex-direction:column;gap:7px}
-.mgrow{position:relative;display:flex;gap:11px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:11px;background:var(--panel);box-shadow:var(--shadow)}
-.mg-rank{flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:12px;font-variant-numeric:tabular-nums;background:var(--panel2);color:var(--muted);border:1px solid var(--line)}
-.mgrow.top1 .mg-rank{background:color-mix(in srgb,#e6b352 24%,transparent);color:#c69328;border-color:#e6b352}
-.mgrow.top2 .mg-rank{background:color-mix(in srgb,#9aa3b2 24%,transparent);color:#8b93a1;border-color:#aeb6c2}
-.mgrow.top3 .mg-rank{background:color-mix(in srgb,#cd7f45 24%,transparent);color:#cd7f45;border-color:#cd7f45}
-.mg-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
-.mg-top{display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
-.mg-name{font-family:"Cinzel",Georgia,serif;font-weight:700;font-size:15px;letter-spacing:.01em}
-.mg-words{font-size:11.5px;color:var(--muted);font-style:italic}
-.mg-bar{position:relative;height:24px;border-radius:7px;background:var(--panel2);overflow:hidden;display:flex;align-items:center}
-.mg-fill{position:absolute;left:0;top:0;bottom:0;width:var(--w);background:var(--barcol);border-radius:7px;transition:width .25s ease}
-.mgrow.dmg{--barcol:linear-gradient(90deg,color-mix(in srgb,var(--rr) 35%,transparent),var(--rr))}
-.mgrow.area{--barcol:linear-gradient(90deg,color-mix(in srgb,#8257e6 35%,transparent),#8257e6)}
-.mgrow.heal{--barcol:linear-gradient(90deg,color-mix(in srgb,var(--rc) 35%,transparent),var(--rc))}
-.mg-val{position:relative;z-index:1;padding:0 9px;font-weight:800;font-size:13.5px;font-variant-numeric:tabular-nums;color:var(--ink);text-shadow:0 1px 2px color-mix(in srgb,var(--panel) 70%,transparent)}
-.mg-sub{display:flex;flex-wrap:wrap;gap:5px 11px;font-size:11.5px;color:var(--muted);align-items:center}
-.mg-sub span{font-variant-numeric:tabular-nums}
-.mg-voc{font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px;text-transform:uppercase;letter-spacing:.03em;background:color-mix(in srgb,var(--vc,var(--muted)) 15%,transparent);color:var(--vc,var(--muted));border:1px solid color-mix(in srgb,var(--vc,var(--muted)) 40%,transparent)}
-@media(max-width:520px){.mg-name{font-size:14px}.mg-bar{height:22px}}
+/* magias: tabela compacta por seção (runas / ofensivas / cura) */
+.mgsec{margin:0 0 20px}
+.mgh{font-family:"Cinzel",Georgia,serif;font-size:15px;font-weight:700;margin:2px 0 8px;display:flex;align-items:baseline;gap:8px;padding-bottom:5px;border-bottom:2px solid var(--accent-soft)}
+.mgh .mgi{font-size:16px}
+.mgh .mgc{font-size:12px;color:var(--muted);font-weight:600}
+.mgtwrap{overflow-x:auto;border:1px solid var(--line);border-radius:11px;background:var(--panel);box-shadow:var(--shadow)}
+.mgt{width:100%;border-collapse:collapse;font-size:12.5px}
+.mgt th{text-align:right;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:700;padding:7px 9px;border-bottom:1px solid var(--line);background:var(--panel2)}
+.mgt th:first-child,.mgt th:nth-child(2){text-align:left}
+.mgt td{padding:5px 9px;border-bottom:1px solid var(--line2);white-space:nowrap;font-variant-numeric:tabular-nums;text-align:right;color:var(--muted)}
+.mgt tr:last-child td{border-bottom:0}
+.mgt tbody tr:hover td{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.mgt .mg-nm{white-space:normal;min-width:150px;text-align:left;color:var(--ink)}
+.mgt .mg-nm b{font-weight:700;font-family:"Cinzel",Georgia,serif;font-size:13.5px}
+.mgt .mg-nm i{color:var(--muted);font-style:italic;font-size:11px;margin-left:5px}
+.mgt .mg-vc{text-align:left;font-size:11px}
+.vcab{font-weight:800;font-size:10.5px;margin-right:3px;color:var(--vc,var(--muted))}
+.mgt .mg-d{min-width:130px}
+.mg-track{position:relative;height:19px;display:flex;align-items:center;border-radius:6px;background:var(--panel2);overflow:hidden}
+.mg-f{position:absolute;left:0;top:0;bottom:0;background:var(--barcol,var(--rr));border-radius:6px}
+.mg-vv{position:relative;z-index:1;padding:0 8px;font-weight:800;font-size:12.5px;color:var(--ink);text-shadow:0 1px 2px color-mix(in srgb,var(--panel) 65%,transparent)}
+.mgt tr.heal{--barcol:linear-gradient(90deg,color-mix(in srgb,var(--rc) 35%,transparent),var(--rc))}
+.mgt tr.area{--barcol:linear-gradient(90deg,color-mix(in srgb,#8257e6 35%,transparent),#8257e6)}
+.mgt tr.dmg{--barcol:linear-gradient(90deg,color-mix(in srgb,var(--rr) 35%,transparent),var(--rr))}
 
 .more{display:block;width:100%;margin:12px 0 4px;padding:11px;font:inherit;font-size:13px;font-weight:600;
   color:var(--accent);background:transparent;border:1px solid var(--line);border-radius:9px;cursor:pointer}
@@ -1073,23 +1076,32 @@ function spellCard(s,qq,open,st){
     +`<span class="sp-tag">${tipo}</span>${det.join("")}</div></div></details>`;
 }
 
-// magia: linha ranqueada com barra proporcional ao dano/cura
-function spellBar(x, rank, top, qq){
+// magia: tabela compacta por seção. VOCAB = abreviação da vocação.
+const VOCAB={knight:"Kn",paladin:"Pa",sorcerer:"So",druid:"Dr",monk:"Mo"};
+function vocAbbr(vocs){
+  vocs=vocs||[];
+  if(vocs.length>=5) return `<span class="mut">todas</span>`;
+  return vocs.map(v=>`<span class="vcab wvoc-${v}">${VOCAB[v]||v}</span>`).join("");
+}
+function spellRowT(x, top, qq){
   const s=x.s;
-  const w = top>0 ? Math.max(4, Math.round(x.max/top*100)) : 4;
-  const cls = x.isHeal ? "heal" : (s.type==="area" ? "area" : "dmg");
-  const val = x.min.toLocaleString("pt-BR")+"–"+x.max.toLocaleString("pt-BR");
-  const icon = x.isHeal ? "🩹" : (s.type==="area" ? "💥" : "⚔");
-  const vocs=(s.vocs||[]).map(v=>`<span class="mg-voc wvoc-${v}">${VOCPT[v]||v}</span>`).join("");
-  const geo = s.type==="area" ? (s.radius?`raio ${s.radius}`:"") : (s.range?`alc ${s.range}`:"");
-  const top3 = rank<=3 ? ` top${rank}` : "";
-  return `<div class="mgrow ${cls}${top3}" style="--w:${w}%">`
-    +`<span class="mg-rank">${rank}</span>`
-    +`<div class="mg-main">`
-      +`<div class="mg-top"><span class="mg-name">${hl(s.name,qq)}</span><span class="mg-words">${esc(s.words)}</span></div>`
-      +`<div class="mg-bar"><span class="mg-fill"></span><span class="mg-val">${icon} ${val}</span></div>`
-      +`<div class="mg-sub">${vocs}<span>lvl ${s.level}</span><span>mana ${s.mana}</span><span>cd ${s.cd/1000}s</span>${geo?`<span>${geo}</span>`:""}</div>`
-    +`</div></div>`;
+  const w=top>0?Math.max(4,Math.round(x.max/top*100)):4;
+  const cls=x.isHeal?"heal":(s.type==="area"?"area":"dmg");
+  const val=x.min.toLocaleString("pt-BR")+"–"+x.max.toLocaleString("pt-BR");
+  const cd=(s.cd/1000);
+  return `<tr class="${cls}">`
+    +`<td class="mg-nm"><b>${hl(s.name,qq)}</b><i>${esc(s.words)}</i></td>`
+    +`<td class="mg-vc">${vocAbbr(s.vocs)}</td>`
+    +`<td>${s.level}</td><td>${s.mana}</td><td>${cd}s</td>`
+    +`<td class="mg-d"><div class="mg-track"><span class="mg-f" style="width:${w}%"></span><span class="mg-vv">${val}</span></div></td>`
+    +`</tr>`;
+}
+function spellSection(g, rows, top, qq){
+  const head=`<th>Magia</th><th>Classe</th><th>Lvl</th><th>Mana</th><th>CD</th><th>${g.key==="cura"?"Cura":"Dano"}</th>`;
+  return `<div class="mgsec"><h3 class="mgh"><span class="mgi">${g.icon}</span>${g.title}<span class="mgc">(${rows.length})</span></h3>`
+    +`<div class="mgtwrap"><table class="mgt"><thead><tr>${head}</tr></thead><tbody>`
+    +rows.map(x=>spellRowT(x,top,qq)).join("")
+    +`</tbody></table></div></div>`;
 }
 // número grande em k/M/B
 const fmtBig = n => n>=1e9 ? +(n/1e9).toFixed(n%1e9?2:0)+"B" : n>=1e6 ? +(n/1e6).toFixed(n%1e6?1:0)+"M" : n>=1e3 ? +(n/1e3).toFixed(0)+"k" : String(n);
@@ -1407,18 +1419,27 @@ function render(){
     noun = res.length===1?"equip":"equips";
   } else if(mode==="magia"){
     const vk=MVOC[magiaVoc][1], tk=MTYPE[magiaType][1], st=spellStats();
-    const res = SPELLS.filter(s=>
-      (!vk || (s.vocs||[]).includes(vk)) &&
-      (!tk || (tk==="dmg"?!!s.dmg : tk==="heal"?!!s.heal : s.type===tk)) &&
-      (!qq || norm(s.name).includes(qq) || norm(s.words).includes(qq)));
     const mult=1+(st[4]||0)/100;
-    const wv=res.map(s=>{ const f=s.dmg||s.heal; const r=f?f(st[0],st[1],st[2],st[3]):[0,0];
-      return {s, isHeal:!!s.heal, min:Math.round(r[0]*mult), max:Math.round(r[1]*mult)}; });
-    wv.sort((a,b)=>b.max-a.max);                 // maior dano/cura primeiro
-    const top=wv.length?wv[0].max:1;
-    limit=wv.length;                             // mostra todas de uma vez
-    cards = wv.map((x,i)=>()=>spellBar(x,i+1,top,qq));
-    noun = wv.length===1?"magia":"magias";
+    const match=s=> (!vk||(s.vocs||[]).includes(vk)) &&
+      (!tk||(tk==="dmg"?!!s.dmg:tk==="heal"?!!s.heal:s.type===tk)) &&
+      (!qq||norm(s.name).includes(qq)||norm(s.words).includes(qq));
+    const valOf=s=>{ const f=s.dmg||s.heal; const r=f?f(st[0],st[1],st[2],st[3]):[0,0];
+      return {s, isHeal:!!s.heal, min:Math.round(r[0]*mult), max:Math.round(r[1]*mult)}; };
+    const GRP=[
+      {key:"runa", icon:"🔮", title:"Runas",            test:s=>s.goldCost!=null},
+      {key:"ofe",  icon:"⚔️", title:"Magias ofensivas", test:s=>s.goldCost==null && (s.type==="strike"||s.type==="area")},
+      {key:"cura", icon:"🩹", title:"Magias de cura",   test:s=>s.goldCost==null && s.type==="heal"},
+    ];
+    let total=0, out="";
+    for(const g of GRP){
+      const rows=SPELLS.filter(s=>match(s)&&g.test(s)).map(valOf).sort((a,b)=>b.max-a.max);
+      if(!rows.length) continue;
+      total+=rows.length;
+      out+=spellSection(g, rows, rows[0].max||1, qq);
+    }
+    list.innerHTML = total ? out : `<div class="empty">Nada encontrado pra “${esc(raw)}”.</div>`;
+    count.textContent = total ? `${total} magias` : "";
+    return;
   } else {
     const res = ITEMS.filter(it=>!qq || norm(it).includes(qq));
     open = raw && res.length<=6 ? " open":"";
