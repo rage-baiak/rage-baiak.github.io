@@ -1152,6 +1152,10 @@ function takenAvg(targets, el){ if(!targets.length) return 1; let a=0;
 // runas de cd igual não se acumulam (só 1 lança por turno) e nukes de cd alto entram
 // nos turnos em que estão prontas. Knight não usa runa (magia de área pega imbuement).
 const TURN_MS=2000;
+// forma da área pela raiz do encantamento: lux=beam(linha), hur=onda/cone, resto=bola(radius).
+// beam pega poucos mobs (linha reta), bola pega o pack todo.
+const AREA_COV={ball:1, wave:0.6, beam:0.3};
+function areaShape(name, w, type){ if(type!=="area") return "single"; if(/beam/i.test(name)||/lux/.test(w)) return "beam"; if(/wave/i.test(name)||/hur/.test(w)) return "wave"; return "ball"; }
 function bestSpells(targets, isBoss, pack){
   const PACK=pack||4, WIN=15;   // janela de simulação (turnos)
   const out={};
@@ -1159,9 +1163,10 @@ function bestSpells(targets, isBoss, pack){
     const isKnight = voc==="knight";
     let cands=SPELLS.filter(x=>x.dmg && (x.vocs||[]).includes(voc) && !(isKnight && x.goldCost!=null)).map(x=>{
       const el=spellEl(x.words), base=spellBaseAvg(x), ef=takenAvg(targets,el);
-      const isArea=x.type==="area", alvos=isBoss?1:(isArea?PACK:1);
-      return {s:x, el, isArea, isRune:x.goldCost!=null,
-        dmg: base*ef*alvos,                              // dano efetivo por cast
+      const shape=areaShape(x.name, x.words, x.type), isArea=x.type==="area";
+      const alvos = isBoss ? 1 : (isArea ? Math.max(1, PACK*AREA_COV[shape]) : 1);  // beam/onda pegam menos
+      return {s:x, el, isArea, shape, isRune:x.goldCost!=null,
+        dmg: base*ef*alvos,                              // dano efetivo por cast (já conta a forma)
         cdT: Math.max(1, Math.round((x.cd||2000)/TURN_MS))}; // cd em turnos (piso 1 = 2s)
     }).filter(x=>x.dmg>0).sort((a,b)=> b.dmg-a.dmg);
     // sem dedupe: a simulação já descarta redundância (magia de cd igual e dano menor
@@ -1181,7 +1186,12 @@ function bestSpells(targets, isBoss, pack){
       for(const c of pool){ if(chosen.includes(c)) continue; const g=sim([...chosen,c]); if(g>bg+1e-6){ bg=g; bc=c; } }
       if(!bc) break; chosen.push(bc); cur=bg;
     }
-    out[voc]=chosen.sort((a,b)=> b.dmg-a.dmg);   // ordem exibida = prioridade de cast
+    // sempre 4 slots: completa com as de maior DANO EFETIVO (pool já favorece área/forma),
+    // mas no máximo 1 runa (runas têm cd igual entre si = a 2ª nunca dispararia).
+    for(const c of pool){ if(chosen.length>=4) break; if(chosen.includes(c)) continue;
+      if(c.isRune && chosen.some(x=>x.isRune)) continue; chosen.push(c); }
+    for(const c of pool){ if(chosen.length>=4) break; if(!chosen.includes(c)) chosen.push(c); }  // último recurso
+    out[voc]=chosen.slice(0,4).sort((a,b)=> b.dmg-a.dmg);   // ordem exibida = prioridade de cast
   }
   return out;
 }
@@ -1189,7 +1199,9 @@ function recTable(title, picks){
   let rows="";
   for(const voc of SREC_VOCS){
     const ps=picks[voc]||[]; if(!ps.length) continue;
-    const chips=ps.map(x=>`<span class="reccast${x.isRune?" isrune":""}${x.isArea?" isarea":""}" title="${esc(x.s.name)} · ${esc(x.s.words)} · lvl ${x.s.level} · cd ${x.s.cd/1000}s${x.isRune?" · runa":""}${x.isArea?" · área":""}"><i class="edot e-${x.el}"></i>${esc(x.s.name)}${x.isRune?`<b class="rmark">runa</b>`:""}${x.isArea?`<b class="amark">área</b>`:""}</span>`).join("");
+    const SHAPEPT={ball:"área",wave:"onda",beam:"linha",single:"alvo"};
+    const chips=ps.map(x=>{ const shl=SHAPEPT[x.shape]||"";
+      return `<span class="reccast${x.isRune?" isrune":""}" title="${esc(x.s.name)} · ${esc(x.s.words)} · lvl ${x.s.level} · cd ${x.s.cd/1000}s · ${shl}${x.isRune?" · runa":""}"><i class="edot e-${x.el}"></i>${esc(x.s.name)}${x.isRune?`<b class="rmark">runa</b>`:""}${shl?`<b class="amark">${shl}</b>`:""}</span>`; }).join("");
     rows+=`<div class="recmagrow"><span class="recvoc wvoc-${voc}">${VOCPT[voc]||voc}</span><span class="recmags">${chips}</span></div>`;
   }
   return rows?`<div class="recmag"><div class="recmagh">${title}</div>${rows}</div>`:"";
