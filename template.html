@@ -1002,7 +1002,7 @@ function huntCard(h,qq,open){
     +`<div class="recnote">Cada charm ocupa um slot e vai pra um monstro só, então dois bichos da hunt não podem levar o mesmo. A distribuição abaixo é a que rende mais no conjunto — não é o melhor de cada um isolado. O boss leva ${esc(CHARMS.boss.join(" + "))}.</div>`
     +recTable("🌐 Hunt (pack) — área: runas + magias, 4 por vocação", bestSpells(regs, false, h.ma||4))
     +(h.boss&&byName[norm(h.boss)]?recTable("👑 Boss (single-target) — 4 por vocação", bestSpells([byName[norm(h.boss)]], true)):"")
-    +`<div class="recnote">4 slots de ataque por vocação, cooldown global. Ranking = <b>dano × fraqueza (100−resist) × alvos ÷ cooldown</b> — a combinação que limpa mais rápido. Na hunt prioriza área (runas + magias) pra pegar o pack — que cresce ao longo das waves; no boss, alvo único. Estimativa pra orientar o loadout.</div></div>`
+    +`<div class="recnote">4 slots, <b>1 lançamento a cada 2s</b> (turno). A ordem é a prioridade de cast; a combinação simula os turnos pra maximizar o dano — por isso não repete runa de cd igual (só uma dispara por turno) e mistura nukes de cd maior com uma spammável. <b>Dano × fraqueza × alvos</b>; área pega o pack (cresce nas waves), boss é alvo único. Knight não usa runa (magia de área dele pega o imbuement da arma). Estimativa pra orientar o loadout.</div></div>`
     +`<div class="hmons2"><div class="lootlbl" style="margin-top:0;border:0;padding-top:0">Monstros</div>${mons}</div></div></details>`;
 }
 
@@ -1147,25 +1147,41 @@ function takenAvg(targets, el){ if(!targets.length) return 1; let a=0;
 // Combate: cooldown GLOBAL (l9) — lança ~1 magia por gcd, sempre a melhor pronta.
 // Melhor loadout pra limpar rápido = maior DANO EFETIVO por cast, limitado pelo cd:
 //   score = dano_base × fraqueza(100-resist) × alvos(área no pack) ÷ max(cd, gcd)
-const GCD_MS=2000;     // piso de cast (as magias/runas mais rápidas são ~2s)
+// Combate por TURNOS: 1 magia a cada 2s (cooldown global). Cada magia ainda tem o
+// cd próprio. Loadout ideal = maximizar dano na janela simulando os turnos — assim
+// runas de cd igual não se acumulam (só 1 lança por turno) e nukes de cd alto entram
+// nos turnos em que estão prontas. Knight não usa runa (magia de área pega imbuement).
+const TURN_MS=2000;
 function bestSpells(targets, isBoss, pack){
-  const PACK=pack||4;   // monstros vivos ao mesmo tempo (maxAlive da hunt)
+  const PACK=pack||4, WIN=15;   // janela de simulação (turnos)
   const out={};
   for(const voc of SREC_VOCS){
-    const cands=SPELLS.filter(x=>x.dmg && ((x.vocs||[]).includes(voc) || x.goldCost!=null)).map(x=>{
+    const isKnight = voc==="knight";
+    let cands=SPELLS.filter(x=>x.dmg && (x.vocs||[]).includes(voc) && !(isKnight && x.goldCost!=null)).map(x=>{
       const el=spellEl(x.words), base=spellBaseAvg(x), ef=takenAvg(targets,el);
-      const isArea=x.type==="area";
-      const alvos = isBoss ? 1 : (isArea ? PACK : 1);
-      const interval = Math.max(x.cd||2000, GCD_MS)/1000;   // cd real, com piso no gcd
-      return {s:x, el, isArea, isRune:x.goldCost!=null, score: base*ef*alvos/interval};
-    }).filter(x=>x.score>0).sort((a,b)=> b.score-a.score);
-    // dedupe só contra redundância de tier (mesmo elemento+tipo+runa) — deixa a fraqueza
-    // real mandar em vez de forçar variedade. Backfill garante os 4 slots.
-    const seen=new Set(), pick=[];
-    for(const c of cands){ const k=c.el+"|"+c.s.type+"|"+(c.isRune?"r":"s"); if(seen.has(k)) continue; seen.add(k); pick.push(c); if(pick.length>=4) break; }
-    if(pick.length<4){ const nm=new Set(pick.map(x=>x.s.name));
-      for(const c of cands){ if(nm.has(c.s.name)) continue; pick.push(c); if(pick.length>=4) break; } }
-    out[voc]=pick;
+      const isArea=x.type==="area", alvos=isBoss?1:(isArea?PACK:1);
+      return {s:x, el, isArea, isRune:x.goldCost!=null,
+        dmg: base*ef*alvos,                              // dano efetivo por cast
+        cdT: Math.max(1, Math.round((x.cd||2000)/TURN_MS))}; // cd em turnos (piso 1 = 2s)
+    }).filter(x=>x.dmg>0).sort((a,b)=> b.dmg-a.dmg);
+    // sem dedupe: a simulação já descarta redundância (magia de cd igual e dano menor
+    // nunca dispara). Só limita o pool por performance (top por dano).
+    const pool=cands.slice(0,16);
+    // simula a rotação: a cada turno (2s) lança a magia PRONTA de maior dano
+    const sim=set=>{ const rdy=set.map(()=>0); let tot=0;
+      for(let t=0;t<WIN;t++){ let bi=-1,bd=-1;
+        for(let i=0;i<set.length;i++) if(rdy[i]<=t && set[i].dmg>bd){ bd=set[i].dmg; bi=i; }
+        if(bi>=0){ tot+=set[bi].dmg; rdy[bi]=t+set[bi].cdT; } }
+      return tot; };
+    // greedy com GANHO ESTRITO: só entra a magia que realmente aumenta o dano da janela.
+    // Assim para de encher slot com runa que nunca dispara (cd igual, dano menor).
+    const chosen=[]; let cur=0;
+    while(chosen.length<4){
+      let bg=cur, bc=null;
+      for(const c of pool){ if(chosen.includes(c)) continue; const g=sim([...chosen,c]); if(g>bg+1e-6){ bg=g; bc=c; } }
+      if(!bc) break; chosen.push(bc); cur=bg;
+    }
+    out[voc]=chosen.sort((a,b)=> b.dmg-a.dmg);   // ordem exibida = prioridade de cast
   }
   return out;
 }
