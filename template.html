@@ -470,6 +470,8 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
   <div class="lvfilter" id="vocfilter"></div>
   <div class="lvfilter" id="eqlvfilter"></div>
   <div class="lvfilter" id="eqshopfilter"></div>
+  <div class="lvfilter" id="eqelfilter"></div>
+  <div class="lvfilter" id="eqelmodefilter"></div>
   <div class="lvfilter" id="mvocfilter"></div>
   <div class="lvfilter" id="mtypefilter"></div>
   <div class="spellstats" id="spellstats">
@@ -1072,6 +1074,10 @@ let equipVoc=0;
 // filtro de loja da aba Equip: [rótulo, chave em SHOP | null=todos]
 const EQSHOP=[["Todos",null],["🎟️ Boss token","b"],["🪙 Gold","g"],["Qualquer loja","any"]];
 let equipShop=0;
+const EQEL=[["Todos",null],["Físico","physical"],["Fogo","fire"],["Gelo","ice"],["Energia","energy"],["Terra","earth"],["Sagrado","holy"],["Morte","death"]];
+let equipEl=0;
+const EQELMODE=[["Ambos",null],["🛡 Defesa","def"],["⚔ Ataque","atk"]];
+let equipElMode=0;
 // filtros da aba Magias
 const MVOC=[["Todas",null],["Knight","knight"],["Pala","paladin"],["Sorc","sorcerer"],["Druid","druid"],["Monk","monk"]];
 let magiaVoc=0;
@@ -1522,11 +1528,18 @@ function render(){
     const [,lo,hiv] = EQLV[equipLv];
     const vk = EQVOC[equipVoc][1];
     const sk = EQSHOP[equipShop][1];
+    const elk = EQEL[equipEl][1], elm = EQELMODE[equipElMode][1];
     const res = EQUIP.filter(e=>
       (!slot||e.slot===slot) &&
       (e.lv>=lo&&e.lv<=hiv) &&
       (!vk ? true : vk==="none" ? !(e.voc&&e.voc.length) : (e.voc&&e.voc.includes(vk))) &&
       (!sk ? true : (s=>s && (sk==="any" ? (s.g!=null||s.b!=null) : s[sk]!=null))(SHOP[norm(e.n)])) &&
+      (!elk ? true : (()=>{
+        const def = !!(e.r && e.r[elk]>0);                                            // defende esse elemento
+        const atk = elk==="physical" ? (e.el==="physical" || (e.atk>0 && !e.el))       // ataca esse elemento
+                                      : e.el===elk;
+        return elm==="def" ? def : elm==="atk" ? atk : (def||atk);
+      })()) &&
       (!qq || norm(e.n).includes(qq) || norm(SLOTPT[e.slot]||"").includes(qq)
         || (e.voc&&e.voc.some(v=>norm(VOCPT[v]||v).includes(qq)||norm(v).includes(qq)))));
     open = raw && res.length<=6 ? " open":"";
@@ -1596,6 +1609,8 @@ wireFilter(slotfilter, EQSLOT, "slot", i=>equipSlot=i);
 wireFilter(vocfilter, EQVOC, "voc", i=>equipVoc=i);
 wireFilter(eqlvfilter, EQLV, "level", i=>equipLv=i);
 wireFilter(document.getElementById("eqshopfilter"), EQSHOP, "loja", i=>equipShop=i);
+wireFilter(document.getElementById("eqelfilter"), EQEL, "elem", i=>equipEl=i);
+wireFilter(document.getElementById("eqelmodefilter"), EQELMODE, "def/atk", i=>equipElMode=i);
 const mvocfilter=document.getElementById("mvocfilter");
 const mtypefilter=document.getElementById("mtypefilter");
 wireFilter(mvocfilter, MVOC, "voc", i=>magiaVoc=i);
@@ -1621,7 +1636,7 @@ function setMode(m){
   mode=m; limit=CHUNK;
   [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["casket",mCasket],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   lvfilter.style.display = m==="hunt" ? "flex" : "none";
-  slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = m==="equip" ? "flex" : "none";
+  slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = document.getElementById("eqelfilter").style.display = document.getElementById("eqelmodefilter").style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
   spellstats.style.display = m==="magia" ? "flex" : "none";
   document.getElementById("spellres").style.display = m==="magia" ? "flex" : "none";
