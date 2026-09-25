@@ -626,10 +626,11 @@ function dmgGrid(dmg){
 function dptFmt(v){ return v>=1000 ? (Math.round(v/100)/10)+"k" : String(Math.round(v)); }
 function dptGrid(dmg){
   if(!dmg.length) return `<div class="resgrid"><span class="hnone">só corpo a corpo</span></div>`;
-  return `<div class="resgrid">`+dmg.map(d=>
-    `<span class="reschip dm" title="${ELPT[d.el]||d.el}: ~${Math.round(d.v).toLocaleString("pt-BR")}/turno (${d.pct}%)"><span class="resic">`
+  return `<div class="resgrid">`+dmg.map(d=>{
+    const rng = d.mn&&d.mn!==d.v ? d.mn.toLocaleString("pt-BR")+"–"+Math.round(d.v).toLocaleString("pt-BR") : Math.round(d.v).toLocaleString("pt-BR");
+    return `<span class="reschip dm" title="${ELPT[d.el]||d.el}: pico ~${Math.round(d.v).toLocaleString("pt-BR")}/turno (golpe ${rng} se tudo acertar)"><span class="resic">`
     +`<img src="${ELICO[d.el]}" alt="${ELPT[d.el]||d.el}" width="11" height="11"></span>`
-    +`<b>~${dptFmt(d.v)}</b></span>`).join("")+`</div>`;
+    +`<b>~${dptFmt(d.v)}</b></span>`;}).join("")+`</div>`;
 }
 // ---- Aba Casket: candidatos do addon casket ----
 // Cores neutras pro preview (no jogo cada um escolhe as suas).
@@ -903,13 +904,14 @@ function huntMon(name, isBoss, atrib){
   const dot=el=>`<i class="edot e-${el}"></i>`;
   const weak=[]; if(m.r) for(const el in m.r){const v=m.r[el]; if(v<0)weak.push([el,v]);}
   weak.sort((a,b)=>a[1]-b[1]);
-  // dano esperado por turno, por elemento: melee (físico, média do range, todo turno)
-  // + habilidades (chance% x média do dano). Estimativa pra saber o que proteger.
-  const th={};
-  if(m.dm&&(m.dm[0]||m.dm[1])) th.physical=(th.physical||0)+((m.dm[0]||0)+(m.dm[1]||0))/2;
-  for(const ab of m.a||[]) if(ab.el&&ab.el!=="healing") th[ab.el]=(th[ab.el]||0)+(ab.ch||0)*(((ab.mn||0)+(ab.mx||0))/2)/100;
+  // PICO de dano por turno por elemento (pior caso = todas as habilidades daquele
+  // elemento acertam no mesmo turno; somo os MAX). O jogo solta várias no turno, então
+  // é isso que hit-kill. mn = piso (soma dos min); mx = pico (soma dos max).
+  const th={}, thmn={};
+  if(m.dm&&m.dm[1]){ th.physical=(th.physical||0)+m.dm[1]; thmn.physical=(thmn.physical||0)+(m.dm[0]||0); }
+  for(const ab of m.a||[]) if(ab.el&&ab.el!=="healing"){ th[ab.el]=(th[ab.el]||0)+(ab.mx||0); thmn[ab.el]=(thmn[ab.el]||0)+(ab.mn||0); }
   const tot=Object.values(th).reduce((a,b)=>a+b,0);
-  const dmg=Object.entries(th).map(([el,v])=>({el,v,pct:tot?Math.round(v/tot*100):0})).filter(d=>d.v>0).sort((a,b)=>b.v-a.v);
+  const dmg=Object.entries(th).map(([el,v])=>({el,v,mn:thmn[el]||0})).filter(d=>d.v>0).sort((a,b)=>b.v-a.v);
   // boss tem regra propria (crit); os outros recebem o charm que a distribuicao decidiu
   // cada bicho leva 1 major + 1 minor. O major vem do dano do elemento; o minor, do perfil.
   const why = atrib && atrib.c
@@ -929,7 +931,7 @@ function huntMon(name, isBoss, atrib){
     +(ch?`<div class="hmon-charms">${ch}</div>`:"")
     +`<div class="hmon-cols">`
     +`<div class="hmon-col"><div class="rlbl">dano que recebe <span class="hint">· 100% = normal</span></div>${resGrid(m.r)}</div>`
-    +`<div class="hmon-col"><div class="rlbl">dano/turno por elemento <span class="hint">· ~${Math.round(tot).toLocaleString("pt-BR")}/turno</span></div>${dptGrid(dmg)}</div>`
+    +`<div class="hmon-col"><div class="rlbl">dano/turno por elemento <span class="hint">· pico ~${Math.round(tot).toLocaleString("pt-BR")}/turno</span></div>${dptGrid(dmg)}</div>`
     +`</div>`
     +`</div></div>`;
 }
