@@ -1501,6 +1501,10 @@ function render(){
   if(mode==="war"){
     const qw=norm(q.value.trim());
     const res=WAR.contas.filter(a=>!qw||norm(a.c).includes(qw)||a.ch.some(c=>norm(c.n).includes(qw)));
+    // ordena pelo MESMO total que o card exibe (só os chars relevantes), senão o
+    // ranking não bate com o número mostrado
+    const relTot=a=>warChars(a).reduce((t,c)=>t+c.lv,0);
+    res.sort((a,b)=>relTot(b)-relTot(a));
     const op=q.value.trim()&&res.length<=4?" open":"";
     list.innerHTML=warHeader()+res.map((a,i)=>warCard(a,qw,op,i+1)).join("");
     const rb=document.getElementById("warRefresh");

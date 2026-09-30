@@ -1,20 +1,66 @@
 {
  "meta": {
-  "id": 205,
+  "id": 225,
   "foe": "Brazino",
   "tag": "777",
   "size": 50,
-  "at": "19/09/2026, 21:37:01",
+  "at": "30/09/2026, 09:41:38",
   "media_res": [],
   "amostra": 0
  },
  "contas": [
   {
+   "c": "Knoxcruel",
+   "ch": [
+    {
+     "n": "Knox Druid",
+     "lv": 2621,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Buff RP",
+     "lv": 2250,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Knox Pally",
+     "lv": 2088,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Knox",
+     "lv": 578,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Knox Monk",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 7545
+  },
+  {
    "c": "KevinSumo",
    "ch": [
     {
      "n": "Sumo Il",
-     "lv": 2275,
+     "lv": 2685,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -22,7 +68,7 @@
     },
     {
      "n": "Sumo II",
-     "lv": 2040,
+     "lv": 2430,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -30,7 +76,7 @@
     },
     {
      "n": "Sumo lI",
-     "lv": 1638,
+     "lv": 2081,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -53,14 +99,174 @@
      "at": {}
     }
    ],
-   "tot": 6104
+   "tot": 7347
+  },
+  {
+   "c": "Gandalf Prime",
+   "ch": [
+    {
+     "n": "Gandalf White",
+     "lv": 2465,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Elder Gandalf",
+     "lv": 2163,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Gandalf Prime",
+     "lv": 2031,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 6659
+  },
+  {
+   "c": "Leozinho Ricaria",
+   "ch": [
+    {
+     "n": "Leozinho Ricaria",
+     "lv": 2191,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Leozinho Edzord",
+     "lv": 1982,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Leozinho Ekzord",
+     "lv": 1744,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Monk Ricaria",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Rp Ricaria",
+     "lv": 8,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 5933
+  },
+  {
+   "c": "Ekivokz",
+   "ch": [
+    {
+     "n": "Ekivokz Ms",
+     "lv": 2030,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Ekivokz Ed",
+     "lv": 1772,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Ekivokz Ek",
+     "lv": 1670,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Ekivokz",
+     "lv": 351,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 5823
+  },
+  {
+   "c": "dud",
+   "ch": [
+    {
+     "n": "Nida",
+     "lv": 1674,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Misha",
+     "lv": 1621,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Maya",
+     "lv": 1521,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Niko Bolas",
+     "lv": 591,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Neno Franjoso",
+     "lv": 75,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 5482
   },
   {
    "c": "cariokapvp",
    "ch": [
     {
      "n": "Akc Druid",
-     "lv": 1754,
+     "lv": 2045,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -68,7 +274,7 @@
     },
     {
      "n": "Akc Sorc",
-     "lv": 1438,
+     "lv": 1708,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -76,38 +282,344 @@
     },
     {
      "n": "Akc Knight",
-     "lv": 1354,
+     "lv": 1596,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 4546
+   "tot": 5349
   },
   {
-   "c": "Grunkhal",
+   "c": "Nacht",
    "ch": [
     {
-     "n": "Mandaloriano",
-     "lv": 1417,
+     "n": "Nacht",
+     "lv": 1438,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Tan Kaum",
+     "lv": 1394,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Luke Skywalker",
-     "lv": 1294,
+     "n": "Kura Nichts",
+     "lv": 1312,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Obi Wan Kenobi",
-     "lv": 1266,
+     "n": "Pally Taum",
+     "lv": 1013,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Monkol",
+     "lv": 33,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 5190
+  },
+  {
+   "c": "GrazY",
+   "ch": [
+    {
+     "n": "Gina Weasley",
+     "lv": 1646,
      "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Pichi Hime",
+     "lv": 1524,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "GrazY",
+     "lv": 1470,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Dojan",
+     "lv": 335,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Simeon the Holy Fool",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4983
+  },
+  {
+   "c": "poldao",
+   "ch": [
+    {
+     "n": "Poldao Sorcerer",
+     "lv": 1692,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Poldao Druid",
+     "lv": 1518,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Poldao Knight",
+     "lv": 1472,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Poldao",
+     "lv": 223,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4905
+  },
+  {
+   "c": "Vitaozkl",
+   "ch": [
+    {
+     "n": "Back",
+     "lv": 1589,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Loren",
+     "lv": 1485,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Vitaozin",
+     "lv": 1479,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Vitao",
+     "lv": 213,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Vimonk",
+     "lv": 137,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4903
+  },
+  {
+   "c": "BRL",
+   "ch": [
+    {
+     "n": "BRL",
+     "lv": 1477,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "BRL Heal",
+     "lv": 1410,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "BRL Mage",
+     "lv": 1385,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "BRL Pally",
+     "lv": 324,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "BRL Fighter",
+     "lv": 301,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4897
+  },
+  {
+   "c": "Hespert",
+   "ch": [
+    {
+     "n": "Hespaladin",
+     "lv": 1401,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "HespSorc",
+     "lv": 1316,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "HespDruid",
+     "lv": 1315,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "HespNight",
+     "lv": 753,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "HespMonk",
+     "lv": 98,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4883
+  },
+  {
+   "c": "Kashmir Knight",
+   "ch": [
+    {
+     "n": "Valenteco",
+     "lv": 1438,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Kashmir Knight",
+     "lv": 1293,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Kashmir Sorc",
+     "lv": 1088,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Skynetneo",
+     "lv": 953,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4772
+  },
+  {
+   "c": "Grunkhal",
+   "ch": [
+    {
+     "n": "Mandaloriano",
+     "lv": 1557,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Obi Wan Kenobi",
+     "lv": 1481,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Luke Skywalker",
+     "lv": 1462,
+     "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
@@ -129,52 +641,282 @@
      "at": {}
     }
    ],
-   "tot": 4237
+   "tot": 4760
   },
   {
-   "c": "poldao",
+   "c": "Bilzinho",
    "ch": [
     {
-     "n": "Poldao Sorcerer",
-     "lv": 1382,
+     "n": "Vittorinha",
+     "lv": 1590,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Poldao Druid",
-     "lv": 1245,
+     "n": "Bilzinho",
+     "lv": 1473,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Poldao Knight",
-     "lv": 1223,
+     "n": "Jamantinha",
+     "lv": 1372,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Poldao",
-     "lv": 223,
+     "n": "Gusz",
+     "lv": 164,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Eduarco",
+     "lv": 72,
      "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 4073
+   "tot": 4671
+  },
+  {
+   "c": "Sankah",
+   "ch": [
+    {
+     "n": "Sankah",
+     "lv": 1314,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Sanka",
+     "lv": 1273,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Sankazinha",
+     "lv": 1234,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "SankaHuanka",
+     "lv": 814,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4635
+  },
+  {
+   "c": "lekao2011",
+   "ch": [
+    {
+     "n": "Baiano",
+     "lv": 1366,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "COMI O RAFA",
+     "lv": 1238,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Baianex",
+     "lv": 1038,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Baianou",
+     "lv": 976,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Baiano MK",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4626
+  },
+  {
+   "c": "Gebrim",
+   "ch": [
+    {
+     "n": "Gebrim I",
+     "lv": 1523,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Gebrim III",
+     "lv": 1479,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Gebrim II",
+     "lv": 1453,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Bruttak",
+     "lv": 117,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Bruttak Mk",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4580
+  },
+  {
+   "c": "Bomax",
+   "ch": [
+    {
+     "n": "Bodruid",
+     "lv": 1493,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Bomax",
+     "lv": 1386,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Bomage",
+     "lv": 1386,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Bopala",
+     "lv": 264,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Bomonk",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4537
+  },
+  {
+   "c": "Hammerwake",
+   "ch": [
+    {
+     "n": "Hammerwake Knight",
+     "lv": 1267,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Hammerwake Druid",
+     "lv": 1117,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Hammerwake",
+     "lv": 1116,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Hammerwake Arrow",
+     "lv": 516,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Hammerwake Punch",
+     "lv": 472,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4488
   },
   {
    "c": "mTs",
    "ch": [
     {
      "n": "mTs",
-     "lv": 1334,
+     "lv": 1482,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -182,7 +924,7 @@
     },
     {
      "n": "Mirulita",
-     "lv": 1304,
+     "lv": 1478,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -190,7 +932,7 @@
     },
     {
      "n": "Mirutuga",
-     "lv": 1086,
+     "lv": 1236,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -205,152 +947,60 @@
      "at": {}
     }
    ],
-   "tot": 4005
+   "tot": 4477
   },
   {
-   "c": "Hammerwake",
+   "c": "reizu",
    "ch": [
     {
-     "n": "Hammerwake Knight",
-     "lv": 1214,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Hammerwake",
-     "lv": 1078,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Hammerwake Druid",
-     "lv": 1077,
+     "n": "Reizu Nodasio",
+     "lv": 1668,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Hammerwake Arrow",
-     "lv": 305,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Hammerwake Punch",
-     "lv": 284,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 3958
-  },
-  {
-   "c": "Kydon",
-   "ch": [
-    {
-     "n": "Kydon",
-     "lv": 1310,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Kydon Druid",
-     "lv": 1213,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Kydon Sorcer",
-     "lv": 1170,
+     "n": "Post Archive Faction",
+     "lv": 1407,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Kydon Paladin",
-     "lv": 183,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Kydon Monk",
-     "lv": 74,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 3950
-  },
-  {
-   "c": "Gebrim",
-   "ch": [
-    {
-     "n": "CARCEREIRO",
-     "lv": 1204,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Wizard",
-     "lv": 1028,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Sarah",
-     "lv": 1022,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Penal",
-     "lv": 435,
+     "n": "Fahhhhhhhhh",
+     "lv": 1359,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Fuzil",
-     "lv": 187,
+     "n": "Louie Vee",
+     "lv": 8,
      "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Sixsevenn",
+     "lv": 8,
+     "v": "monk",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 3876
+   "tot": 4450
   },
   {
    "c": "Waker",
    "ch": [
     {
      "n": "Royal Waker",
-     "lv": 1311,
+     "lv": 1515,
      "v": "paladin",
      "sk": {},
      "res": {},
@@ -358,7 +1008,7 @@
     },
     {
      "n": "Elder Waker",
-     "lv": 1209,
+     "lv": 1389,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -366,7 +1016,7 @@
     },
     {
      "n": "Waker",
-     "lv": 1185,
+     "lv": 1343,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -389,14 +1039,228 @@
      "at": {}
     }
    ],
-   "tot": 3876
+   "tot": 4418
+  },
+  {
+   "c": "Blue",
+   "ch": [
+    {
+     "n": "Setzer Gamba",
+     "lv": 1216,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Ruu the Panda",
+     "lv": 1176,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Fixuku",
+     "lv": 1163,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Blu",
+     "lv": 761,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "FluffyHits",
+     "lv": 90,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4406
+  },
+  {
+   "c": "Renanzera",
+   "ch": [
+    {
+     "n": "MS do Renanzera",
+     "lv": 1559,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "ED Renanzera",
+     "lv": 1388,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Renanzera",
+     "lv": 1244,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "RP Renanzera",
+     "lv": 199,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4390
+  },
+  {
+   "c": "KidK",
+   "ch": [
+    {
+     "n": "KidK Knight",
+     "lv": 1439,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "KidK Sorc",
+     "lv": 1422,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "KidK Druid",
+     "lv": 1415,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "KidK Pally",
+     "lv": 44,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4320
+  },
+  {
+   "c": "fefo",
+   "ch": [
+    {
+     "n": "fefoo",
+     "lv": 1374,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "fefe",
+     "lv": 1275,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "fefa",
+     "lv": 1241,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "fofo",
+     "lv": 313,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "fufu",
+     "lv": 89,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4292
+  },
+  {
+   "c": "0xRW",
+   "ch": [
+    {
+     "n": "Warlord Nocturn ED",
+     "lv": 1625,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Warlord Nocturn MS",
+     "lv": 1352,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Warlord Nocturn",
+     "lv": 1293,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Olavo",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Teodoro",
+     "lv": 8,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4286
   },
   {
    "c": "Dani Green",
    "ch": [
     {
      "n": "Sophie",
-     "lv": 1250,
+     "lv": 1408,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -404,7 +1268,7 @@
     },
     {
      "n": "Elder Loyt",
-     "lv": 1217,
+     "lv": 1340,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -412,7 +1276,7 @@
     },
     {
      "n": "Loytek",
-     "lv": 1160,
+     "lv": 1294,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -427,83 +1291,183 @@
      "at": {}
     }
    ],
-   "tot": 3864
+   "tot": 4279
   },
   {
-   "c": "Albilau",
+   "c": "Boombastick",
    "ch": [
     {
-     "n": "Albilau EK",
-     "lv": 1189,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Albilau ED",
-     "lv": 1132,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Albilau MS",
-     "lv": 1119,
+     "n": "Nightmare",
+     "lv": 1389,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Albilau Pala",
-     "lv": 300,
+     "n": "Zuza Fragaboss",
+     "lv": 1336,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Black Knight",
+     "lv": 1236,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Boombasticks",
+     "lv": 240,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Boombastick",
+     "lv": 42,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4243
+  },
+  {
+   "c": "Lazera17",
+   "ch": [
+    {
+     "n": "Hellbringer",
+     "lv": 1464,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Beltranu",
+     "lv": 1270,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Eskibiribou",
+     "lv": 1160,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Boltada Divina",
+     "lv": 254,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Punhos de Adamantium",
+     "lv": 14,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4162
+  },
+  {
+   "c": "Top Monk",
+   "ch": [
+    {
+     "n": "CARCEREIRO",
+     "lv": 1311,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Wizard",
+     "lv": 1121,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Sarah",
+     "lv": 1105,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Penal",
+     "lv": 435,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Fuzil",
+     "lv": 187,
      "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 3740
+   "tot": 4159
   },
   {
-   "c": "Prince of Darkness",
+   "c": "Mellow",
    "ch": [
     {
-     "n": "Fogo",
-     "lv": 1077,
+     "n": "Mellox",
+     "lv": 1430,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Prince of Darkness",
-     "lv": 1052,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Cicle of Water",
-     "lv": 1052,
+     "n": "Mellowz",
+     "lv": 1243,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Jaka bow",
-     "lv": 467,
+     "n": "Mellow",
+     "lv": 1171,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Melloz",
+     "lv": 280,
      "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Céu Son",
+     "n": "Mellowp",
      "lv": 8,
      "v": "monk",
      "sk": {},
@@ -511,14 +1475,60 @@
      "at": {}
     }
    ],
-   "tot": 3656
+   "tot": 4132
+  },
+  {
+   "c": "murilera",
+   "ch": [
+    {
+     "n": "Mbapper",
+     "lv": 1359,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Cucurela",
+     "lv": 1328,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Ankara Messi",
+     "lv": 1243,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Vovozinha",
+     "lv": 188,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Rodrii",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4126
   },
   {
    "c": "dgg",
    "ch": [
     {
      "n": "Pecador",
-     "lv": 1144,
+     "lv": 1291,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -526,7 +1536,7 @@
     },
     {
      "n": "Merli",
-     "lv": 1079,
+     "lv": 1243,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -534,7 +1544,7 @@
     },
     {
      "n": "Skullz",
-     "lv": 1071,
+     "lv": 1223,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -557,175 +1567,45 @@
      "at": {}
     }
    ],
-   "tot": 3650
+   "tot": 4113
   },
   {
-   "c": "tSh",
+   "c": "Camposzkk",
    "ch": [
     {
-     "n": "Lightbringer",
-     "lv": 1007,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Frieren",
-     "lv": 992,
+     "n": "Camposzkk ED",
+     "lv": 1346,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Witch Hat",
-     "lv": 971,
+     "n": "Camposzkk Sorc",
+     "lv": 1178,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "tSh",
-     "lv": 567,
+     "n": "Camposzkk EK",
+     "lv": 1163,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Discordia",
-     "lv": 54,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 3591
-  },
-  {
-   "c": "Biel Dashaliso",
-   "ch": [
-    {
-     "n": "Biiel Ed",
-     "lv": 1076,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Biel Ek",
-     "lv": 1001,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Biel Ms",
-     "lv": 1000,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Biel Rp",
-     "lv": 268,
+     "n": "CLEBERRP",
+     "lv": 416,
      "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Biel Monk",
-     "lv": 185,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 3530
-  },
-  {
-   "c": "Mayerzin",
-   "ch": [
-    {
-     "n": "Mayerzinn",
-     "lv": 1175,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Mayer MS",
-     "lv": 1161,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Mayerzin",
-     "lv": 1126,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Mayerzao",
-     "lv": 8,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 3470
-  },
-  {
-   "c": "Aryex",
-   "ch": [
-    {
-     "n": "Aryex",
-     "lv": 1067,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Dj Heal",
-     "lv": 1032,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Dj Death",
-     "lv": 1012,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Dj Arrow",
-     "lv": 337,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Dj Yoga",
+     "n": "camposzkk monkzinho",
      "lv": 8,
      "v": "monk",
      "sk": {},
@@ -733,60 +1613,52 @@
      "at": {}
     }
    ],
-   "tot": 3456
+   "tot": 4111
   },
   {
-   "c": "Juninhowsz",
+   "c": "Nettolas",
    "ch": [
     {
-     "n": "JUNIOR SDZERO",
-     "lv": 1171,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Juninhowsz Paramax",
-     "lv": 1074,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Juninhowsz",
-     "lv": 1071,
+     "n": "Sullivan",
+     "lv": 1463,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Juninhowsz Palitero",
-     "lv": 125,
-     "v": "paladin",
+     "n": "Nettolas",
+     "lv": 1323,
+     "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "JUNIOR MK",
+     "n": "Toinho DMG",
+     "lv": 1299,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Toinho TacaPalito",
      "lv": 8,
-     "v": "monk",
+     "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 3449
+   "tot": 4093
   },
   {
    "c": "Bolerin",
    "ch": [
     {
      "n": "Bolerin Ms",
-     "lv": 1187,
+     "lv": 1432,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -794,7 +1666,7 @@
     },
     {
      "n": "Bolerin Ed",
-     "lv": 1103,
+     "lv": 1320,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -802,7 +1674,7 @@
     },
     {
      "n": "Bolerin",
-     "lv": 1055,
+     "lv": 1262,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -825,52 +1697,464 @@
      "at": {}
     }
    ],
-   "tot": 3423
+   "tot": 4092
   },
   {
-   "c": "Ghr",
+   "c": "Albilau",
    "ch": [
     {
-     "n": "Ghr Kina",
-     "lv": 1069,
+     "n": "Albilau EK",
+     "lv": 1289,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Ghr Druid",
-     "lv": 1014,
+     "n": "Albilau ED",
+     "lv": 1262,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Grh Mage",
-     "lv": 994,
+     "n": "Albilau MS",
+     "lv": 1218,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Ghr",
-     "lv": 318,
+     "n": "Albilau Pala",
+     "lv": 300,
      "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 3395
+   "tot": 4069
+  },
+  {
+   "c": "Dioo",
+   "ch": [
+    {
+     "n": "Vequiluxi",
+     "lv": 1343,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "dioo cura",
+     "lv": 1285,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Dioo",
+     "lv": 1255,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Dioo fraga",
+     "lv": 178,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "o mongg",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4069
+  },
+  {
+   "c": "Juninhowsz",
+   "ch": [
+    {
+     "n": "JUNIOR SDZERO",
+     "lv": 1404,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Juninhowsz Paramax",
+     "lv": 1262,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Juninhowsz",
+     "lv": 1245,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Juninhowsz Palitero",
+     "lv": 125,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "JUNIOR MK",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4044
+  },
+  {
+   "c": "kirokiro",
+   "ch": [
+    {
+     "n": "Thor CuradorNato",
+     "lv": 1552,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Thor MagiaSinistra",
+     "lv": 1254,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Thor Bolado",
+     "lv": 1219,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Thor BoltadaLouca",
+     "lv": 8,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 4033
+  },
+  {
+   "c": "Prince of Darkness",
+   "ch": [
+    {
+     "n": "Fogo",
+     "lv": 1187,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Prince of Darkness",
+     "lv": 1169,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Cicle of Water",
+     "lv": 1156,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Jaka bow",
+     "lv": 467,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Céu Son",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3987
+  },
+  {
+   "c": "tSh",
+   "ch": [
+    {
+     "n": "Lightbringer",
+     "lv": 1161,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Frieren",
+     "lv": 1112,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Witch Hat",
+     "lv": 1079,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "tSh",
+     "lv": 575,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Discordia",
+     "lv": 54,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3981
+  },
+  {
+   "c": "dendenmushi",
+   "ch": [
+    {
+     "n": "seeeloco",
+     "lv": 1434,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "poisépoisépoisé",
+     "lv": 1294,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "denden",
+     "lv": 1250,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3978
+  },
+  {
+   "c": "Commander Idle",
+   "ch": [
+    {
+     "n": "Commander Idle",
+     "lv": 1319,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Major Idle",
+     "lv": 1253,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Soldier Idle",
+     "lv": 1234,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Marechal Idle",
+     "lv": 163,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3969
+  },
+  {
+   "c": "Hugomfd",
+   "ch": [
+    {
+     "n": "Magico Calistenico",
+     "lv": 1394,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Medico Calistenico",
+     "lv": 1314,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Bodybuilder",
+     "lv": 1246,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Atirador Calistenico",
+     "lv": 8,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3962
+  },
+  {
+   "c": "Shikai",
+   "ch": [
+    {
+     "n": "Quincy",
+     "lv": 1290,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Shikai",
+     "lv": 1288,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Bankaii",
+     "lv": 1286,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3864
+  },
+  {
+   "c": "kanov",
+   "ch": [
+    {
+     "n": "Eo Monk Vida",
+     "lv": 1339,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Ana Maria Larga",
+     "lv": 1250,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Kanovinho",
+     "lv": 1216,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Escravo do Meta",
+     "lv": 8,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "indigena",
+     "lv": 8,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3821
   },
   {
    "c": "Hellflex",
    "ch": [
     {
+     "n": "Dehzaum",
+     "lv": 1175,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
      "n": "Juiz",
-     "lv": 1064,
+     "lv": 1173,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -878,16 +2162,8 @@
     },
     {
      "n": "Hellflex",
-     "lv": 1031,
+     "lv": 1169,
      "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Dehzaum",
-     "lv": 1006,
-     "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
@@ -901,14 +2177,60 @@
      "at": {}
     }
    ],
-   "tot": 3380
+   "tot": 3796
+  },
+  {
+   "c": "Aryex",
+   "ch": [
+    {
+     "n": "Aryex",
+     "lv": 1156,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Dj Heal",
+     "lv": 1150,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Dj Death",
+     "lv": 1115,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Dj Arrow",
+     "lv": 337,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Dj Yoga",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3766
   },
   {
    "c": "Erasus",
    "ch": [
     {
      "n": "Tonhao da Cacimbinha",
-     "lv": 973,
+     "lv": 1104,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -916,7 +2238,7 @@
     },
     {
      "n": "Flavin do Pneu",
-     "lv": 922,
+     "lv": 1045,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -924,7 +2246,7 @@
     },
     {
      "n": "Lúcia Pasteleira",
-     "lv": 922,
+     "lv": 1045,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -947,89 +2269,29 @@
      "at": {}
     }
    ],
-   "tot": 3362
+   "tot": 3739
   },
   {
-   "c": "Shikai",
+   "c": "Freeyback",
    "ch": [
     {
-     "n": "Shikai",
-     "lv": 1130,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Quincy",
-     "lv": 1106,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Bankaii",
-     "lv": 1102,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 3338
-  },
-  {
-   "c": "Krug",
-   "ch": [
-    {
-     "n": "Krug",
-     "lv": 1207,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Atacador De Runa",
-     "lv": 1057,
+     "n": "Bambino",
+     "lv": 1262,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Cucucura",
-     "lv": 1049,
+     "n": "Preeyback",
+     "lv": 1217,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Boneco Lixo",
-     "lv": 8,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Boneco Pior",
-     "lv": 8,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 3329
-  },
-  {
-   "c": "Shysco",
-   "ch": [
-    {
-     "n": "Shysco",
+     "n": "Freeyback",
      "lv": 1181,
      "v": "knight",
      "sk": {},
@@ -1037,84 +2299,38 @@
      "at": {}
     },
     {
-     "n": "Shysca",
-     "lv": 1003,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Shysto",
-     "lv": 996,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Shysco P",
-     "lv": 137,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 3317
-  },
-  {
-   "c": "kattox",
-   "ch": [
-    {
-     "n": "Kattox Nightank",
-     "lv": 1129,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Kattox",
-     "lv": 1028,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Kattox Salva Vidas",
-     "lv": 1021,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Kattoxladino",
-     "lv": 62,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Monkattox",
-     "lv": 8,
+     "n": "Monkeke",
+     "lv": 24,
      "v": "monk",
      "sk": {},
      "res": {},
      "at": {}
+    },
+    {
+     "n": "TacaTudo",
+     "lv": 24,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
     }
    ],
-   "tot": 3248
+   "tot": 3708
   },
   {
    "c": "IghorMVP",
    "ch": [
     {
+     "n": "Sarc",
+     "lv": 1181,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
      "n": "Eternal Knight",
-     "lv": 1036,
+     "lv": 1162,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -1122,16 +2338,8 @@
     },
     {
      "n": "PazTerrivel",
-     "lv": 991,
+     "lv": 1145,
      "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Sarc",
-     "lv": 982,
-     "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
@@ -1153,90 +2361,52 @@
      "at": {}
     }
    ],
-   "tot": 3228
+   "tot": 3707
   },
   {
-   "c": "Mano GT",
+   "c": "Ambu",
    "ch": [
     {
-     "n": "Gutin Menor dochapa",
-     "lv": 1102,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Menor Disposicao",
-     "lv": 1053,
+     "n": "Ambuzinha",
+     "lv": 1105,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "GT Menorzin Enjoado",
-     "lv": 1044,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 3199
-  },
-  {
-   "c": "Renannzin",
-   "ch": [
-    {
-     "n": "MSZera",
-     "lv": 1088,
+     "n": "Flamhur de Gelo",
+     "lv": 1066,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "DRUIZIN",
-     "lv": 1056,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Renann",
-     "lv": 1032,
+     "n": "Ambutroll",
+     "lv": 1038,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Mankzada",
-     "lv": 8,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Palazera",
-     "lv": 8,
+     "n": "Atirador de Vento",
+     "lv": 496,
      "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 3192
+   "tot": 3705
   },
   {
    "c": "Baguetao",
    "ch": [
     {
      "n": "Cisorz ED",
-     "lv": 1061,
+     "lv": 1225,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -1244,7 +2414,7 @@
     },
     {
      "n": "Famoj",
-     "lv": 978,
+     "lv": 1200,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -1252,7 +2422,7 @@
     },
     {
      "n": "Baguetão Blocador",
-     "lv": 927,
+     "lv": 1078,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -1275,30 +2445,30 @@
      "at": {}
     }
    ],
-   "tot": 3162
+   "tot": 3699
   },
   {
    "c": "lmilech",
    "ch": [
     {
-     "n": "Shan Helmet",
-     "lv": 1001,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
      "n": "Demomage",
-     "lv": 969,
+     "lv": 1176,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
+     "n": "Shan Helmet",
+     "lv": 1167,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
      "n": "Macer",
-     "lv": 934,
+     "lv": 1082,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -1306,7 +2476,7 @@
     },
     {
      "n": "Arkmedz",
-     "lv": 126,
+     "lv": 128,
      "v": "paladin",
      "sk": {},
      "res": {},
@@ -1314,98 +2484,52 @@
     },
     {
      "n": "ShianBuff",
-     "lv": 120,
+     "lv": 122,
      "v": "monk",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 3150
+   "tot": 3675
   },
   {
-   "c": "Janderson",
+   "c": "Soh Lamento",
    "ch": [
     {
-     "n": "Jandershow Ek",
-     "lv": 1073,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Jandershow",
-     "lv": 1010,
+     "n": "Cura Muito",
+     "lv": 1149,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Jandershow Ms",
-     "lv": 978,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Jandershow Rp",
-     "lv": 81,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Jander Monk",
-     "lv": 8,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 3150
-  },
-  {
-   "c": "Kipz",
-   "ch": [
-    {
-     "n": "Kipez",
-     "lv": 949,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Kipz",
-     "lv": 924,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Tanknifico",
-     "lv": 914,
+     "n": "Jhonn",
+     "lv": 1100,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Kipzera",
-     "lv": 339,
+     "n": "Guh Zao",
+     "lv": 1056,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Pipoca",
+     "lv": 355,
      "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Nega Ro",
+     "n": "Ator Pago",
      "lv": 9,
      "v": "monk",
      "sk": {},
@@ -1413,77 +2537,115 @@
      "at": {}
     }
    ],
-   "tot": 3135
+   "tot": 3669
   },
   {
-   "c": "Diadorim1",
+   "c": "Poolter",
    "ch": [
     {
-     "n": "Hazekush",
-     "lv": 1051,
+     "n": "Karthus",
+     "lv": 1256,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Curse cure",
-     "lv": 1016,
+     "n": "Sona",
+     "lv": 1203,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Tankaa",
-     "lv": 981,
+     "n": "Poolter",
+     "lv": 1158,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Usoop",
-     "lv": 62,
+     "n": "Ezreal",
+     "lv": 21,
      "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Gouzink",
-     "lv": 8,
+     "n": "MMMMMMMM",
+     "lv": 21,
      "v": "monk",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 3118
+   "tot": 3659
   },
   {
-   "c": "Henrike",
+   "c": "Shysco",
    "ch": [
     {
-     "n": "Henrikek",
-     "lv": 909,
+     "n": "Shysco",
+     "lv": 1308,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "AxlD",
-     "lv": 852,
+     "n": "Shysca",
+     "lv": 1100,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "AxlS",
-     "lv": 847,
+     "n": "Shysto",
+     "lv": 1090,
      "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Shysco P",
+     "lv": 137,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3635
+  },
+  {
+   "c": "Henrike",
+   "ch": [
+    {
+     "n": "Henrikek",
+     "lv": 1080,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "AxlS",
+     "lv": 1015,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "AxlD",
+     "lv": 1014,
+     "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
@@ -1505,106 +2667,14 @@
      "at": {}
     }
    ],
-   "tot": 3111
-  },
-  {
-   "c": "xeulins",
-   "ch": [
-    {
-     "n": "Xeulins",
-     "lv": 1002,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Xeuulin",
-     "lv": 963,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Xeuliins",
-     "lv": 942,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Xeulin",
-     "lv": 195,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Xaulins",
-     "lv": 8,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 3110
-  },
-  {
-   "c": "L X",
-   "ch": [
-    {
-     "n": "l x k",
-     "lv": 966,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Lxk",
-     "lv": 941,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "L X Mage",
-     "lv": 907,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "L X",
-     "lv": 260,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Mordomo",
-     "lv": 8,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 3082
+   "tot": 3612
   },
   {
    "c": "Persephonie",
    "ch": [
     {
      "n": "Syori",
-     "lv": 987,
+     "lv": 1122,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -1612,7 +2682,7 @@
     },
     {
      "n": "Suru Magezin",
-     "lv": 912,
+     "lv": 1121,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -1620,7 +2690,7 @@
     },
     {
      "n": "Persephonie",
-     "lv": 911,
+     "lv": 1073,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -1643,13 +2713,197 @@
      "at": {}
     }
    ],
-   "tot": 3077
+   "tot": 3583
   },
   {
-   "c": "Bolinha",
+   "c": "Desisto",
    "ch": [
     {
-     "n": "Bolinhas",
+     "n": "Desisto de Varinha",
+     "lv": 1138,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Desisto de Cura",
+     "lv": 1070,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Desisto",
+     "lv": 1047,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Desisto de Arco",
+     "lv": 315,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Desisto de Tchaco",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3578
+  },
+  {
+   "c": "Renannzin",
+   "ch": [
+    {
+     "n": "MSZera",
+     "lv": 1219,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "DRUIZIN",
+     "lv": 1184,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Renann",
+     "lv": 1157,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Mankzada",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Palazera",
+     "lv": 8,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3576
+  },
+  {
+   "c": "Mousedera",
+   "ch": [
+    {
+     "n": "Mini Mousee",
+     "lv": 1223,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Sirius",
+     "lv": 1203,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Coach Bruto",
+     "lv": 1132,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Mouseedera",
+     "lv": 8,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3566
+  },
+  {
+   "c": "nje",
+   "ch": [
+    {
+     "n": "Nje",
+     "lv": 1139,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "zflux",
+     "lv": 1057,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "damis ms",
+     "lv": 1037,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "damis",
+     "lv": 311,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3544
+  },
+  {
+   "c": "DanDanDan",
+   "ch": [
+    {
+     "n": "DanDan",
+     "lv": 1178,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Dan do Caminhaopipa",
+     "lv": 1154,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Dan Cavaleiro",
      "lv": 1039,
      "v": "knight",
      "sk": {},
@@ -1657,76 +2911,160 @@
      "at": {}
     },
     {
-     "n": "Bolinha",
-     "lv": 1029,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Bolinhaz",
-     "lv": 1008,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 3076
-  },
-  {
-   "c": "Pardal",
-   "ch": [
-    {
-     "n": "Pardal ed",
-     "lv": 995,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Pardal ms",
-     "lv": 944,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Pardal ek",
-     "lv": 939,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Pardal",
-     "lv": 97,
+     "n": "Dan Atirador",
+     "lv": 157,
      "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Pardall",
-     "lv": 88,
+     "n": "Dan Monge",
+     "lv": 8,
      "v": "monk",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 3063
+   "tot": 3536
+  },
+  {
+   "c": "Diadorim1",
+   "ch": [
+    {
+     "n": "Hazekush",
+     "lv": 1188,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Curse cure",
+     "lv": 1148,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Tankaa",
+     "lv": 1110,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Usoop",
+     "lv": 62,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Gouzink",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3516
+  },
+  {
+   "c": "Markee",
+   "ch": [
+    {
+     "n": "Toei",
+     "lv": 1000,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Toe",
+     "lv": 973,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Tecuro",
+     "lv": 953,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Maylion",
+     "lv": 281,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "FlechaBamba",
+     "lv": 277,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3484
+  },
+  {
+   "c": "DiogoNogueira",
+   "ch": [
+    {
+     "n": "DiogoDruid",
+     "lv": 1116,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "DiogoNogueiratank",
+     "lv": 1032,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "DiogoNogueira MS",
+     "lv": 1015,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "DiogoNogueira",
+     "lv": 311,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3474
   },
   {
    "c": "Aptem",
    "ch": [
     {
      "n": "Aptem xd",
-     "lv": 1034,
+     "lv": 1134,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -1734,7 +3072,7 @@
     },
     {
      "n": "Aptem lul",
-     "lv": 1008,
+     "lv": 1131,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -1742,7 +3080,7 @@
     },
     {
      "n": "Aptem oio",
-     "lv": 1006,
+     "lv": 1114,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -1757,77 +3095,31 @@
      "at": {}
     }
    ],
-   "tot": 3058
-  },
-  {
-   "c": "Mallpa",
-   "ch": [
-    {
-     "n": "Rasguinho",
-     "lv": 799,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Mallpa",
-     "lv": 788,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Rasgo",
-     "lv": 783,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "BilliBomTcheibas",
-     "lv": 345,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Xibyll",
-     "lv": 311,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 3026
+   "tot": 3389
   },
   {
    "c": "Hartmann Knight",
    "ch": [
     {
      "n": "Sorce Male",
-     "lv": 983,
+     "lv": 1119,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Hartmann Knight",
-     "lv": 914,
-     "v": "knight",
+     "n": "Druidzinho Sio",
+     "lv": 1046,
+     "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Druidzinho Sio",
-     "lv": 911,
-     "v": "druid",
+     "n": "Hartmann Knight",
+     "lv": 1022,
+     "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
@@ -1849,106 +3141,44 @@
      "at": {}
     }
    ],
-   "tot": 3006
+   "tot": 3385
   },
   {
-   "c": "Tica",
+   "c": "Frozen Yeti",
    "ch": [
     {
-     "n": "Master Tica",
-     "lv": 887,
+     "n": "Frozen Yeti",
+     "lv": 1154,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Elite Tica",
-     "lv": 878,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Inmortal Tica",
-     "lv": 867,
+     "n": "Hot Yeti",
+     "lv": 1131,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Ticador",
-     "lv": 290,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Ex Tica",
-     "lv": 53,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2975
-  },
-  {
-   "c": "MagnusEK",
-   "ch": [
-    {
-     "n": "vinius",
-     "lv": 767,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "MMagnus",
-     "lv": 760,
+     "n": "Melted Yeti",
+     "lv": 1088,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
-    },
-    {
-     "n": "Magnus SORC",
-     "lv": 746,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "magnusvinill",
-     "lv": 482,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Monk bolado",
-     "lv": 186,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
     }
    ],
-   "tot": 2941
+   "tot": 3373
   },
   {
    "c": "bik",
    "ch": [
     {
      "n": "Bik",
-     "lv": 914,
+     "lv": 1027,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -1956,7 +3186,7 @@
     },
     {
      "n": "bik druida",
-     "lv": 864,
+     "lv": 1007,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -1964,7 +3194,7 @@
     },
     {
      "n": "bik sorcerer",
-     "lv": 835,
+     "lv": 990,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -1987,190 +3217,128 @@
      "at": {}
     }
    ],
-   "tot": 2908
+   "tot": 3319
   },
   {
-   "c": "Jestsin",
+   "c": "Tica",
    "ch": [
     {
-     "n": "Dark Muccy",
-     "lv": 893,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "El Mucy",
-     "lv": 893,
+     "n": "Master Tica",
+     "lv": 1005,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "El Muccy",
-     "lv": 892,
+     "n": "Elite Tica",
+     "lv": 990,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Inmortal Tica",
+     "lv": 978,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Mucillon",
-     "lv": 212,
+     "n": "Ticador",
+     "lv": 290,
      "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "El Muucy",
-     "lv": 8,
+     "n": "Ex Tica",
+     "lv": 53,
      "v": "monk",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 2898
+   "tot": 3316
   },
   {
-   "c": "Jbaraldi",
+   "c": "Bolinha",
    "ch": [
     {
-     "n": "Oldawk",
-     "lv": 885,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "ElahremuS",
-     "lv": 862,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Balelo",
-     "lv": 851,
+     "n": "Bolinha",
+     "lv": 1106,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Neno",
-     "lv": 281,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Nena",
-     "lv": 8,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2887
-  },
-  {
-   "c": "AngelSeven",
-   "ch": [
-    {
-     "n": "Angel Seven MS",
-     "lv": 788,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Angel Seven",
-     "lv": 787,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Angel Seven RP",
-     "lv": 773,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Angel Seven EK",
-     "lv": 501,
+     "n": "Bolinhas",
+     "lv": 1097,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Angel Seven EM",
-     "lv": 37,
-     "v": "monk",
+     "n": "Bolinhaz",
+     "lv": 1068,
+     "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 2886
+   "tot": 3271
   },
   {
-   "c": "Berranteiro",
+   "c": "Feyth Sz",
    "ch": [
     {
-     "n": "BERRANTEIRO EK",
-     "lv": 991,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "BERRANTEIRO MS",
-     "lv": 946,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "BERRANTEIRO ED",
-     "lv": 931,
+     "n": "Mari Sz",
+     "lv": 1076,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "BERRANTEIRO",
-     "lv": 9,
+     "n": "Pururuco",
+     "lv": 1070,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Feyth",
+     "lv": 1044,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Bull's Eye Girl",
+     "lv": 21,
      "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 2877
+   "tot": 3211
   },
   {
    "c": "Jefaopk",
    "ch": [
     {
      "n": "Asharin Aikar",
-     "lv": 946,
+     "lv": 1049,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -2178,7 +3346,7 @@
     },
     {
      "n": "Jefaopk",
-     "lv": 876,
+     "lv": 996,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -2186,7 +3354,7 @@
     },
     {
      "n": "Jefao No Sio",
-     "lv": 864,
+     "lv": 968,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -2201,14 +3369,90 @@
      "at": {}
     }
    ],
-   "tot": 2838
+   "tot": 3165
+  },
+  {
+   "c": "Brederico Brederson",
+   "ch": [
+    {
+     "n": "Dark Bred",
+     "lv": 1054,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Brederico",
+     "lv": 1034,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Brederico Ed",
+     "lv": 1006,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3094
+  },
+  {
+   "c": "Core",
+   "ch": [
+    {
+     "n": "xCore",
+     "lv": 1023,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Core",
+     "lv": 979,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Core Ed",
+     "lv": 969,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Cori",
+     "lv": 65,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Corimonk",
+     "lv": 8,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 3044
   },
   {
    "c": "Demolay",
    "ch": [
     {
      "n": "Demolay",
-     "lv": 896,
+     "lv": 963,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -2216,7 +3460,7 @@
     },
     {
      "n": "Jaquin Boaz",
-     "lv": 854,
+     "lv": 918,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -2224,7 +3468,7 @@
     },
     {
      "n": "Kimera",
-     "lv": 853,
+     "lv": 915,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -2247,464 +3491,14 @@
      "at": {}
     }
    ],
-   "tot": 2829
-  },
-  {
-   "c": "Feyth Sz",
-   "ch": [
-    {
-     "n": "Mari Sz",
-     "lv": 948,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Pururuco",
-     "lv": 932,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Feyth",
-     "lv": 927,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Bull's Eye Girl",
-     "lv": 21,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2828
-  },
-  {
-   "c": "Spawz",
-   "ch": [
-    {
-     "n": "Confu",
-     "lv": 816,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Spawz",
-     "lv": 802,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Moe",
-     "lv": 774,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Whyz truw Pogromca",
-     "lv": 305,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Brikwall",
-     "lv": 113,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2810
-  },
-  {
-   "c": "Gaucho",
-   "ch": [
-    {
-     "n": "Cura Gaucho",
-     "lv": 870,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Gaucho",
-     "lv": 818,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Mata Tudo",
-     "lv": 802,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Gaucho Flechada",
-     "lv": 301,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2791
-  },
-  {
-   "c": "Kartmano",
-   "ch": [
-    {
-     "n": "Kartmano Knight",
-     "lv": 726,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Kartmano Druid",
-     "lv": 704,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Kartmano Sorcerer",
-     "lv": 689,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Kartmano Paladin",
-     "lv": 392,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Kartmano Monk",
-     "lv": 256,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2767
-  },
-  {
-   "c": "Frozen Yeti",
-   "ch": [
-    {
-     "n": "Frozen Yeti",
-     "lv": 940,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Hot Yeti",
-     "lv": 915,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Melted Yeti",
-     "lv": 912,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2767
-  },
-  {
-   "c": "Paraquedista",
-   "ch": [
-    {
-     "n": "Druidark",
-     "lv": 912,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Paraquedista",
-     "lv": 853,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Bad'Dream",
-     "lv": 830,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Vento",
-     "lv": 171,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2766
-  },
-  {
-   "c": "Chimini",
-   "ch": [
-    {
-     "n": "Issami",
-     "lv": 837,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Yuchiru",
-     "lv": 784,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Malandrinha Luan",
-     "lv": 784,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Chimini Batendo",
-     "lv": 351,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "No Vocation",
-     "lv": 8,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2764
-  },
-  {
-   "c": "baianolv",
-   "ch": [
-    {
-     "n": "baianoo",
-     "lv": 905,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Dbaianin",
-     "lv": 859,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "baianindacura",
-     "lv": 851,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Baianolv",
-     "lv": 70,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "baianinlv",
-     "lv": 61,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2746
-  },
-  {
-   "c": "Pedrohall",
-   "ch": [
-    {
-     "n": "Skyne",
-     "lv": 860,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Merovingeo",
-     "lv": 792,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Zennon",
-     "lv": 792,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Kyran",
-     "lv": 217,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "PeterKun",
-     "lv": 76,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2737
-  },
-  {
-   "c": "MikeSouz",
-   "ch": [
-    {
-     "n": "MSouz",
-     "lv": 837,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "MikeSouz",
-     "lv": 827,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "MSorc",
-     "lv": 812,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Keill",
-     "lv": 254,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2730
-  },
-  {
-   "c": "Pipich4n",
-   "ch": [
-    {
-     "n": "Pipinha",
-     "lv": 864,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Pippi",
-     "lv": 826,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Pipi Magia",
-     "lv": 813,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Pipichan",
-     "lv": 224,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2727
+   "tot": 3022
   },
   {
    "c": "Siteon",
    "ch": [
     {
      "n": "Elite Waker",
-     "lv": 948,
+     "lv": 1046,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -2712,7 +3506,7 @@
     },
     {
      "n": "Master Siteon",
-     "lv": 877,
+     "lv": 960,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -2720,7 +3514,7 @@
     },
     {
      "n": "Elder Siteon",
-     "lv": 874,
+     "lv": 957,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -2743,77 +3537,31 @@
      "at": {}
     }
    ],
-   "tot": 2715
-  },
-  {
-   "c": "Bardaroc",
-   "ch": [
-    {
-     "n": "Bardarok",
-     "lv": 942,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Bardarock",
-     "lv": 873,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Bardaroc",
-     "lv": 868,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Bardarkc",
-     "lv": 8,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Bardarokc",
-     "lv": 8,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2699
+   "tot": 2979
   },
   {
    "c": "mineiiro",
    "ch": [
     {
      "n": "Juvisclauvison",
-     "lv": 849,
+     "lv": 935,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Gladstone",
-     "lv": 798,
-     "v": "druid",
+     "n": "Juvislene",
+     "lv": 903,
+     "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Juvislene",
-     "lv": 793,
-     "v": "sorcerer",
+     "n": "Gladstone",
+     "lv": 879,
+     "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
@@ -2835,45 +3583,129 @@
      "at": {}
     }
    ],
-   "tot": 2696
+   "tot": 2973
   },
   {
-   "c": "2two",
+   "c": "MikeSouz",
    "ch": [
     {
-     "n": "Kina Mal",
-     "lv": 831,
+     "n": "MSouz",
+     "lv": 900,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "DruidaMaligno",
-     "lv": 789,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Dois Two",
-     "lv": 781,
+     "n": "MSorc",
+     "lv": 899,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "One Two",
-     "lv": 282,
+     "n": "MikeSouz",
+     "lv": 894,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Keill",
+     "lv": 254,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 2947
+  },
+  {
+   "c": "Breizh",
+   "ch": [
+    {
+     "n": "BreizhEk",
+     "lv": 902,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Breizh",
+     "lv": 891,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "BreizhSorc",
+     "lv": 887,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "BreizhMonk",
+     "lv": 131,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "BreizhArcher",
+     "lv": 130,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 2941
+  },
+  {
+   "c": "Kuskly",
+   "ch": [
+    {
+     "n": "Kusklyzukah",
+     "lv": 866,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Majestrick",
+     "lv": 857,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Lord Skyxt",
+     "lv": 844,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Kusklyzin",
+     "lv": 335,
      "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "MonkPUnhocareca",
+     "n": "Monkukah",
      "lv": 8,
      "v": "monk",
      "sk": {},
@@ -2881,31 +3713,69 @@
      "at": {}
     }
    ],
-   "tot": 2691
+   "tot": 2910
   },
   {
-   "c": "Berto_Canuck",
+   "c": "Gaucho",
    "ch": [
     {
-     "n": "Aeval",
-     "lv": 838,
+     "n": "Cura Gaucho",
+     "lv": 910,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Mollymauk",
-     "lv": 813,
+     "n": "Gaucho",
+     "lv": 847,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Mata Tudo",
+     "lv": 834,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
+     "n": "Gaucho Flechada",
+     "lv": 301,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 2892
+  },
+  {
+   "c": "Berto_Canuck",
+   "ch": [
+    {
+     "n": "Aeval",
+     "lv": 912,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
      "n": "Sniko",
-     "lv": 813,
+     "lv": 876,
      "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Mollymauk",
+     "lv": 874,
+     "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
@@ -2927,13 +3797,13 @@
      "at": {}
     }
    ],
-   "tot": 2682
+   "tot": 2880
   },
   {
-   "c": "lamentavel",
+   "c": "Chimini",
    "ch": [
     {
-     "n": "Knnight",
+     "n": "Issami",
      "lv": 879,
      "v": "knight",
      "sk": {},
@@ -2941,153 +3811,31 @@
      "at": {}
     },
     {
-     "n": "Maggo",
-     "lv": 876,
+     "n": "Yuchiru",
+     "lv": 820,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Malandrinha Luan",
+     "lv": 820,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Druid Dos Matos",
-     "lv": 865,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Flecha Ahcelf",
-     "lv": 32,
+     "n": "Chimini Batendo",
+     "lv": 351,
      "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Monque The Monk",
-     "lv": 28,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2680
-  },
-  {
-   "c": "Jandershowloveexp",
-   "ch": [
-    {
-     "n": "Athos Blessed",
-     "lv": 784,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Athos Druid",
-     "lv": 759,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Athos Warlock",
-     "lv": 724,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Athos Legendary",
-     "lv": 395,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Athos Monk",
-     "lv": 13,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2675
-  },
-  {
-   "c": "iguinho90",
-   "ch": [
-    {
-     "n": "Iguinho",
-     "lv": 932,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Iguinho RP",
-     "lv": 872,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Iguinho ED",
-     "lv": 858,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2662
-  },
-  {
-   "c": "NojonyI",
-   "ch": [
-    {
-     "n": "NojonyII",
-     "lv": 807,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "NojonyIII",
-     "lv": 801,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "NojonyIIII",
-     "lv": 790,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "NojonyI",
-     "lv": 221,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "NojonyIIIII",
+     "n": "No Vocation",
      "lv": 8,
      "v": "monk",
      "sk": {},
@@ -3095,288 +3843,14 @@
      "at": {}
     }
    ],
-   "tot": 2627
-  },
-  {
-   "c": "Brederico Brederson",
-   "ch": [
-    {
-     "n": "Brederico",
-     "lv": 916,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Brederico Ed",
-     "lv": 856,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Dark Bred",
-     "lv": 855,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2627
-  },
-  {
-   "c": "v1nizkk",
-   "ch": [
-    {
-     "n": "Peladeiro",
-     "lv": 807,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Ganfalf",
-     "lv": 781,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Front endler",
-     "lv": 779,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "renandalfa",
-     "lv": 202,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "vinizk the magician",
-     "lv": 56,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2625
-  },
-  {
-   "c": "Sansa Vass",
-   "ch": [
-    {
-     "n": "Sansa Vass",
-     "lv": 758,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Knight Vass",
-     "lv": 742,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Druid Vass",
-     "lv": 735,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Pally Vass",
-     "lv": 385,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2620
-  },
-  {
-   "c": "Fox",
-   "ch": [
-    {
-     "n": "Fox",
-     "lv": 890,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "FoxDruid",
-     "lv": 865,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "FoxKnight",
-     "lv": 852,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2607
-  },
-  {
-   "c": "Calvonor",
-   "ch": [
-    {
-     "n": "Calvonor",
-     "lv": 774,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Samir",
-     "lv": 758,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "QuaseQeuCao",
-     "lv": 742,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Leonir",
-     "lv": 211,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "AceofDead",
-     "lv": 109,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2594
-  },
-  {
-   "c": "Archeiro",
-   "ch": [
-    {
-     "n": "Curona",
-     "lv": 793,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Tankeneiro",
-     "lv": 790,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Bombina",
-     "lv": 787,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Archeiro",
-     "lv": 221,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2591
-  },
-  {
-   "c": "Kevinnn",
-   "ch": [
-    {
-     "n": "Kzin",
-     "lv": 779,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Mayu",
-     "lv": 739,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Shizen",
-     "lv": 720,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Harin",
-     "lv": 250,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Hayato",
-     "lv": 66,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2554
+   "tot": 2878
   },
   {
    "c": "Galiazzi",
    "ch": [
     {
      "n": "Galiazzi Monk",
-     "lv": 858,
+     "lv": 973,
      "v": "monk",
      "sk": {},
      "res": {},
@@ -3384,7 +3858,7 @@
     },
     {
      "n": "CNN",
-     "lv": 856,
+     "lv": 943,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -3392,7 +3866,7 @@
     },
     {
      "n": "Galiazzi",
-     "lv": 823,
+     "lv": 925,
      "v": "paladin",
      "sk": {},
      "res": {},
@@ -3415,52 +3889,106 @@
      "at": {}
     }
    ],
-   "tot": 2553
+   "tot": 2857
   },
   {
-   "c": "Guivassao",
+   "c": "Synthax Error",
    "ch": [
     {
-     "n": "Wagnitzz",
-     "lv": 804,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Guivassao",
-     "lv": 800,
+     "n": "Vitoria",
+     "lv": 849,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Antek",
-     "lv": 783,
+     "n": "Mel",
+     "lv": 846,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Clamantha",
-     "lv": 155,
+     "n": "Synthax Druid",
+     "lv": 814,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Synthax Error",
+     "lv": 280,
      "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Vitorinha",
+     "lv": 64,
+     "v": "monk",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 2542
+   "tot": 2853
+  },
+  {
+   "c": "Kevinnn",
+   "ch": [
+    {
+     "n": "Kzin",
+     "lv": 857,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Mayu",
+     "lv": 819,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Shizen",
+     "lv": 792,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Harin",
+     "lv": 250,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Hayato",
+     "lv": 66,
+     "v": "monk",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 2784
   },
   {
    "c": "Leozinek",
    "ch": [
     {
      "n": "Leosorczin",
-     "lv": 852,
+     "lv": 935,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -3468,7 +3996,7 @@
     },
     {
      "n": "Leozaoekzao",
-     "lv": 849,
+     "lv": 912,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -3476,20 +4004,74 @@
     },
     {
      "n": "Leozinek",
-     "lv": 823,
+     "lv": 890,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 2524
+   "tot": 2737
   },
   {
-   "c": "Duzoco",
+   "c": "armonie",
    "ch": [
     {
-     "n": "Duzoco Mage",
+     "n": "Queimei Você",
+     "lv": 881,
+     "v": "sorcerer",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Armonie",
+     "lv": 878,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Lady Armonie",
+     "lv": 840,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Armonie Pally",
+     "lv": 83,
+     "v": "paladin",
+     "sk": {},
+     "res": {},
+     "at": {}
+    }
+   ],
+   "tot": 2682
+  },
+  {
+   "c": "Monkeey",
+   "ch": [
+    {
+     "n": "Coxinhaa",
+     "lv": 924,
+     "v": "knight",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Monkeey",
+     "lv": 868,
+     "v": "druid",
+     "sk": {},
+     "res": {},
+     "at": {}
+    },
+    {
+     "n": "Ronaldo Loco",
      "lv": 849,
      "v": "sorcerer",
      "sk": {},
@@ -3497,92 +4079,52 @@
      "at": {}
     },
     {
-     "n": "Duzoco Warrior",
-     "lv": 838,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Duzoco Healler",
-     "lv": 797,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Royal Duzoco",
+     "n": "Taca Coco",
      "lv": 8,
      "v": "paladin",
      "sk": {},
      "res": {},
      "at": {}
-    },
-    {
-     "n": "Duzoco Monk",
-     "lv": 8,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
     }
    ],
-   "tot": 2500
+   "tot": 2649
   },
   {
-   "c": "Mwrylo",
+   "c": "Guuzeera",
    "ch": [
     {
-     "n": "Mwrylo ED",
-     "lv": 770,
+     "n": "Guuzeera",
+     "lv": 950,
      "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Mwrylo",
-     "lv": 769,
+     "n": "Guuzeerona",
+     "lv": 850,
      "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Mwrylo EK",
-     "lv": 758,
+     "n": "Guuzeerinha",
+     "lv": 845,
      "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Mwrylo RP",
-     "lv": 80,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Mwrylo Monkz",
-     "lv": 53,
-     "v": "monk",
      "sk": {},
      "res": {},
      "at": {}
     }
    ],
-   "tot": 2430
+   "tot": 2645
   },
   {
    "c": "Noisy",
    "ch": [
     {
      "n": "Lexi Luna",
-     "lv": 817,
+     "lv": 906,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -3590,7 +4132,7 @@
     },
     {
      "n": "Nicole Aniston",
-     "lv": 782,
+     "lv": 862,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -3598,7 +4140,7 @@
     },
     {
      "n": "Brandi Love",
-     "lv": 763,
+     "lv": 843,
      "v": "sorcerer",
      "sk": {},
      "res": {},
@@ -3621,188 +4163,14 @@
      "at": {}
     }
    ],
-   "tot": 2378
-  },
-  {
-   "c": "kush",
-   "ch": [
-    {
-     "n": "uKina",
-     "lv": 775,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "uDruida",
-     "lv": 758,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "uSorce",
-     "lv": 748,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "uPala",
-     "lv": 89,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2370
-  },
-  {
-   "c": "Zuka Bazuka",
-   "ch": [
-    {
-     "n": "Zuka Bazuka",
-     "lv": 809,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Manu Batidão",
-     "lv": 769,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Zuca Curando",
-     "lv": 760,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2338
-  },
-  {
-   "c": "Guuzeera",
-   "ch": [
-    {
-     "n": "Guuzeera",
-     "lv": 822,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Guuzeerinha",
-     "lv": 760,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Guuzeerona",
-     "lv": 756,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2338
-  },
-  {
-   "c": "Fortrekz",
-   "ch": [
-    {
-     "n": "Hawkz",
-     "lv": 696,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Zorchy",
-     "lv": 658,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Fortrekz",
-     "lv": 653,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Krooz",
-     "lv": 302,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2309
-  },
-  {
-   "c": "armonie",
-   "ch": [
-    {
-     "n": "Armonie",
-     "lv": 761,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Queimei Você",
-     "lv": 735,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Lady Armonie",
-     "lv": 716,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Armonie Pally",
-     "lv": 83,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2295
+   "tot": 2627
   },
   {
    "c": "feerk",
    "ch": [
     {
      "n": "Feerk",
-     "lv": 764,
+     "lv": 878,
      "v": "paladin",
      "sk": {},
      "res": {},
@@ -3810,7 +4178,7 @@
     },
     {
      "n": "Ferkek",
-     "lv": 758,
+     "lv": 840,
      "v": "knight",
      "sk": {},
      "res": {},
@@ -3818,7 +4186,7 @@
     },
     {
      "n": "ferkolina",
-     "lv": 739,
+     "lv": 825,
      "v": "druid",
      "sk": {},
      "res": {},
@@ -3841,77 +4209,31 @@
      "at": {}
     }
    ],
-   "tot": 2277
-  },
-  {
-   "c": "Issami",
-   "ch": [
-    {
-     "n": "Alicerumi",
-     "lv": 761,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "IssamiSan",
-     "lv": 752,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Iector",
-     "lv": 740,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Gabiru",
-     "lv": 8,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Baki The Monk",
-     "lv": 8,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2269
+   "tot": 2559
   },
   {
    "c": "Armitage",
    "ch": [
     {
      "n": "Gromash",
-     "lv": 767,
+     "lv": 829,
      "v": "knight",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Verbena",
-     "lv": 730,
-     "v": "druid",
+     "n": "Mestre do Magos",
+     "lv": 800,
+     "v": "sorcerer",
      "sk": {},
      "res": {},
      "at": {}
     },
     {
-     "n": "Mestre do Magos",
-     "lv": 729,
-     "v": "sorcerer",
+     "n": "Verbena",
+     "lv": 793,
+     "v": "druid",
      "sk": {},
      "res": {},
      "at": {}
@@ -3933,221 +4255,7 @@
      "at": {}
     }
    ],
-   "tot": 2266
-  },
-  {
-   "c": "Brunao",
-   "ch": [
-    {
-     "n": "Bmz",
-     "lv": 675,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Deus da Cura",
-     "lv": 629,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Flamzinho",
-     "lv": 619,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Atirei de Longe",
-     "lv": 309,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2232
-  },
-  {
-   "c": "Dubalde",
-   "ch": [
-    {
-     "n": "Dubalde",
-     "lv": 730,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Setzer Gambller",
-     "lv": 713,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Eliminador of Chimer",
-     "lv": 707,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Xiblitz",
-     "lv": 8,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Yaang",
-     "lv": 8,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2166
-  },
-  {
-   "c": "Netiin",
-   "ch": [
-    {
-     "n": "Netiinxd",
-     "lv": 754,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "RedArmy",
-     "lv": 703,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Netiin",
-     "lv": 700,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "monktank",
-     "lv": 8,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2165
-  },
-  {
-   "c": "Sukits",
-   "ch": [
-    {
-     "n": "Slk",
-     "lv": 708,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Susuka",
-     "lv": 663,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Sórcônah",
-     "lv": 658,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Palamel",
-     "lv": 66,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Tankots",
-     "lv": 42,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 2137
-  },
-  {
-   "c": "Binbinha",
-   "ch": [
-    {
-     "n": "Binbinha",
-     "lv": 591,
-     "v": "knight",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Binbinha Second",
-     "lv": 584,
-     "v": "druid",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Binbinha Terceiro",
-     "lv": 574,
-     "v": "sorcerer",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Binbinha Quinto",
-     "lv": 68,
-     "v": "monk",
-     "sk": {},
-     "res": {},
-     "at": {}
-    },
-    {
-     "n": "Binbinha Quarto",
-     "lv": 66,
-     "v": "paladin",
-     "sk": {},
-     "res": {},
-     "at": {}
-    }
-   ],
-   "tot": 1883
+   "tot": 2462
   }
  ]
 }
