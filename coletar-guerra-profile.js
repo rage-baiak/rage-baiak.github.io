@@ -1,8 +1,10 @@
 // ============================================================================
 //  COLETOR DA ABA GUERRA (via /profile no socket)
 //  Cole no console do jogo (F12) em baiakidle.com, LOGADO e JOGANDO.
-//  Pega o roster inimigo (guild.view) e roda /profile em cada conta pra
-//  descobrir os PERSONAGENS reais dela (o link conta->chars so vem por socket).
+//  Pega o roster ESCALADO da guerra (guild.warState -> participants) e roda
+//  /profile em cada conta pra descobrir os PERSONAGENS reais dela (o link
+//  conta->chars so vem por socket). NAO usa guild.view: aquilo e a guild
+//  inteira, e guerra NxN escala so N contas (quem tem warPinned/warPicked).
 //  So le. /profile nao passa pelo antibot. Ao fim, baixa war.json.
 //  Leva ~3 min pra 100 contas (throttle). Deixe a aba em foco.
 // ============================================================================
@@ -24,30 +26,58 @@
     return res.data;
   }
 
-  // ---- 1) roster de CONTAS da guild inimiga ----
+  // ---- 1) roster ESCALADO da guerra (nao a guild inteira) ----
+  //  warState.participants = as contas que de fato estao na guerra, nos dois
+  //  lados, cada uma com accountId/name/guildId/totalLevel (level do servidor).
+  //  guild.view.members = guild inteira, inclui quem nao escalou. Nunca usar
+  //  aquilo como roster: era o bug de aparecer gente que nem esta na guerra.
   let foeId = null, foeName = FOE_NOME, size = 0, warId = null;
-  if (FOE_NOME) {
+  let parts = [], escalado = true;
+
+  const mine = await q('guild.mine', {});
+  const war = mine && mine.war;
+  if (war && war.id) {
+    warId = war.id;
+    const ws = await q('guild.warState', { warId });
+    window.__ws = ws;                              // pra inspecionar no console
+    size = (ws.war && ws.war.size) || 0;
+    const meu = ws.myGuildId;
+    const todosP = ws.participants || [];
+    let inimigos = todosP.filter(p => p.guildId !== meu);
+    if (FOE_NOME) {
+      const alvo = inimigos.filter(p => p.guildName &&
+        p.guildName.toLowerCase() === FOE_NOME.toLowerCase());
+      if (alvo.length) inimigos = alvo;
+    }
+    if (!inimigos.length) { console.error('warState sem participantes inimigos.'); return; }
+    foeId = inimigos[0].guildId;
+    parts = inimigos.filter(p => p.guildId === foeId);
+    console.log('Guerra #' + warId + ' ' + size + 'x' + size + ' - ' +
+      parts.length + ' contas escaladas do lado inimigo (de ' + todosP.length + ' no total).');
+  } else if (FOE_NOME) {
+    // Sem guerra ativa: cai pro roster completo da guild, e AVISA.
+    escalado = false;
     const lst = await q('guild.list', { q: FOE_NOME, limit: 8, sort: 'level' });
     const g = (lst || []).find(x => (x.name || '').toLowerCase() === FOE_NOME.toLowerCase()) || (lst || [])[0];
     if (!g) { console.error('Nao achei a guild', FOE_NOME); return; }
     foeId = g.id; foeName = g.name;
+    console.warn('Sem guerra ativa: usando a GUILD INTEIRA de ' + foeName +
+      '. Vai incluir quem nao escalaria. Rode de novo com a guerra declarada.');
   } else {
-    const mine = await q('guild.mine', {});
-    const war = mine && mine.war;
-    if (!war || !war.id) { console.error('Sem guerra ativa. Preencha FOE_NOME no topo.'); window.__mine = mine; return; }
-    warId = war.id;
-    const ws = await q('guild.warState', { warId });
-    size = (ws.war && ws.war.size) || 0;
-    const meu = ws.myGuildId;
-    const inimigos = (ws.participants || []).filter(p => p.guildId !== meu);
-    foeId = inimigos.length ? inimigos[0].guildId : null;
+    console.error('Sem guerra ativa. Declare a guerra ou preencha FOE_NOME no topo.');
+    window.__mine = mine; return;
   }
-  if (!foeId) { console.error('Nao achei a guild inimiga.'); return; }
+
   const view = await q('guild.view', { id: foeId });
   foeName = foeName || (view.guild && view.guild.name) || ('Guild #' + foeId);
   const tag = (view.guild && view.guild.tag) || '';
-  const contas = (view.members || []).map(m => m.name);
-  console.log('Guild inimiga: ' + foeName + ' [' + tag + '] - ' + contas.length + ' contas. Rodando /profile...');
+  // level de conta que o servidor usa na guerra, por nome de conta
+  const tlPorConta = new Map(parts.map(p => [p.name, p.totalLevel || 0]));
+  const contas = escalado
+    ? parts.map(p => p.name).filter(Boolean)
+    : (view.members || []).map(m => m.name);
+  console.log('Guild inimiga: ' + foeName + ' [' + tag + '] - ' + contas.length +
+    (escalado ? ' contas escaladas.' : ' contas (guild inteira).') + ' Rodando /profile...');
 
   // ---- 2) UI: dispara /profile e le os chars no #profile-overlay ----
   const input = document.getElementById('chat-input');
@@ -135,13 +165,15 @@
   const contasOut = res.filter(c => c.ch.length).map(c => ({
     c: c.c,
     ch: c.ch.slice().sort((a, b) => b.lv - a.lv),
-    tot: c.ch.reduce((t, x) => t + x.lv, 0)
-  })).sort((a, b) => b.tot - a.tot);
+    tot: c.ch.reduce((t, x) => t + x.lv, 0),
+    tl: tlPorConta.get(c.c) || 0        // level da conta segundo o servidor
+  })).sort((a, b) => (b.tl - a.tl) || (b.tot - a.tot));
   const semPerfil = res.filter(c => !c.ch.length).map(c => c.c);
 
   const warOut = {
     meta: {
       id: warId || foeId, foe: foeName, tag, size: size || contasOut.length,
+      warId: warId || null, escalado: escalado,
       at: new Date().toLocaleString('pt-BR'), media_res: [], amostra: 0
     },
     contas: contasOut

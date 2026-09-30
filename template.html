@@ -72,6 +72,8 @@ h1 .g{color:var(--accent)}
 .whead .wlv{color:var(--accent);font-weight:800;font-size:19px;font-variant-numeric:tabular-nums;margin:0}
 .wvoc-knight{--vc:#d64550}.wvoc-paladin{--vc:#c99a2e}.wvoc-druid{--vc:#2fa15f}.wvoc-sorcerer{--vc:#8257e6}.wvoc-monk{--vc:#d97b2e}.whead .wvoc{margin-left:auto;font-weight:700;font-size:11px;padding:1px 8px;border-radius:999px;letter-spacing:.04em;text-transform:uppercase;background:color-mix(in srgb,var(--vc,var(--muted)) 15%,transparent);color:var(--vc,var(--muted));border:1px solid color-mix(in srgb,var(--vc,var(--muted)) 42%,transparent)}
 .wbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:8px 0 12px}.whero{background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 7%,var(--panel)),var(--panel));border:1px solid var(--line);border-radius:14px;padding:16px;margin:6px 0 14px;box-shadow:var(--shadow)}.wversus{display:flex;align-items:center;justify-content:center;gap:18px;flex-wrap:wrap;text-align:center}.wteam{display:flex;flex-direction:column;gap:1px;min-width:0}.wteam-n{font-family:"Cinzel",Georgia,serif;font-weight:700;font-size:clamp(19px,4.5vw,28px);line-height:1.05}.wteam.us .wteam-n{color:var(--accent)}.wteam-t{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.12em}.wx{display:flex;flex-direction:column;align-items:center;line-height:1;font-family:"Cinzel",serif;font-weight:800;color:var(--muted);font-size:14px}.wx small{font-size:11px;font-weight:600;opacity:.75;margin-top:3px}.wcompbar{display:flex;height:11px;border-radius:999px;overflow:hidden;margin:15px 0 9px;border:1px solid var(--line);background:var(--panel2)}.wseg{background:var(--vc);min-width:2px}.wcomplegend{display:flex;flex-wrap:wrap;gap:7px 15px;justify-content:center;font-size:12.5px;color:var(--muted)}.wleg{display:inline-flex;align-items:center;gap:5px}.wleg b{color:var(--ink);font-variant-numeric:tabular-nums;font-weight:700}.wdot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:0 0 auto;background:var(--vc)}.whero .wbar{justify-content:center;margin:13px 0 0;border-top:1px solid var(--line2);padding-top:12px}.warcard summary{align-items:center}.wlead{display:flex;align-items:center;gap:10px;min-width:0}.wrank{flex:0 0 auto;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums;background:var(--panel2);color:var(--muted);border:1px solid var(--line)}.wrank.r1{background:color-mix(in srgb,#e6b352 22%,transparent);color:#c69328;border-color:#e6b352}.wrank.r2{background:color-mix(in srgb,#9aa3b2 22%,transparent);color:#8b93a1;border-color:#aeb6c2}.wrank.r3{background:color-mix(in srgb,#cd7f45 22%,transparent);color:#cd7f45;border-color:#cd7f45}.wdots{display:inline-flex;gap:3px;align-items:center}.warcard .wtot b{color:var(--accent);font-weight:800;font-variant-numeric:tabular-nums}
+.wdif{font-style:normal;color:#c98b2e;font-variant-numeric:tabular-nums}
+.wwarn{margin:12px 0 0;padding:9px 12px;border-radius:9px;font-size:12.5px;line-height:1.45;border:1px solid color-mix(in srgb,#e0a038 55%,var(--line));background:color-mix(in srgb,#e0a038 12%,var(--panel2));color:var(--ink)}
 .wsrc{color:var(--muted);font-size:12px}
 .wrow{font-size:13px;margin:3px 0;line-height:1.6}
 .wrow .wlbl{color:var(--muted);display:inline-block;min-width:74px;font-size:11px;text-transform:uppercase;letter-spacing:.4px}
@@ -1435,6 +1437,15 @@ function warComp(){
   const leg=ord.map(v=>`<span class="wleg"><i class="wdot wvoc-${v}"></i>${VOCPT[v]} <b>${cnt[v]}</b></span>`).join("");
   return `<div class="wcompbar">${seg}</div><div class="wcomplegend">${leg}</div>`;
 }
+// Guerra NxN escala N contas por lado. Se o war.json veio com mais que isso, foi
+// coletado da guild inteira (guild.view) em vez do roster da guerra
+// (warState.participants) e tem gente que nao esta em campo.
+function warAviso(){
+  const m=WAR.meta, nC=WAR.contas.length;
+  if(m.escalado===false) return `<div class="wwarn">⚑ Coletado sem guerra ativa: esta e a guild inteira de ${esc(m.foe)}, nao o time escalado. Recolete com a guerra declarada.</div>`;
+  if(m.size && nC>m.size) return `<div class="wwarn">⚑ Lista com ${nC} contas para uma guerra ${m.size}×${m.size}: o war.json veio da guild inteira, entao tem conta aqui que nao esta na guerra. Rode o coletor de novo.</div>`;
+  return "";
+}
 function warHeader(){
   const m=WAR.meta;
   const us=(m.us&&m.us.n)||"RAGE";
@@ -1446,6 +1457,7 @@ function warHeader(){
       +`<div class="wteam them"><span class="wteam-n">${esc(m.foe)}</span>${m.tag?`<span class="wteam-t">[${esc(m.tag)}]</span>`:""}</div>`
     +`</div>`
     +warComp()
+    +warAviso()
     +`<div class="wbar">`
       +`<span class="wsrc">${nC} contas · ${nCh} chars · coletado ${esc(m.at)}</span>`
       +`<button id="warRefresh" class="wbtn">↻ Atualizar fichas</button>`
@@ -1453,15 +1465,15 @@ function warHeader(){
     +`</div></div>`;
 }
 
-// So aparece quem pode entrar em campo: a party e de 3, e char muito abaixo do
-// principal so gasta request na varredura. Corte: metade do level do mais forte.
+// Todos os chars da conta, sem corte. O filtro por level que existia aqui fazia a
+// soma exibida nao bater com o total real da conta, e e a soma que interessa.
 function warChars(a){
   const c=a.ch||[]; if(!c.length) return [];
-  const max=Math.max.apply(null,c.map(x=>x.lv));
-  return c.filter(x=>x.lv*2>=max).sort((x,y)=>y.lv-x.lv);
+  return c.slice().sort((x,y)=>y.lv-x.lv);
 }
 function warCard(a,qq,open,rank){
   const rel=warChars(a);
+  const soma=rel.reduce((t,c)=>t+c.lv,0);
   const chars=rel.map(c=>{
     const sk=Object.entries(c.sk).sort((x,y)=>y[1]-x[1]).map(([k,v])=>`${k} ${v}`).join(" · ");
     const at=Object.entries(c.at).filter(([k])=>!/^Regen|^Ruse|Amplification/.test(k))
@@ -1480,7 +1492,9 @@ function warCard(a,qq,open,rank){
     +`<span class="wlead"><span class="wrank${rk}">${rank}</span>`
     +`<span class="name">${hl(a.c,qq)}</span>`
     +`<span class="wdots">${dots}</span></span>`
-    +`<span class="wtot"><b>${rel.reduce((t,c)=>t+c.lv,0).toLocaleString("pt-BR")}</b> níveis · ${rel.length} chars</span>`
+    +`<span class="wtot"><b>${soma.toLocaleString("pt-BR")}</b> níveis · ${rel.length} chars${
+        a.tl && a.tl-soma>=25 ? ` · <i class="wdif" title="O servidor informou este level pra conta no roster da guerra, acima da soma dos chars que o /profile devolveu: tem char que nao apareceu (offline ou perfil oculto).">servidor ${a.tl.toLocaleString("pt-BR")}</i>` : ""
+      }</span>`
     +`</summary><div class="body warbody">${chars}</div></details>`;
 }
 function render(){
@@ -1503,6 +1517,8 @@ function render(){
     const res=WAR.contas.filter(a=>!qw||norm(a.c).includes(qw)||a.ch.some(c=>norm(c.n).includes(qw)));
     // ordena pelo MESMO total que o card exibe (só os chars relevantes), senão o
     // ranking não bate com o número mostrado
+    // ordena pela mesma soma que o card exibe (todos os chars da conta), senao o
+    // ranking nao bate com o numero mostrado
     const relTot=a=>warChars(a).reduce((t,c)=>t+c.lv,0);
     res.sort((a,b)=>relTot(b)-relTot(a));
     const op=q.value.trim()&&res.length<=4?" open":"";
