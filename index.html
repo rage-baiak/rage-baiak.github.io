@@ -311,8 +311,19 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hmons2{padding:10px 0 0;margin-top:8px;border-top:1px solid var(--line2)}
 .hmon{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:10px 0;border-top:1px solid var(--line2)}
 .hmon-body{min-width:0}
-.hmon-cols{display:flex;flex-wrap:wrap;gap:10px 26px;margin:7px 0 2px}
+.hmon-cols{display:grid;grid-template-columns:auto auto minmax(200px,1fr);gap:10px 26px;margin:7px 0 2px;align-items:start}
+@media(max-width:760px){.hmon-cols{grid-template-columns:auto 1fr}}
+@media(max-width:520px){.hmon-cols{grid-template-columns:1fr}}
 .hmon-col{min-width:104px}
+.hmon-drops{min-width:190px}
+.hdrops{display:flex;flex-wrap:wrap;gap:5px;max-height:232px;overflow-y:auto;overscroll-behavior:contain;padding-right:3px}
+.hdrops::-webkit-scrollbar{width:6px}
+.hdrops::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
+.hdrops::-webkit-scrollbar-track{background:transparent}
+.hdrops .hdrop{display:flex;flex-direction:column;align-items:center;gap:1px;width:44px;padding:3px 1px;border-radius:6px;border:1px solid transparent;border-bottom:1px solid transparent;cursor:pointer;color:var(--muted)}
+.hdrops .hdrop:hover{border-color:var(--line);background:var(--panel2);color:var(--ink)}
+.hdrop .spr{width:30px;height:30px;margin:0}
+.hdrop b{font-family:"JetBrains Mono",monospace;font-size:9.5px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
 .hmon-col .rlbl{margin:0 0 5px}
 .hmon-charms{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}
 .charmbig{display:inline-flex;align-items:baseline;gap:7px;font-size:15px;font-weight:700;
@@ -938,6 +949,18 @@ function huntMon(name, isBoss, atrib){
       ? `<span class="charmbig major">🔮 ${esc(atrib.c.n)}${why?`<i>${esc(why)}</i>`:""}</span>`
         +(atrib.mc?`<span class="charmbig minor">🔮 ${esc(atrib.mc.n)}<i>minor</i></span>`:"")
       : "";
+  // Drops na 3a coluna: grade de sprite + chance. Lista com nome nao cabe (mediana
+  // de 15 drops por bicho, ate 45), entao vai so imagem e %; o nome fica no title
+  // e o clique abre o item.
+  const drops=(m.l||[]).slice().sort((a,b)=>b[1]-a[1]);
+  const dropCol = drops.length
+    ? `<div class="hmon-col hmon-drops"><div class="rlbl">drops <span class="hint">· ${drops.length}</span></div>`
+      +`<div class="hdrops">`
+      +drops.map(([nm,ch,mx])=>
+         `<span class="hdrop ilink" data-item="${esc(nm)}" title="${esc(nm)}${mx>1?` · ate ${mx}`:""} · ${pct(ch)}%">`
+         +`${itemSpr(nm)}<b class="${band(ch)}">${pct(ch)}%</b></span>`).join("")
+      +`</div></div>`
+    : "";
   return `<div class="hmon${isBoss?" boss":""}">`
     +monSpr(m.lt,true,m.oc)
     +`<div class="hmon-body"><div class="hmon-h">`
@@ -946,7 +969,8 @@ function huntMon(name, isBoss, atrib){
     +(ch?`<div class="hmon-charms">${ch}</div>`:"")
     +`<div class="hmon-cols">`
     +`<div class="hmon-col"><div class="rlbl">dano que recebe <span class="hint">· 100% = normal</span></div>${resGrid(m.r)}</div>`
-    +`<div class="hmon-col"><div class="rlbl">dano/turno por elemento <span class="hint">· pico ~${Math.round(tot).toLocaleString("pt-BR")}/turno</span></div>${dptGrid(dmg)}</div>`
+    +`<div class="hmon-col"><div class="rlbl">dano/turno <span class="hint">· pico ~${Math.round(tot).toLocaleString("pt-BR")}</span></div>${dptGrid(dmg)}</div>`
+    +dropCol
     +`</div>`
     +`</div></div>`;
 }
