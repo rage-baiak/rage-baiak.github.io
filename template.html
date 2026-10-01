@@ -198,6 +198,19 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .chg .cval{font-family:"JetBrains Mono",monospace;font-weight:700;font-size:12.5px;
   white-space:nowrap;font-variant-numeric:tabular-nums;grid-row:1;grid-column:3}
 .nf{color:var(--rr)} .bf{color:var(--rc)} .mut{color:var(--muted)}
+.csec{border-top:1px solid var(--line2)}
+.csec>summary{list-style:none;cursor:pointer;padding:8px 0;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:7px}
+.csec>summary::-webkit-details-marker{display:none}
+.csec>summary:hover{color:var(--ink)}
+.csec>summary::after{content:"▾";margin-left:auto;padding-right:2px;font-size:10px;opacity:.6}
+.csec[open]>summary::after{content:"▴"}
+.csec .csn{font-weight:700;font-variant-numeric:tabular-nums}
+.csec .chg:first-of-type{border-top:1px solid var(--line2)}
+.hentry>summary{list-style:none;cursor:pointer;padding:5px 0;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.hentry>summary::-webkit-details-marker{display:none}
+.hentry>summary .hcnt{display:flex;gap:9px;align-items:center}
+.hentry>summary:hover{color:var(--ink)}
+.hentry .hbody{padding-left:10px;border-left:2px solid var(--line2);margin:2px 0 8px}
 .cmore{color:var(--muted);font-size:12.5px;padding:8px 0 2px}
 .chist{margin-top:10px;border-top:1px solid var(--line2);padding-top:8px}
 .chist summary{list-style:none;cursor:pointer;color:var(--accent);font-size:12.5px;font-weight:600}
@@ -1739,28 +1752,49 @@ function renderChanges(){
   }
   const e=CHANGES[0];
   const chip=(n,cls,lbl)=> n?`<span class="cchip ${cls}">${lbl} ${n}</span>`:"";
-  const row=([mon,it,o,n],cls,ico)=>
+  const row=(ico,cls,title,sub,val)=>
     `<div class="chg"><span class="cico ${cls}">${ico}</span>`
-    +`<span class="cit">${esc(it)}</span><span class="cmon">${esc(mon)}</span>`
-    +`<span class="cval ${cls}">${pct(o)}% → ${pct(n)}%</span></div>`;
-  let lines="";
-  e.nerf.slice(0,7).forEach(x=>lines+=row(x,"nf","▼"));
-  e.buff.slice(0,7).forEach(x=>lines+=row(x,"bf","▲"));
-  const extra=Math.max(0,e.nerf.length-7)+Math.max(0,e.buff.length-7);
+    +`<span class="cit">${esc(title)}</span>`
+    +(sub?`<span class="cmon">${esc(sub)}</span>`:"")
+    +(val?`<span class="cval ${cls}">${val}</span>`:"")+`</div>`;
+  // Cada tipo vira um bloco proprio. Abre sozinho quando e curto; listas grandes
+  // (82 bichos novos) ficam fechadas pra nao empurrar a pagina inteira pra baixo.
+  const sec=(ico,cls,lbl,arr,fn,autoOpen)=>{
+    if(!arr||!arr.length) return "";
+    const open=(autoOpen&&arr.length<=8)?" open":"";
+    return `<details class="csec"${open}><summary><span class="csn ${cls}">${ico} ${arr.length}</span> ${lbl}</summary>`
+      +arr.map(fn).join("")+`</details>`;
+  };
+  const nome=x=>Array.isArray(x)?x[0]:x;
+  function detalhe(c,autoOpen){
+    return sec("▼","nf","com chance menor",c.nerf,
+        ([mon,it,o,n])=>row("▼","nf",it,mon,`${pct(o)}% → ${pct(n)}%`),autoOpen)
+      +sec("▲","bf","com chance maior",c.buff,
+        ([mon,it,o,n])=>row("▲","bf",it,mon,`${pct(o)}% → ${pct(n)}%`),autoOpen)
+      +sec("➕","mut","drops novos",c.add,
+        ([mon,it,ch])=>row("➕","mut",it,mon,ch!=null?pct(ch)+"%":""),autoOpen)
+      +sec("➖","mut","drops que saíram",c.rem,
+        ([mon,it])=>row("➖","mut",it,mon,"saiu"),autoOpen)
+      +sec("🆕","mut","monstros novos",c.newmon,
+        ([mon,n])=>row("🆕","mut",mon,"",n?`${n} ${n===1?"drop":"drops"}`:"sem drop"),autoOpen)
+      +sec("🚫","mut","monstros removidos",c.remmon,
+        x=>row("🚫","mut",nome(x),"",""),autoOpen);
+  }
   let hist="";
   for(const c of CHANGES){
-    hist+=`<div class="hrow"><b>${br(c.d)}</b> `
-      +(c.nerf.length?`<span class="nf">▼${c.nerf.length} nerf</span> `:"")
-      +(c.buff.length?`<span class="bf">▲${c.buff.length} buff</span> `:"")
-      +(c.add.length?`<span class="mut">➕${c.add.length}</span> `:"")
-      +(c.rem.length?`<span class="mut">➖${c.rem.length}</span> `:"")
-      +(c.newmon&&c.newmon.length?`<span class="mut">${c.newmon.length} bicho novo</span>`:"")
-      +`</div>`;
+    const cont=(c.nerf.length?`<span class="nf">▼${c.nerf.length}</span>`:"")
+      +(c.buff.length?`<span class="bf">▲${c.buff.length}</span>`:"")
+      +(c.add.length?`<span class="mut">➕${c.add.length}</span>`:"")
+      +(c.rem.length?`<span class="mut">➖${c.rem.length}</span>`:"")
+      +(c.newmon&&c.newmon.length?`<span class="mut">🆕${c.newmon.length}</span>`:"")
+      +(c.remmon&&c.remmon.length?`<span class="mut">🚫${c.remmon.length}</span>`:"");
+    hist+=`<details class="hentry"><summary><b>${br(c.d)}</b><span class="hcnt">${cont}</span></summary>`
+      +`<div class="hbody">${detalhe(c,false)}</div></details>`;
   }
   box.innerHTML=`<div class="cbox">`
     +`<div class="chead"><span class="ctitle">Mudanças de drop</span><span class="cdate">${br(e.d)}</span></div>`
-    +`<div class="cchips">${chip(e.nerf.length,"nf","▼ nerf")}${chip(e.buff.length,"bf","▲ buff")}${chip(e.add.length,"mut","➕ novos")}${chip(e.rem.length,"mut","➖ tirados")}</div>`
-    +(lines?`<div class="clist">${lines}${extra?`<div class="cmore">+${extra} outras mudanças de %</div>`:""}</div>`:"")
+    +`<div class="cchips">${chip(e.nerf.length,"nf","▼ nerf")}${chip(e.buff.length,"bf","▲ buff")}${chip(e.add.length,"mut","➕ novos")}${chip(e.rem.length,"mut","➖ tirados")}${chip((e.newmon||[]).length,"mut","🆕 bichos")}</div>`
+    +`<div class="clist">${detalhe(e,true)}</div>`
     +`<details class="chist"><summary>Histórico completo</summary>${hist}</details>`
     +`</div>`;
 }
