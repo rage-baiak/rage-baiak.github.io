@@ -737,9 +737,14 @@ function diff(oldD, newD) {
     // parenteses e alfabeticamente "Épico" cai antes de "Incomum". O step do
     // proprio gerador e a ordem certa (Comum, Incomum, Raro, Epico).
     for (const c of cadeias.values()) c.n.sort((a, b) => a.s - b.s);
-    CODEX = { cadeias: [...cadeias.values()], total: lista.length, conf: Math.round(pior * 1000) / 1000 };
+    // gold pra ABRIR cada degrau, por step. Padrao do cliente; o servidor pode
+    // sobrescrever via adminConfig (funcao $Te), entao e o valor de referencia.
+    const mg = src.match(/stepGold:\[([\de.,+]+)\]/);
+    const stepGold = mg ? mg[1].split(",").map(Number) : null;
+    CODEX = { cadeias: [...cadeias.values()], total: lista.length, conf: Math.round(pior * 1000) / 1000, gold: stepGold };
     console.log("codex:", lista.length, "niveis em", CODEX.cadeias.length, "cadeias |",
-      [...new Set(lista.map(e => e.cat))].join("/"), "| orcamento confere (dif " + CODEX.conf + ")");
+      [...new Set(lista.map(e => e.cat))].join("/"), "| orcamento confere (dif " + CODEX.conf + ")",
+      "| gold por degrau:", stepGold ? stepGold.join("/") : "nao achei");
   } catch (e) { console.log("codex indisponivel:", e.message); }
   tpl = tpl.replace("const CODEX = __CODEX__;", "const CODEX = " + JSON.stringify(CODEX) + ";");
 

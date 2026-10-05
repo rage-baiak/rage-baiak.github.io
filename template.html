@@ -412,6 +412,9 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .cxtot .cxnote{margin:8px 0 10px}
 .cxtot table td:not(:first-child),.cxtot table th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
 .cxtot tr.on td{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--ink)}
+.cxgold{margin-left:8px;font-size:11.5px;font-weight:700;color:#e5a13a;border:1px solid color-mix(in srgb,#e5a13a 40%,transparent);border-radius:999px;padding:1px 8px;background:color-mix(in srgb,#e5a13a 10%,transparent)}
+.cxfree{margin-left:8px;font-size:11.5px;font-weight:600;color:var(--muted)}
+.cxtot tr.cxgoldrow td{border-top:1px solid var(--line);color:#e5a13a;font-weight:700}
 .cxstar{font-size:12px}
 .cxlvl{padding:10px 0;border-top:1px solid var(--line2)}
 .cxlvl:first-of-type{border-top:0;padding-top:2px}
@@ -1421,6 +1424,14 @@ function cxSoma(res){
   });
   return {niveis,tudo};
 }
+// gold em escala curta: 50 mi, 500 mi, 1 bi
+function cxGold(v){
+  if(!v) return "0";
+  if(v>=1e9) return (v/1e9).toLocaleString("pt-BR",{maximumFractionDigits:2})+" bi";
+  if(v>=1e6) return (v/1e6).toLocaleString("pt-BR",{maximumFractionDigits:1})+" mi";
+  if(v>=1e3) return (v/1e3).toLocaleString("pt-BR",{maximumFractionDigits:1})+" mil";
+  return v.toLocaleString("pt-BR");
+}
 const cxVal=(k,v)=>{
   if(v==null||v===0) return "";
   const n=Math.round(v*100)/100;
@@ -1450,6 +1461,16 @@ function cxTotalHTML(res){
     +chaves.map(k=>`<tr${k===cxBon?' class="on"':""}><td>${esc(cxNomeBonus(k))}</td>`
         +niveis.map(nv=>`<td>${cxVal(k,nv[k])||"—"}</td>`).join("")
         +`<td><b>${cxVal(k,tudo[k])}</b></td></tr>`).join("")
+    +(()=>{ // quanto de gold pra abrir todos os degraus daquele nivel
+        const g=CODEX.gold||[];
+        const porNivel=niveis.map((_,ix)=>(g[ix]||0)*res.filter(c=>c.n.length>ix).length);
+        const tot=porNivel.reduce((a,b)=>a+b,0);
+        if(!tot) return "";
+        return `<tr class="cxgoldrow" title="O gold abre o degrau; os itens continuam sendo entregues depois. Valor padrão do cliente — o servidor pode ajustar.">`
+          +`<td>🔓 gold pra abrir</td>`
+          +porNivel.map(v=>`<td>${v?cxGold(v):"grátis"}</td>`).join("")
+          +`<td><b>${cxGold(tot)}</b></td></tr>`;
+      })()
     +`</tbody></table></div></details>`;
 }
 const cxTemBonus=(n,k)=>{
@@ -1524,7 +1545,7 @@ function codexHeader(){
     +`<p class="cxnote">A busca também acha por item, pra saber onde um drop é usado.</p>`;
 }
 function codexCard(c,qx){
-  const niveis=c.n.map(n=>{
+  const niveis=c.n.map((n,ix)=>{
     const itens=n.req.map(r=>{
       const alt=r.anyOf&&r.anyOf.length>1;
       const nome=r.item;
@@ -1535,7 +1556,10 @@ function codexCard(c,qx){
         +`<span class="cxitn">${hl(nome,qx)}${alt?`<i class="cxalt">+${r.anyOf.length-1}</i>`:""}</span></span>`;
     }).join("");
     const bo=cxBonus(n.b).map(x=>`<span class="cxb${cxCasa(x,cxBon)?" on":""}">${esc(x.t)}</span>`).join("");
-    return `<div class="cxlvl"><div class="cxlvlh">${esc(n.nome)}</div>`
+    const g=(CODEX.gold||[])[ix]||0;
+    return `<div class="cxlvl"><div class="cxlvlh">${esc(n.nome)}`
+      +(g?`<span class="cxgold" title="Gold pra abrir este degrau. Depois disso os itens ainda têm que ser entregues.">🔓 ${cxGold(g)}</span>`
+         :`<span class="cxfree">abre de graça</span>`)+`</div>`
       +`<div class="cxbs">${bo||"<span class=\"hnote\">sem bônus</span>"}</div>`
       +`<div class="cxits">${itens}</div></div>`;
   }).join("");
