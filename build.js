@@ -731,9 +731,12 @@ function diff(oldD, newD) {
     const cadeias = new Map();
     for (const e of lista) {
       if (!cadeias.has(e.chain)) cadeias.set(e.chain, { c: e.chain, cat: e.cat, x: GTe(e.chain) ? 1 : 0, n: [] });
-      cadeias.get(e.chain).n.push({ nome: e.name, req: e.req, b: e.bonus });
+      cadeias.get(e.chain).n.push({ nome: e.name, req: e.req, b: e.bonus, s: e.step });
     }
-    for (const c of cadeias.values()) c.n.sort((a, b) => a.nome.localeCompare(b.nome));
+    // ordenar por NOME quebrava os sets: o nivel vem como raridade entre
+    // parenteses e alfabeticamente "Épico" cai antes de "Incomum". O step do
+    // proprio gerador e a ordem certa (Comum, Incomum, Raro, Epico).
+    for (const c of cadeias.values()) c.n.sort((a, b) => a.s - b.s);
     CODEX = { cadeias: [...cadeias.values()], total: lista.length, conf: Math.round(pior * 1000) / 1000 };
     console.log("codex:", lista.length, "niveis em", CODEX.cadeias.length, "cadeias |",
       [...new Set(lista.map(e => e.cat))].join("/"), "| orcamento confere (dif " + CODEX.conf + ")");

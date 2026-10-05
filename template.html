@@ -1431,15 +1431,22 @@ function cxTotalHTML(res){
   const {niveis,tudo}=cxSoma(res);
   const chaves=Object.keys(tudo).sort((a,b)=>tudo[b]-tudo[a]);
   if(!chaves.length) return "";
-  const rot=["I","II","III","IV"].slice(0,niveis.length);
+  // nos Sets o nivel E a raridade, entao rotula com ela em vez de I/II/III/IV
+  const rar=(RARITY&&RARITY.escala?RARITY.escala.filter(t=>t.tier<=3).map(t=>t.pt):[]);
+  const rot=(cxCat==="gear"&&rar.length>=niveis.length?rar:["I","II","III","IV"]).slice(0,niveis.length);
   return `<details class="cxtot"${cxBon?" open":""}><summary>`
     +`Total se fechar tudo que está na lista <span class="cxtotn">${res.length} ${res.length===1?"cadeia":"cadeias"}</span></summary>`
     +`<p class="cxnote">Quanto cada nível entrega somando todas as cadeias da lista. `
-    +`As colunas <b>somam</b> até "tudo". O nível I rende pouco por coluna, mas pede `
-    +`<b>1× a quantidade</b> contra 5× no II e 15× no III, então é de longe o mais barato `
-    +`por ponto de bônus. O nível IV só existe nos Sets.</p>`
+    +`As colunas <b>somam</b> até "tudo". `
+    +(cxCat==="gear"
+      ? `Cada nível pede as peças do conjunto <b>naquela raridade</b>, uma de cada, e o bônus `
+        +`multiplica por 1; 1,5; 2 e 3.`
+      : `O nível I rende pouco por coluna, mas pede <b>1× a quantidade</b> contra 5× no II e `
+        +`15× no III, então é de longe o mais barato por ponto de bônus.`
+        +(niveis.length>3?` O nível IV só existe nos Sets.`:""))
+    +`</p>`
     +`<div class="ftbl"><table><thead><tr><th>Bônus</th>`
-    +rot.map(r=>`<th>só nível ${r}</th>`).join("")+`<th>tudo</th></tr></thead><tbody>`
+    +rot.map(r=>`<th>só ${cxCat==="gear"?"":"nível "}${esc(r)}</th>`).join("")+`<th>tudo</th></tr></thead><tbody>`
     +chaves.map(k=>`<tr${k===cxBon?' class="on"':""}><td>${esc(cxNomeBonus(k))}</td>`
         +niveis.map(nv=>`<td>${cxVal(k,nv[k])||"—"}</td>`).join("")
         +`<td><b>${cxVal(k,tudo[k])}</b></td></tr>`).join("")
