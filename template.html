@@ -386,6 +386,24 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hchip.att.nm{color:#7fd4ff;border-color:color-mix(in srgb,#7fd4ff 40%,transparent);background:color-mix(in srgb,#7fd4ff 9%,transparent)}
 .hchip.att.hl{color:#ff7fd4;border-color:color-mix(in srgb,#ff7fd4 40%,transparent);background:color-mix(in srgb,#ff7fd4 9%,transparent)}
 .rlbl.at{color:#7fd4ff}
+.cxbar{display:flex;flex-wrap:wrap;gap:7px;margin:4px 0 8px}
+.cxbar button{font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
+.cxbar button:hover{color:var(--ink);border-color:var(--line2)}
+.cxbar button.on{background:color-mix(in srgb,var(--accent) 18%,var(--panel));color:var(--accent);border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.cxnote{color:var(--muted);font-size:12.5px;line-height:1.5;margin:0 0 12px}
+.cxstar{font-size:12px}
+.cxlvl{padding:10px 0;border-top:1px solid var(--line2)}
+.cxlvl:first-of-type{border-top:0;padding-top:2px}
+.cxlvlh{font-weight:700;font-size:13.5px;margin-bottom:6px}
+.cxbs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.cxb{font-size:12.5px;font-weight:600;color:var(--rc);padding:2px 9px;border-radius:999px;border:1px solid color-mix(in srgb,var(--rc) 40%,transparent);background:color-mix(in srgb,var(--rc) 9%,transparent)}
+.cxits{display:flex;flex-wrap:wrap;gap:5px}
+.cxit{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:12.5px;color:var(--muted);padding:3px 8px 3px 4px;border-radius:7px;border:1px solid var(--line);background:var(--panel2)}
+.cxit:hover{color:var(--ink);border-color:var(--line2)}
+.cxit .spr{width:22px;height:22px;margin:0}
+.cxit b{color:var(--accent);font-variant-numeric:tabular-nums;font-weight:800}
+.cxitn{text-transform:capitalize}
+.cxalt{font-style:normal;font-size:10px;color:var(--accent);margin-left:3px;vertical-align:super}
 .hrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .famrow{padding:8px 0;border-top:1px solid var(--line2)}
 .famrow:first-of-type{border-top:0}
@@ -520,6 +538,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
       <button class="mode" id="mForja" aria-pressed="false">Forja</button>
       <button class="mode" id="mExped" aria-pressed="false">🗺️ Expedição</button>
       <button class="mode" id="mCasket" aria-pressed="false">🎁 Casket</button>
+      <button class="mode" id="mCodex" aria-pressed="false">📖 Codex</button>
       <button class="mode" id="mWar" aria-pressed="false">⚔️ Guerra</button>
     </div>
   </div>
@@ -576,6 +595,7 @@ const SHOP = __SHOP__;
 const FORGE = __FORGE__;
 const RARITY = __RARITY__;
 const MODOS = __MODOS__;
+const CODEX = __CODEX__;
 // guerra: dossie da guild adversaria (contas -> chars -> atributos/resistencias)
 const WAR = __WAR__;
 // atributos rolaveis do item (id -> bonus) + constantes da forja, do bundle
@@ -1324,6 +1344,78 @@ function recTable(title, picks){
 }
 // número grande em k/M/B
 const fmtBig = n => n>=1e9 ? +(n/1e9).toFixed(n%1e9?2:0)+"B" : n>=1e6 ? +(n/1e6).toFixed(n%1e6?1:0)+"M" : n>=1e3 ? +(n/1e3).toFixed(0)+"k" : String(n);
+// ---- Codex ----
+// 741 niveis em 232 cadeias. Cada cadeia e um alvo (hunt, boss ou set de equip) e
+// tem 3 ou 4 niveis; o bonus de um nivel JA INCLUI os anteriores, entao o ultimo e
+// o total daquela cadeia. As cadeias marcadas com estrela ficam fora do orcamento
+// global do codex: dao bonus sem diluir o que as outras pagam.
+let cxCat="todas", cxExtra=false;
+const CXCAT={hunt:"Domínio",boss:"Troféu",gear:"Set"};
+const CXLBL={
+  atkPct:v=>`+${v}% ataque`, defFlat:v=>`+${v} def`, armorFlat:v=>`+${v} armadura`,
+  critChance:v=>`+${v}% chance de crítico`, critDmg:v=>`+${v}% dano crítico`,
+  lifeLeech:v=>`+${v}% life leech`, manaLeech:v=>`+${v}% mana leech`,
+  hpPct:v=>`+${v}% HP`, manaPct:v=>`+${v}% mana`, expPct:v=>`+${v}% exp`,
+  lootPct:v=>`+${v}% loot`, spellDmgPct:v=>`+${v}% dano de magia`,
+  attackSpeedPct:v=>`+${v}% velocidade de ataque`, spellHealPct:v=>`+${v}% cura de magia`,
+  hpRegenPct:v=>`+${v}% regen de HP`, mpRegenPct:v=>`+${v}% regen de mana`,
+  moveSpeed:v=>`+${v} velocidade`, onslaught:v=>`+${v}% chance de fatal`,
+  nmDmg:v=>`+${v} Celestial Attunement`, nmWard:v=>`+${v} Celestial Ward`,
+  hlDmg:v=>`+${v} Cosmic Attunement`, hlWard:v=>`+${v} Cosmic Ward`
+};
+// mesmas regras do jogo, incluindo o caso de protecao igual nos 7 elementos
+function cxBonus(b){
+  const out=[];
+  for(const [k,v] of Object.entries(b||{})){
+    if(typeof v==="number"){ out.push(CXLBL[k]?CXLBL[k](v):`+${v} ${k}`); continue; }
+    const es=Object.entries(v), abs=k==="absorbPct", vals=new Set(es.map(([,x])=>x));
+    if(abs && es.length===7 && vals.size===1){ out.push(`+${es[0][1]}% proteção total`); continue; }
+    for(const [el,vv] of es) out.push(abs?`+${vv}% proteção ${ELPT[el]||el}`:`+${vv}% dano de ${ELPT[el]||el}`);
+  }
+  return out;
+}
+const cxNome=c=>(c.n[0]?.nome||c.c).replace(/\s+(I{1,3}|\([^)]*\))$/,"");
+function codexFiltra(qx){
+  if(!CODEX) return [];
+  return CODEX.cadeias.filter(c=>{
+    if(cxCat!=="todas" && c.cat!==cxCat) return false;
+    if(cxExtra && !c.x) return false;
+    if(!qx) return true;
+    if(norm(cxNome(c)).includes(qx)) return true;
+    return c.n.some(n=>n.req.some(r=>(r.anyOf||[r.item]).some(it=>norm(it).includes(qx))));
+  }).sort((a,b)=>cxNome(a).localeCompare(cxNome(b)));
+}
+function codexHeader(){
+  if(!CODEX) return "";
+  const b=(f,t)=>`<button class="cxfilt" data-f="${f}">${t}</button>`;
+  return `<div class="cxbar">`
+    +b("todas","Todas")+b("hunt","Domínio")+b("boss","Troféu")+b("gear","Set")
+    +`<button class="cxextra" title="Cadeias fora do orçamento global: dão bônus sem diluir o que as outras pagam.">⭐ fora do orçamento</button>`
+    +`</div>`
+    +`<p class="cxnote">Entregue os itens pra ganhar bônus de conta. O bônus de cada nível `
+    +`<b>já inclui os anteriores</b>, então o último é o total da cadeia. Busca também por item.</p>`;
+}
+function codexCard(c,qx){
+  const niveis=c.n.map(n=>{
+    const itens=n.req.map(r=>{
+      const alt=r.anyOf&&r.anyOf.length>1;
+      const nome=r.item;
+      const tt=(alt?`aceita qualquer um de ${r.anyOf.length}: ${r.anyOf.join(", ")}`:nome)
+        +(r.tier!=null?` · tier ${r.tier}`:"")+(r.minUp?` · +${r.minUp}`:"");
+      return `<span class="cxit ilink" data-item="${esc(nome)}" title="${esc(tt)}">`
+        +`${itemSpr(nome)}<b>${r.qty.toLocaleString("pt-BR")}</b>`
+        +`<span class="cxitn">${hl(nome,qx)}${alt?`<i class="cxalt">+${r.anyOf.length-1}</i>`:""}</span></span>`;
+    }).join("");
+    const bo=cxBonus(n.b).map(t=>`<span class="cxb">${esc(t)}</span>`).join("");
+    return `<div class="cxlvl"><div class="cxlvlh">${esc(n.nome)}</div>`
+      +`<div class="cxbs">${bo||"<span class=\"hnote\">sem bônus</span>"}</div>`
+      +`<div class="cxits">${itens}</div></div>`;
+  }).join("");
+  return `<details><summary><span class="name">${hl(cxNome(c),qx)}</span>`
+    +`<span class="meta">${c.x?'<span class="cxstar" title="fora do orçamento global">⭐</span> ':""}`
+    +`<span class="chip">${CXCAT[c.cat]||c.cat}</span> · ${c.n.length} níveis</span></summary>`
+    +`<div class="body">${niveis}</div></details>`;
+}
 // ---- Raridades (tiers 0-7) ----
 // Celestial e Cosmico nao dropam: so sobem por upgrade a partir do Mitico. As
 // formulas de material sao do proprio bundle, entao se o jogo mudar o numero
@@ -1767,6 +1859,21 @@ function warCard(a,qq,open,rank){
 function render(){
   setTimeout(pintaSprites,0);   // sprites de humanoide precisam de cor
   if(mode==="forja"){ list.innerHTML=forjaHTML(); count.textContent=""; return; }
+  if(mode==="codex"){
+    const qx=norm(q.value.trim());
+    const res=codexFiltra(qx);
+    list.innerHTML=codexHeader()+res.map(c=>codexCard(c,qx)).join("");
+    list.querySelectorAll(".cxfilt").forEach(b=>{
+      b.classList.toggle("on", b.dataset.f===cxCat);
+      b.onclick=()=>{ cxCat=b.dataset.f; render(); };
+    });
+    const ex=list.querySelector(".cxextra");
+    if(ex){ ex.classList.toggle("on",cxExtra); ex.onclick=()=>{ cxExtra=!cxExtra; render(); }; }
+    const n=res.reduce((t,c)=>t+c.n.length,0);
+    count.textContent=`${res.length} ${res.length===1?"cadeia":"cadeias"} · ${n} ${n===1?"nível":"níveis"}`;
+    setTimeout(pintaSprites,0);
+    return;
+  }
   if(mode==="casket"){
     const qc=norm(q.value.trim());
     const res=OUTFITS.filter(o=>(ocFiltro==="todos"||o.c===ocFiltro) && (!qc||norm(o.n).includes(qc)));
@@ -1929,7 +2036,7 @@ for(const el of [stLvl,stMag,stDist,stMelee,stBonus]) el.addEventListener("input
 
 function setMode(m){
   mode=m; limit=CHUNK;
-  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["casket",mCasket],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
+  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["casket",mCasket],["codex",mCodex],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   lvfilter.style.display = m==="hunt" ? "flex" : "none";
   slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = document.getElementById("eqelfilter").style.display = document.getElementById("eqelmodefilter").style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
@@ -1956,6 +2063,7 @@ mMagia.onclick=()=>setMode("magia");
 mEquip.onclick=()=>setMode("equip");
 mItem.onclick=()=>setMode("item");
 mForja.onclick=()=>setMode("forja");
+mCodex.onclick=()=>setMode("codex");
 mExped.onclick=()=>setMode("exped");
 mCasket.onclick=()=>setMode("casket");
 mWar.onclick=()=>setMode("war");

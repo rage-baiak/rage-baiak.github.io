@@ -651,6 +651,106 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const EXPED = __EXPED__;", "const EXPED = " + JSON.stringify(exped) + ";");
   tpl = tpl.replace("const CHARMS = __CHARMS__;", "const CHARMS = " + JSON.stringify(CHARMS) + ";");
   tpl = tpl.replace("const EQUIP = __EQUIP__;", "const EQUIP = " + JSON.stringify(equip) + ";");
+  // ---- Codex ----
+  // O catalogo nao e uma tabela: e gerado por rqe() a partir de 3 fontes, e o valor
+  // do bonus sai de um orcamento global dividido entre as cadeias. Reimplementar
+  // isso erraria em silencio, entao EXECUTO o codigo do proprio jogo: extraio as
+  // declaracoes necessarias do bundle e rodo. A conferencia e o orcamento: a soma
+  // dos bonus tem que bater com zTe (ver verificacao abaixo).
+  function extractCodex(src) {
+    // recorta uma declaracao do bundle, com contagem de aspas e chaves
+    const pulaStr = (i) => {
+      const q = src[i];
+      for (let k = i + 1; k < src.length; k++) {
+        if (src[k] === "\\") { k++; continue; }
+        if (src[k] === q) return k;
+      }
+      return src.length;
+    };
+    const pega = (nome, tipo) => {
+      const re = tipo === "fn" ? new RegExp(`function ${nome}\\(`) : new RegExp(`(?<![A-Za-z0-9_$])${nome}=`);
+      const m = re.exec(src);
+      if (!m) throw new Error("declaracao nao encontrada: " + nome);
+      const i = m.index;
+      if (tipo === "fn") {
+        let d = 0, k = src.indexOf("{", i);
+        for (; k < src.length; k++) {
+          const c = src[k];
+          if (c === '"' || c === "'" || c === "`") { k = pulaStr(k); continue; }
+          if (c === "{") d++; else if (c === "}") { d--; if (d === 0) break; }
+        }
+        return src.slice(i, k + 1);
+      }
+      let d = 0, k = i + nome.length + 1;
+      for (; k < src.length; k++) {
+        const c = src[k];
+        if (c === '"' || c === "'" || c === "`") { k = pulaStr(k); continue; }
+        if ("([{".includes(c)) d++;
+        else if (")]}".includes(c)) { if (d === 0) break; d--; }
+        else if ((c === "," || c === ";") && d === 0) break;
+      }
+      return "const " + src.slice(i, k);
+    };
+    const decls = [
+      ["GU","const"],["Et","const"],["FTe","fn"],["HTe","const"],["DTe","const"],
+      ["VU","const"],["RTe","const"],["OTe","const"],["zTe","const"],["UTe","const"],
+      ["jTe","const"],["GTe","const"],["UN","fn"],["VTe","fn"],["gie","fn"],
+      ["Sne","const"],["Tne","const"],["Lf","fn"],["Te","const"],
+      ["zt","const"],["yie","const"],["pie","const"],["aqe","const"],
+      ["KTe","const"],["WTe","const"],["JTe","const"],["ZTe","const"],["eqe","const"],
+      ["tqe","const"],["Pa","const"],["nqe","const"],
+      ["XTe","fn"],["YTe","fn"],["oqe","fn"],["QTe","fn"],["rqe","fn"],
+    ];
+    let corpo = "";
+    for (const [n, t] of decls) corpo += pega(n, t) + ";\n";
+    const prelude = `
+      let VN=null, hv=null;
+      const i=(t,p)=>String(t).replace(/\\{(\\w+)\\}/g,(_,k)=>(p&&p[k]!=null?p[k]:""));
+      const Lt={};
+    `;
+    const entradas = new Function(prelude + corpo + "\nreturn {lista:rqe(), zTe, GTe};")();
+    return entradas;
+  }
+  let CODEX = null;
+  try {
+    const { lista, zTe, GTe } = extractCodex(src);
+    // VERIFICACAO: o orcamento global tem que fechar. Se nao fechar, nao publico
+    // numero errado -- prefiro nao ter a aba.
+    const soma = {};
+    for (const e of lista) {
+      if (e.cat === "gear" || GTe(e.chain)) continue;
+      for (const [k, v] of Object.entries(e.bonus)) {
+        if (typeof v === "number") soma[k] = (soma[k] || 0) + v;
+        else for (const [el, vv] of Object.entries(v)) soma[k + "." + el] = (soma[k + "." + el] || 0) + vv;
+      }
+    }
+    let pior = 0;
+    for (const k of Object.keys(zTe)) pior = Math.max(pior, Math.abs((soma[k] || 0) - zTe[k]));
+    if (pior > 0.1) throw new Error("orcamento nao fecha (maior diferenca " + pior.toFixed(3) + ")");
+    // agrupa por cadeia: os niveis de uma cadeia andam juntos na tela
+    const cadeias = new Map();
+    for (const e of lista) {
+      if (!cadeias.has(e.chain)) cadeias.set(e.chain, { c: e.chain, cat: e.cat, x: GTe(e.chain) ? 1 : 0, n: [] });
+      cadeias.get(e.chain).n.push({ nome: e.name, req: e.req, b: e.bonus });
+    }
+    for (const c of cadeias.values()) c.n.sort((a, b) => a.nome.localeCompare(b.nome));
+    CODEX = { cadeias: [...cadeias.values()], total: lista.length, conf: Math.round(pior * 1000) / 1000 };
+    console.log("codex:", lista.length, "niveis em", CODEX.cadeias.length, "cadeias |",
+      [...new Set(lista.map(e => e.cat))].join("/"), "| orcamento confere (dif " + CODEX.conf + ")");
+  } catch (e) { console.log("codex indisponivel:", e.message); }
+  tpl = tpl.replace("const CODEX = __CODEX__;", "const CODEX = " + JSON.stringify(CODEX) + ";");
+
+  // itens que so aparecem no codex (sanguine, caixas de demonio) nao dropam, entao
+  // nao estavam no ITEMID e ficariam sem sprite
+  if (CODEX) {
+    let add = 0;
+    for (const c of CODEX.cadeias) for (const n of c.n) for (const r of n.req)
+      for (const nome of (r.anyOf || [r.item])) {
+        const k = norm(nome);
+        if (!(k in ITEMID) && idByName[k]) { ITEMID[k] = idByName[k]; add++; }
+      }
+    if (add) console.log("  +" + add + " sprites de item so-do-codex");
+  }
   tpl = tpl.replace("const ITEMID = __ITEMID__;", "const ITEMID = " + JSON.stringify(ITEMID) + ";");
   tpl = tpl.replace("const SHOP = __SHOP__;", "const SHOP = " + JSON.stringify(SHOP) + ";");
   tpl = tpl.replace("const FORGE = __FORGE__;", "const FORGE = " + JSON.stringify(FORGE) + ";");
