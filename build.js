@@ -711,7 +711,7 @@ function diff(oldD, newD) {
   // Dois tiers mais dificeis das MESMAS hunts, em escada. LV(hp,atk,exp,expPerStep,
   // itemChance) da os multiplicadores. O desbloqueio e por pontos; o boss tem um
   // seletor de dificuldade a parte, que e de onde sai essence e soul.
-  function extractModos(src) {
+  function extractModos(src, hunts) {
     const num = x => Number(x);
     const lv = tag => {
       const m = src.match(new RegExp(tag + ':(?:\\{\\.\\.\\.)?\\w+\\(([\\d.]+),([\\d.]+),([\\d.]+),([\\d.]+),([\\d.]+)\\)'));
@@ -725,7 +725,30 @@ function diff(oldD, newD) {
     const mD = src.match(/levelDrops:\{([^}]*\}\])\}/);
     if (mD) for (const d of mD[1].matchAll(/(\w+):\[\{item:"([^"]+)",level:([\d.]+),chance:([\d.]+),perLevel:([\d.]+)\}\]/g))
       drops.push({ boss: d[1], item: d[2], lv: num(d[3]), chance: num(d[4]), porNivel: num(d[5]) });
+    // Quais hunts compoem cada familia de pontos. Isto NAO esta no bundle: o jogo
+    // so guarda o valor por familia. Veio do operador e confere com o disco --
+    // toda hunt de nivel 800+ cai em exatamente uma familia, sem sobra nem
+    // sobreposicao, e cada familia e uma faixa de nivel fechada.
+    const FAMILIA = {
+      gnomprona: ["gnomprona1-cave", "gnomprona2-cave", "gnomprona3-cave"],
+      soulwar: ["darkthais-cave", "bonyseadevil-cave", "infernalmdemon-cave", "cloakofterror-lair", "rottengolem-cave"],
+      sanguine: ["wanderingpillar-cave", "draklightsource-cave", "maggot-cave", "bloatedmanmaggot-cave"],
+      radiant: ["radiant-skyhold", "radiant-ascendancy"],
+      devoted: ["radiant-skyhold-devoted", "radiant-ascendancy-devoted"]
+    };
+    const porId = {};
+    for (const x of hunts) porId[x.id] = x;
+    const familias = {}, perdidos = [];
+    for (const [fam, ids] of Object.entries(FAMILIA)) {
+      familias[fam] = [];
+      for (const id of ids) {
+        if (porId[id]) familias[fam].push({ id, nome: porId[id].name, lv: porId[id].lv });
+        else perdidos.push(fam + "/" + id);
+      }
+    }
+    if (perdidos.length) console.log("  aviso: hunt de familia sumiu do jogo:", perdidos.join(", "));
     const r = {
+      familias,
       nm: lv("nm"), hl: lv("hl"),
       pontos: mPts ? {
         fonte: { gnomprona: num(mPts[1]), soulwar: num(mPts[2]), sanguine: num(mPts[3]), radiant: num(mPts[4]), devoted: num(mPts[5]) },
@@ -741,7 +764,7 @@ function diff(oldD, newD) {
   }
   let MODOS = null;
   try {
-    MODOS = extractModos(src);
+    MODOS = extractModos(src, hunts);
     console.log("modos: nm x" + MODOS.nm.hp + "hp/x" + MODOS.nm.atk + "atk | hl x" + MODOS.hl.hp + "hp/x" + MODOS.hl.atk
       + " | unlock " + MODOS.unlock.nm + "/" + MODOS.unlock.hl + " | drops por nivel: " + MODOS.drops.length);
   } catch (e) { console.log("modos indisponiveis:", e.message); }

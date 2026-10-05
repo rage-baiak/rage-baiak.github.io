@@ -387,6 +387,12 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hchip.att.hl{color:#ff7fd4;border-color:color-mix(in srgb,#ff7fd4 40%,transparent);background:color-mix(in srgb,#ff7fd4 9%,transparent)}
 .rlbl.at{color:#7fd4ff}
 .hrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.famrow{padding:8px 0;border-top:1px solid var(--line2)}
+.famrow:first-of-type{border-top:0}
+.famh{display:flex;align-items:baseline;gap:8px;font-size:13px}
+.famh b{color:var(--ink)}
+.fampt{color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
+.famlv{color:var(--muted);font-size:12px;margin-left:auto;font-variant-numeric:tabular-nums}
 .rarc{flex:0 1 128px;min-width:118px;display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:10px;border:1px solid color-mix(in srgb,var(--rc) 45%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 16%,transparent),color-mix(in srgb,var(--rc) 5%,transparent))}
 .rarc.nova{border-width:2px;box-shadow:0 0 0 3px color-mix(in srgb,var(--rc) 14%,transparent)}
 .rcn{font-weight:700;font-size:13.5px;color:var(--rc)}
@@ -1453,8 +1459,18 @@ function modosHTML(){
     h+=`<h3>Como abrir</h3><div class="fgrid">`
       +`<div class="fcard"><h3 style="color:#7fd4ff">Nightmare</h3>`
       +`<p><b>${nf(M.unlock.nm)}</b> Pontos de Progresso.</p>`
-      +`<p class="fp small">Ganhos por hunt fechada, e quanto cada família vale:</p>`
-      +`<div class="hrow">${fontes}</div></div>`
+      +`<p class="fp small">Ganhos por hunt fechada. Cada família é uma faixa de nível, `
+      +`e toda hunt de 800+ cai em exatamente uma:</p>`
+      +(M.familias ? Object.entries(f).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{
+          const hs=M.familias[k]||[];
+          if(!hs.length) return "";
+          return `<div class="famrow"><div class="famh"><b>${esc(FAM[k]||k)}</b>`
+            +`<span class="fampt">${v} ${v===1?"ponto":"pontos"}</span>`
+            +`<span class="famlv">lv ${hs[0].lv}</span></div><div class="hrow">`
+            +hs.map(x=>`<span class="hchip hlink" data-hunt="${esc(x.nome)}">${esc(x.nome)}</span>`).join("")
+            +`</div></div>`;
+        }).join("") : `<div class="hrow">${fontes}</div>`)
+      +`</div>`
       +`<div class="fcard"><h3 style="color:#ff7fd4">Hell</h3>`
       +`<p><b>${nf(M.unlock.hl)}</b> Pontos de clear Nightmare.</p>`
       +`<ul><li>cada clear vale <b>${M.pontos.porClear}</b></li>`
