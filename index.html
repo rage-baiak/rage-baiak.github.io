@@ -403,6 +403,15 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .cxbsel:focus{outline:2px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:1px}
 .cxb.on{color:var(--accent);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
 .cxnote{color:var(--muted);font-size:12.5px;line-height:1.5;margin:0 0 12px}
+.cxtot{margin:0 0 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:10px 14px}
+.cxtot>summary{list-style:none;cursor:pointer;font-weight:700;font-size:13.5px;color:var(--accent);display:flex;align-items:center;gap:8px}
+.cxtot>summary::-webkit-details-marker{display:none}
+.cxtot>summary::after{content:"▾";margin-left:auto;font-size:10px;opacity:.6}
+.cxtot[open]>summary::after{content:"▴"}
+.cxtotn{font-weight:600;color:var(--muted);font-size:12px}
+.cxtot .cxnote{margin:8px 0 10px}
+.cxtot table td:not(:first-child),.cxtot table th:not(:first-child){text-align:right;font-variant-numeric:tabular-nums}
+.cxtot tr.on td{background:color-mix(in srgb,var(--accent) 12%,transparent);color:var(--ink)}
 .cxstar{font-size:12px}
 .cxlvl{padding:10px 0;border-top:1px solid var(--line2)}
 .cxlvl:first-of-type{border-top:0;padding-top:2px}
@@ -1391,6 +1400,51 @@ function cxBonusDisponiveis(){
   return Object.keys(c).map(k=>({k,nome:cxNomeBonus(k),n:c[k]}))
     .sort((a,b)=>a.nome.localeCompare(b.nome));
 }
+// Soma o que cada nivel entrega se voce fechar TODAS as cadeias da lista atual.
+// Respeita os filtros, entao da pra perguntar "e se eu fizer so os nivel I de
+// Trofeu". As colunas somam ate "tudo" (conferido: diferenca da ordem de 1e-14).
+// O que NAO e incremento e o valor em si: cada nivel ja carrega as parcelas dos
+// anteriores, por isso as colunas nao crescem de forma monotona -- depende de
+// qual parcela da cadeia carrega aquele bonus.
+const CXFLAT=new Set(["defFlat","armorFlat","moveSpeed","nmDmg","nmWard","hlDmg","hlWard"]);
+function cxAcumula(dst,b){
+  for(const [k,v] of Object.entries(b||{})){
+    if(typeof v==="number") dst[k]=(dst[k]||0)+v;
+    else for(const [el,vv] of Object.entries(v)) dst[k+"."+el]=(dst[k+"."+el]||0)+vv;
+  }
+}
+function cxSoma(res){
+  const niveis=[], tudo={};
+  for(const c of res) c.n.forEach((n,ix)=>{
+    niveis[ix]=niveis[ix]||{};
+    cxAcumula(niveis[ix],n.b); cxAcumula(tudo,n.b);
+  });
+  return {niveis,tudo};
+}
+const cxVal=(k,v)=>{
+  if(v==null||v===0) return "";
+  const n=Math.round(v*100)/100;
+  return n.toLocaleString("pt-BR")+(CXFLAT.has(k.split(".")[0])?"":"%");
+};
+function cxTotalHTML(res){
+  if(!res.length) return "";
+  const {niveis,tudo}=cxSoma(res);
+  const chaves=Object.keys(tudo).sort((a,b)=>tudo[b]-tudo[a]);
+  if(!chaves.length) return "";
+  const rot=["I","II","III","IV"].slice(0,niveis.length);
+  return `<details class="cxtot"${cxBon?" open":""}><summary>`
+    +`Total se fechar tudo que está na lista <span class="cxtotn">${res.length} ${res.length===1?"cadeia":"cadeias"}</span></summary>`
+    +`<p class="cxnote">Quanto cada nível entrega somando todas as cadeias da lista. `
+    +`As colunas <b>somam</b> até "tudo". O nível I rende pouco por coluna, mas pede `
+    +`<b>1× a quantidade</b> contra 5× no II e 15× no III, então é de longe o mais barato `
+    +`por ponto de bônus. O nível IV só existe nos Sets.</p>`
+    +`<div class="ftbl"><table><thead><tr><th>Bônus</th>`
+    +rot.map(r=>`<th>só nível ${r}</th>`).join("")+`<th>tudo</th></tr></thead><tbody>`
+    +chaves.map(k=>`<tr${k===cxBon?' class="on"':""}><td>${esc(cxNomeBonus(k))}</td>`
+        +niveis.map(nv=>`<td>${cxVal(k,nv[k])||"—"}</td>`).join("")
+        +`<td><b>${cxVal(k,tudo[k])}</b></td></tr>`).join("")
+    +`</tbody></table></div></details>`;
+}
 const cxTemBonus=(n,k)=>{
   if(!k) return true;
   const [base,el]=k.split(".");
@@ -1928,7 +1982,7 @@ function render(){
   if(mode==="codex"){
     const qx=norm(q.value.trim());
     const res=codexFiltra(qx);
-    list.innerHTML=codexHeader()+res.map(c=>codexCard(c,qx)).join("");
+    list.innerHTML=codexHeader()+cxTotalHTML(res)+res.map(c=>codexCard(c,qx)).join("");
     list.querySelectorAll(".cxfilt").forEach(b=>{
       b.classList.toggle("on", b.dataset.f===cxCat);
       b.onclick=()=>{ cxCat=b.dataset.f; render(); };
