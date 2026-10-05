@@ -381,6 +381,11 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .fcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .fcard.wide{grid-column:1/-1}
 .rscale{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;margin:12px 0 4px}
+.hchip.att{font-variant-numeric:tabular-nums}
+.hchip.att b{color:var(--ink)}
+.hchip.att.nm{color:#7fd4ff;border-color:color-mix(in srgb,#7fd4ff 40%,transparent);background:color-mix(in srgb,#7fd4ff 9%,transparent)}
+.hchip.att.hl{color:#ff7fd4;border-color:color-mix(in srgb,#ff7fd4 40%,transparent);background:color-mix(in srgb,#ff7fd4 9%,transparent)}
+.rlbl.at{color:#7fd4ff}
 .rarc{flex:0 1 128px;min-width:118px;display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:10px;border:1px solid color-mix(in srgb,var(--rc) 45%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 16%,transparent),color-mix(in srgb,var(--rc) 5%,transparent))}
 .rarc.nova{border-width:2px;box-shadow:0 0 0 3px color-mix(in srgb,var(--rc) 14%,transparent)}
 .rcn{font-weight:700;font-size:13.5px;color:var(--rc)}
@@ -1047,6 +1052,19 @@ function expedCard(e,qq,open){
     +`Os bichos daqui não dropam nada no caminho.</div></div>`
     +stages+`</div></details>`;
 }
+// Attunement exigido pela hunt nos modos nightmare/hell. Abaixo do valor, o dano
+// que voce causa cai proporcionalmente ate o piso de 10%. Cada peca Celestial da
+// +35; a Cosmica da os mesmos +35 e mais +35 no hell.
+function attRow(h){
+  if(!h.rec) return "";
+  const pecas=n=>Math.ceil(n/35);
+  return `<div class="recrow"><span class="rlbl at">✦ attunement</span>`
+    +`<span class="hchip att nm" title="Celestial Attunement pra causar 100% de dano no nightmare. Equivale a ${pecas(h.rec)} peças Celestial, sem contar a árvore rift.">`
+    +`nightmare <b>${h.rec}</b></span>`
+    +`<span class="hchip att hl" title="Cosmic Attunement pra causar 100% de dano no hell. Equivale a ${pecas(h.recH)} peças Cósmicas, sem contar a árvore rift.">`
+    +`hell <b>${h.recH}</b></span>`
+    +`<span class="hnote">abaixo disso o dano cai até 10%</span></div>`;
+}
 function huntCard(h,qq,open){
   const dot=el=>`<i class="edot e-${el}"></i>`;
   const arma = h.off.length
@@ -1073,6 +1091,7 @@ function huntCard(h,qq,open){
   return `<details${open}><summary><span class="name">${hl(h.name,qq)}</span>`
     +`<span class="meta">lv ${h.lv}+ · <span class="chip">${h.mons.length}</span> bichos</span></summary>`
     +`<div class="body hbody"><div class="rec">`
+    +attRow(h)
     +`<div class="recrow"><span class="rlbl wk">⚔ arma / imbu</span>${arma}</div>`
     +`<div class="recrow"><span class="rlbl rs">🛡 proteção</span>${def}</div>`
     
@@ -1356,6 +1375,40 @@ function raridadeHTML(){
       +`é do servidor e não aparece no jogo baixado — então não dá pra estimar aqui.</p>`;
   }
 
+  if(R.perPeca){
+    const f=Math.round((R.floor||0.1)*100);
+    h+=`<h3>Pra que serve</h3>`
+      +`<p class="fp">O ganho de verdade não é o atributo a mais: é que peça Celestial ou Cósmica `
+      +`dá <b>Attunement</b> e <b>Ward</b>, que só existem no nightmare e no hell.</p>`
+      +`<div class="fgrid">`
+      +`<div class="fcard"><h3 style="color:#7fd4ff">Cada peça Celestial</h3>`
+      +`<ul><li>+<b>${R.perPeca}</b> Celestial Attunement</li>`
+      +`<li>+<b>${R.perPeca}</b> Celestial Ward</li></ul></div>`
+      +`<div class="fcard"><h3 style="color:#ff7fd4">Cada peça Cósmica</h3>`
+      +`<ul><li>o mesmo que a Celestial</li>`
+      +`<li>+<b>${R.perPeca}</b> Cosmic Attunement <i>e</i> Ward, que valem no hell</li></ul></div>`
+      +`</div>`
+      +`<p class="fp rnote"><b>Attunement</b> é quanto do seu dano passa: `
+      +`<code>${f}% + ${100-f}% × min(1, attunement ÷ exigência da hunt)</code>. `
+      +`Sem nada, você bate <b>${f}%</b>. <b>Ward</b> divide o dano que você toma, com teto de `
+      +`<b>${R.head||1.1}×</b> a exigência. O número de cada hunt está na aba Hunts.</p>`;
+  }
+  if(R.chance){
+    const n=R.chance.nivel, t=R.chance.tier;
+    const cols=n.map((_,i)=>i);
+    h+=`<h3>Chance de subir atributo</h3>`
+      +`<p class="fp">Cada atributo sobe de nível por tentativa, e a chance cai rápido. `
+      +`O tier só ajuda nos baixos: de Lendário pra cima o multiplicador é <b>1</b>, `
+      +`então Celestial e Cósmico <b>não ganham desconto nenhum</b>.</p>`
+      +`<div class="ftbl"><table><thead><tr><th>Nível atual</th>`
+      +cols.map(i=>`<th>${i}</th>`).join("")+`</tr></thead><tbody>`
+      +`<tr><td>chance base</td>`+n.map(v=>`<td>${v}%</td>`).join("")+`</tr>`
+      +`</tbody></table></div>`
+      +`<div class="ftbl"><table><thead><tr><th>Tier</th>`
+      +t.map((_,i)=>`<th>${(R.escala.find(x=>x.tier===i)||{}).pt||i}</th>`).join("")
+      +`</tr></thead><tbody><tr><td>multiplicador</td>`
+      +t.map(v=>`<td>${v===1?"—":"×"+v}</td>`).join("")+`</tr></tbody></table></div>`;
+  }
   if(R.mochila && R.mochila.length){
     h+=`<h3>Mochilas novas</h3><div class="fgrid">`
       +R.mochila.map(m=>`<div class="fcard rbag">${spr(m.id)}<div><h3>${esc(m.n)}</h3>`

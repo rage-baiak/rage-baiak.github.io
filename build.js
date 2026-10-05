@@ -549,6 +549,48 @@ function diff(oldD, newD) {
   let tpl = fs.readFileSync(HERE + "/template.html", "utf8");
   tpl = tpl.replace("const M = __DATA__;", "const M = " + JSON.stringify(data) + ";");
   tpl = tpl.replace("const CHANGES = __CHANGES__;", "const CHANGES = " + JSON.stringify(changes) + ";");
+  // ---- Attunement por hunt ----
+  // O jogo guarda ancoras [huntId, rec] e INTERPOLA pelo nivel minimo da hunt pra
+  // todas as outras. rec = quanto de Celestial Attunement a hunt exige pra voce
+  // bater 100%; abaixo disso o dano cai ate o piso de 10%. Hell pede rec * 1.05.
+  function extractRec(src, hunts) {
+    const lvl = {};
+    for (const h of hunts) lvl[h.id] = h.lv || 1;
+    let anc = null;
+    for (const m of src.matchAll(/\[(?:\["[a-z0-9-]+",\d+\],){3,}\["[a-z0-9-]+",\d+\]\]/g)) {
+      const pares = [...m[0].matchAll(/\["([a-z0-9-]+)",(\d+)\]/g)].map(x => [x[1], +x[2]]);
+      const conhecidos = pares.filter(([id]) => id in lvl).length;
+      if (conhecidos / pares.length > 0.7) { anc = pares; break; }
+    }
+    if (!anc) throw new Error("ancoras de attunement nao encontradas");
+    const mCap = src.match(/\]\],\w+=([\de.+]+),\w+=\(/);
+    const cap = mCap ? Number(mCap[1]) : 1000;
+    const mPlus = src.match(/recPlus:([\d.]+)/);
+    const plus = mPlus ? Number(mPlus[1]) : 0.05;
+    const pts = anc.map(([id, rec]) => ({ lvl: lvl[id] ?? 1, rec })).sort((a, b) => a.lvl - b.lvl);
+    // copia fiel da interpolacao do bundle
+    const rec = lv => {
+      const a = pts[0], n = pts[pts.length - 1];
+      if (!a || !n) return 100;
+      if (lv <= a.lvl) return a.rec;
+      if (lv >= n.lvl) return Math.min(cap, Math.round(n.rec * lv / n.lvl));
+      let o = a, r = n;
+      for (const t of pts) {
+        if (t.lvl <= lv) o = t.lvl === o.lvl ? { lvl: t.lvl, rec: Math.max(o.rec, t.rec) } : t;
+        if (t.lvl >= lv) { r = t; break; }
+      }
+      return r.lvl === o.lvl ? Math.max(o.rec, r.rec)
+        : Math.round(o.rec + (r.rec - o.rec) * (lv - o.lvl) / (r.lvl - o.lvl));
+    };
+    let n = 0;
+    for (const h of hunts) { h.rec = rec(h.lv || 1); h.recH = Math.round(h.rec * (1 + plus)); n++; }
+    return { cap, plus, ancoras: anc.length, hunts: n };
+  }
+  try {
+    const r = extractRec(src, hunts);
+    console.log("attunement:", r.hunts, "hunts calculadas de", r.ancoras, "ancoras | teto", r.cap, "| hell +" + Math.round(r.plus * 100) + "%");
+  } catch (e) { console.log("attunement indisponivel:", e.message); }
+
   tpl = tpl.replace("const HUNTS = __HUNTS__;", "const HUNTS = " + JSON.stringify(hunts) + ";");
 
 
@@ -647,8 +689,18 @@ function diff(oldD, newD) {
       const ab = /(\w+):(\d+)/.exec(m[2]);
       mochila.push({ n: nome, id: +m[1], size: sz ? +sz[2] : null, absorb: ab ? +ab[2] : null });
     }
+    // bonus por peca celestial/cosmica e as formulas de attunement/ward
+    const mW = src.match(/foe\(\w+\.tier\)&&\(\w+\.nmDmg\+=(\w+),\w+\.nmWard\+=\1/);
+    const perPeca = mW ? Number((src.match(new RegExp(mW[1] + "=(\\d+)")) || [])[1]) : null;
+    const mFloor = src.match(/dealtFloor:([\d.]+)/);
+    const mHead = src.match(/recHead:([\d.]+)/);
+    // chance de subir atributo: tabela por nivel x multiplicador por tier
+    const mCh = src.match(/=\[(60(?:,\d+){10,})\],\w+=\[(1(?:,[\d.]+){5,})\]/);
+    const chance = mCh ? { nivel: mCh[1].split(",").map(Number), tier: mCh[2].split(",").map(Number) } : null;
     return {
       escala,
+      perPeca, floor: mFloor ? Number(mFloor[1]) : null, head: mHead ? Number(mHead[1]) : null,
+      chance,
       up: mu ? { celEss: +mu[1], celGold: +mu[2], cosSoul: +mu[3], cosGold: +mu[4], reroll: +mu[5] } : null,
       boss: mb ? { essBase: +mb[1], essPerLv: +mb[2], essCap: +mb[3], soulLv: +mb[4], soulOff: +mb[5], soulDiv: +mb[6], soulCap: +mb[7] } : null,
       mat: { ess: idDe ? +idDe[1] : 0, soul: idIs ? +idIs[1] : 0 },
@@ -660,7 +712,8 @@ function diff(oldD, newD) {
     RARITY = extractRarity(src);
     console.log("raridades:", RARITY.escala.map(t => t.pt).join(" < "),
       "| upgrade:", RARITY.up ? "ok" : "-", "| boss:", RARITY.boss ? "ok" : "-",
-      "| mochilas:", RARITY.mochila.length);
+      "| mochilas:", RARITY.mochila.length,
+      "| +" + RARITY.perPeca + "/peca", "| chance:", RARITY.chance ? "ok" : "-");
   } catch (e) { console.log("raridades indisponiveis:", e.message); }
   tpl = tpl.replace("const RARITY = __RARITY__;", "const RARITY = " + JSON.stringify(RARITY) + ";");
 
