@@ -398,6 +398,10 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .cxbar button{font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
 .cxbar button:hover{color:var(--ink);border-color:var(--line2)}
 .cxbar button.on{background:color-mix(in srgb,var(--accent) 18%,var(--panel));color:var(--accent);border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.cxbsel{font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:5px 10px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted);max-width:230px}
+.cxbsel:hover{color:var(--ink);border-color:var(--line2)}
+.cxbsel:focus{outline:2px solid color-mix(in srgb,var(--accent) 55%,transparent);outline-offset:1px}
+.cxb.on{color:var(--accent);border-color:var(--accent);background:color-mix(in srgb,var(--accent) 18%,transparent)}
 .cxnote{color:var(--muted);font-size:12.5px;line-height:1.5;margin:0 0 12px}
 .cxstar{font-size:12px}
 .cxlvl{padding:10px 0;border-top:1px solid var(--line2)}
@@ -1357,8 +1361,43 @@ const fmtBig = n => n>=1e9 ? +(n/1e9).toFixed(n%1e9?2:0)+"B" : n>=1e6 ? +(n/1e6)
 // tem 3 ou 4 niveis; o bonus de um nivel JA INCLUI os anteriores, entao o ultimo e
 // o total daquela cadeia. As cadeias marcadas com estrela ficam fora do orcamento
 // global do codex: dao bonus sem diluir o que as outras pagam.
-let cxCat="todas", cxExtra=false;
+let cxCat="todas", cxBon="";
 const CXCAT={hunt:"Domínio",boss:"Troféu",gear:"Set"};
+// nome do bonus sem o valor, pro seletor. absorbPct/elementDmgPct sao por elemento
+// e viram "Proteção X" / "Dano X".
+const CXNOME={
+  atkPct:"Ataque", defFlat:"Defesa", armorFlat:"Armadura",
+  critChance:"Chance de crítico", critDmg:"Dano crítico",
+  lifeLeech:"Life leech", manaLeech:"Mana leech",
+  hpPct:"HP", manaPct:"Mana", expPct:"Exp", lootPct:"Loot",
+  spellDmgPct:"Dano de magia", spellHealPct:"Cura de magia",
+  attackSpeedPct:"Velocidade de ataque", hpRegenPct:"Regen de HP", mpRegenPct:"Regen de mana",
+  moveSpeed:"Velocidade", onslaught:"Chance de fatal",
+  nmDmg:"Celestial Attunement", nmWard:"Celestial Ward",
+  hlDmg:"Cosmic Attunement", hlWard:"Cosmic Ward"
+};
+function cxNomeBonus(k){
+  const [base,el]=k.split(".");
+  if(el) return (base==="absorbPct"?"Proteção ":"Dano ")+(ELPT[el]||el);
+  return CXNOME[base]||base;
+}
+// todas as chaves que realmente aparecem, com quantos niveis cada uma toca
+function cxBonusDisponiveis(){
+  const c={};
+  for(const ch of (CODEX?CODEX.cadeias:[])) for(const n of ch.n) for(const [k,v] of Object.entries(n.b||{})){
+    if(typeof v==="number") c[k]=(c[k]||0)+1;
+    else for(const el of Object.keys(v)) c[k+"."+el]=(c[k+"."+el]||0)+1;
+  }
+  return Object.keys(c).map(k=>({k,nome:cxNomeBonus(k),n:c[k]}))
+    .sort((a,b)=>a.nome.localeCompare(b.nome));
+}
+const cxTemBonus=(n,k)=>{
+  if(!k) return true;
+  const [base,el]=k.split(".");
+  const v=(n.b||{})[base];
+  if(v==null) return false;
+  return el?(typeof v==="object"&&v[el]!=null):typeof v==="number";
+};
 const CXLBL={
   atkPct:v=>`+${v}% ataque`, defFlat:v=>`+${v} def`, armorFlat:v=>`+${v} armadura`,
   critChance:v=>`+${v}% chance de crítico`, critDmg:v=>`+${v}% dano crítico`,
@@ -1375,19 +1414,25 @@ const CXLBL={
 function cxBonus(b){
   const out=[];
   for(const [k,v] of Object.entries(b||{})){
-    if(typeof v==="number"){ out.push(CXLBL[k]?CXLBL[k](v):`+${v} ${k}`); continue; }
+    if(typeof v==="number"){ out.push({k,t:CXLBL[k]?CXLBL[k](v):`+${v} ${k}`}); continue; }
     const es=Object.entries(v), abs=k==="absorbPct", vals=new Set(es.map(([,x])=>x));
-    if(abs && es.length===7 && vals.size===1){ out.push(`+${es[0][1]}% proteção total`); continue; }
-    for(const [el,vv] of es) out.push(abs?`+${vv}% proteção ${ELPT[el]||el}`:`+${vv}% dano de ${ELPT[el]||el}`);
+    if(abs && es.length===7 && vals.size===1){
+      // protecao igual nos 7: o jogo resume numa linha so, e ela casa com qualquer elemento
+      out.push({k,els:es.map(([el])=>el),t:`+${es[0][1]}% proteção total`}); continue;
+    }
+    for(const [el,vv] of es) out.push({k:`${k}.${el}`,t:abs?`+${vv}% proteção ${ELPT[el]||el}`:`+${vv}% dano de ${ELPT[el]||el}`});
   }
   return out;
 }
+// o chip casa com o filtro se for a mesma chave, ou se for o resumo "proteção total"
+// e o filtro pedir um dos elementos que ele cobre
+const cxCasa=(c,f)=>!!f && (c.k===f || (c.els||[]).some(el=>`${c.k}.${el}`===f));
 const cxNome=c=>(c.n[0]?.nome||c.c).replace(/\s+(I{1,3}|\([^)]*\))$/,"");
 function codexFiltra(qx){
   if(!CODEX) return [];
   return CODEX.cadeias.filter(c=>{
     if(cxCat!=="todas" && c.cat!==cxCat) return false;
-    if(cxExtra && !c.x) return false;
+    if(cxBon && !c.n.some(n=>cxTemBonus(n,cxBon))) return false;
     if(!qx) return true;
     if(norm(cxNome(c)).includes(qx)) return true;
     return c.n.some(n=>n.req.some(r=>(r.anyOf||[r.item]).some(it=>norm(it).includes(qx))));
@@ -1411,7 +1456,9 @@ function codexHeader(){
     +`</ul></div></div>`
     +`<div class="cxbar">`
     +b("todas","Todas")+b("hunt","Domínio")+b("boss","Troféu")+b("gear","Set")
-    +`<button class="cxextra" title="Cadeias fora do orçamento global: dão bônus sem diluir o que as outras pagam.">⭐ fora do orçamento</button>`
+    +`<select class="cxbsel" aria-label="Filtrar por bônus"><option value="">todo bônus</option>`
+    +cxBonusDisponiveis().map(b=>`<option value="${esc(b.k)}"${b.k===cxBon?" selected":""}>${esc(b.nome)} (${b.n})</option>`).join("")
+    +`</select>`
     +`</div>`
     +`<p class="cxnote">A busca também acha por item, pra saber onde um drop é usado.</p>`;
 }
@@ -1426,14 +1473,13 @@ function codexCard(c,qx){
         +`${itemSpr(nome)}<b>${r.qty.toLocaleString("pt-BR")}</b>`
         +`<span class="cxitn">${hl(nome,qx)}${alt?`<i class="cxalt">+${r.anyOf.length-1}</i>`:""}</span></span>`;
     }).join("");
-    const bo=cxBonus(n.b).map(t=>`<span class="cxb">${esc(t)}</span>`).join("");
+    const bo=cxBonus(n.b).map(x=>`<span class="cxb${cxCasa(x,cxBon)?" on":""}">${esc(x.t)}</span>`).join("");
     return `<div class="cxlvl"><div class="cxlvlh">${esc(n.nome)}</div>`
       +`<div class="cxbs">${bo||"<span class=\"hnote\">sem bônus</span>"}</div>`
       +`<div class="cxits">${itens}</div></div>`;
   }).join("");
   return `<details><summary><span class="name">${hl(cxNome(c),qx)}</span>`
-    +`<span class="meta">${c.x?'<span class="cxstar" title="fora do orçamento global">⭐</span> ':""}`
-    +`<span class="chip">${CXCAT[c.cat]||c.cat}</span> · ${c.n.length} níveis</span></summary>`
+    +`<span class="meta"><span class="chip">${CXCAT[c.cat]||c.cat}</span> · ${c.n.length} níveis</span></summary>`
     +`<div class="body">${niveis}</div></details>`;
 }
 // ---- Raridades (tiers 0-7) ----
@@ -1887,8 +1933,8 @@ function render(){
       b.classList.toggle("on", b.dataset.f===cxCat);
       b.onclick=()=>{ cxCat=b.dataset.f; render(); };
     });
-    const ex=list.querySelector(".cxextra");
-    if(ex){ ex.classList.toggle("on",cxExtra); ex.onclick=()=>{ cxExtra=!cxExtra; render(); }; }
+    const sel=list.querySelector(".cxbsel");
+    if(sel) sel.onchange=()=>{ cxBon=sel.value; render(); };
     const n=res.reduce((t,c)=>t+c.n.length,0);
     count.textContent=`${res.length} ${res.length===1?"cadeia":"cadeias"} · ${n} ${n===1?"nível":"níveis"}`;
     setTimeout(pintaSprites,0);
@@ -2072,6 +2118,7 @@ function setMode(m){
     : m==="casket" ? "Buscar outfit…"
     : m==="exped" ? "Buscar expedição (nome, chefe ou bicho)…"
     : m==="war" ? "Buscar conta ou personagem inimigo…"
+    : m==="codex" ? "Buscar cadeia ou item exigido (ex: troll green)…"
     : m==="boss" ? "Buscar boss (ex: deathstrike, ferumbras)…"
     : "Buscar monstro (ex: dragon, demon)…";
   render();
