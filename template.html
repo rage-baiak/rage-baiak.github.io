@@ -386,6 +386,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hchip.att.nm{color:#7fd4ff;border-color:color-mix(in srgb,#7fd4ff 40%,transparent);background:color-mix(in srgb,#7fd4ff 9%,transparent)}
 .hchip.att.hl{color:#ff7fd4;border-color:color-mix(in srgb,#ff7fd4 40%,transparent);background:color-mix(in srgb,#ff7fd4 9%,transparent)}
 .rlbl.at{color:#7fd4ff}
+.hrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .rarc{flex:0 1 128px;min-width:118px;display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:10px;border:1px solid color-mix(in srgb,var(--rc) 45%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 16%,transparent),color-mix(in srgb,var(--rc) 5%,transparent))}
 .rarc.nova{border-width:2px;box-shadow:0 0 0 3px color-mix(in srgb,var(--rc) 14%,transparent)}
 .rcn{font-weight:700;font-size:13.5px;color:var(--rc)}
@@ -568,6 +569,7 @@ const SHOP = __SHOP__;
 // forja: {tier:{cost,ka}, bench:{tierMult,umbral,doom}}
 const FORGE = __FORGE__;
 const RARITY = __RARITY__;
+const MODOS = __MODOS__;
 // guerra: dossie da guild adversaria (contas -> chars -> atributos/resistencias)
 const WAR = __WAR__;
 // atributos rolaveis do item (id -> bonus) + constantes da forja, do bundle
@@ -1419,11 +1421,79 @@ function raridadeHTML(){
   }
   return h+`</div>`;
 }
+// ---- Nightmare / Hell ----
+// Nao sao lugares novos: sao as MESMAS hunts com os bichos multiplicados, em
+// escada (nao da pra pular hunt). E o unico lugar onde Attunement e Ward valem.
+// id interno de boss -> nome do catalogo, clicavel. Se nao achar, mostra o id
+// com inicial maiuscula em vez de inventar nome.
+function bossLink(id){
+  const alvo=norm(String(id).replace(/[_-]/g," "));
+  const m=byName[alvo];
+  if(m) return `<span class="mlink" data-mon="${esc(m.n)}">${esc(m.n)}</span>`;
+  return esc(String(id).charAt(0).toUpperCase()+String(id).slice(1));
+}
+function modosHTML(){
+  if(!MODOS || !MODOS.nm) return "";
+  const M=MODOS, nf=n=>n.toLocaleString("pt-BR"), x=v=>`×${String(v).replace(".",",")}`;
+  let h=`<div class="fsec"><h2>🌙 Nightmare e Hell</h2>`
+    +`<p class="fp">Os dois tiers mais duros das <b>mesmas hunts</b>. O mapa é o mesmo; o que muda `
+    +`são os bichos. É só aqui que <b>Attunement</b> e <b>Ward</b> fazem alguma coisa.</p>`
+    +`<div class="ftbl"><table><thead><tr><th>Tier</th><th>Vida</th><th>Ataque</th><th>Exp</th><th>Chance de item</th></tr></thead><tbody>`
+    +`<tr><td><b style="color:#7fd4ff">Nightmare</b></td><td>${x(M.nm.hp)}</td><td>${x(M.nm.atk)}</td><td>${x(M.nm.exp)}</td><td>${x(M.nm.itemChance)}</td></tr>`
+    +`<tr><td><b style="color:#ff7fd4">Hell</b></td><td>${x(M.hl.hp)}</td><td>${x(M.hl.atk)}</td><td>${x(M.hl.exp)}</td><td>${x(M.hl.itemChance)}</td></tr>`
+    +`</tbody></table></div>`;
+
+  if(M.unlock && M.pontos){
+    const f=M.pontos.fonte;
+    // rotulos como o proprio jogo escreve ("Gnomprona, Soul War, Sanguine, Radiant
+    // e Devoted dao pontos por hunt fechada")
+    const FAM={gnomprona:"Gnomprona",soulwar:"Soul War",sanguine:"Sanguine",radiant:"Radiant",devoted:"Devoted"};
+    const fontes=Object.entries(f).sort((a,b)=>b[1]-a[1])
+      .map(([k,v])=>`<span class="hchip">${esc(FAM[k]||k)} <b>${v}</b></span>`).join("");
+    h+=`<h3>Como abrir</h3><div class="fgrid">`
+      +`<div class="fcard"><h3 style="color:#7fd4ff">Nightmare</h3>`
+      +`<p><b>${nf(M.unlock.nm)}</b> Pontos de Progresso.</p>`
+      +`<p class="fp small">Ganhos por hunt fechada, e quanto cada família vale:</p>`
+      +`<div class="hrow">${fontes}</div></div>`
+      +`<div class="fcard"><h3 style="color:#ff7fd4">Hell</h3>`
+      +`<p><b>${nf(M.unlock.hl)}</b> Pontos de clear Nightmare.</p>`
+      +`<ul><li>cada clear vale <b>${M.pontos.porClear}</b></li>`
+      +`<li>do degrau <b>${M.pontos.bonusDoDegrau}</b> em diante, <b>+${String(M.pontos.bonusPorDegrau).replace(".",",")}</b> por degrau acima</li>`
+      +`<li>e exige a escada Nightmare <b>fechada inteira</b></li></ul></div>`
+      +`</div>`
+      +`<p class="fp rnote">Dentro de cada tier a ordem é fixa: o jogo recusa entrar numa hunt se a `
+      +`anterior da escada não estiver fechada.</p>`;
+  }
+
+  if(M.boss){
+    const b=M.boss, st=M.steep;
+    h+=`<h3>Nível do boss</h3>`
+      +`<p class="fp">Não é o boss que tem nível: é um <b>seletor de dificuldade</b> que você escolhe `
+      +`antes da luta. É daqui que sai a <i>death essence</i> e a <i>infernal soul</i>.</p>`
+      +`<div class="ftbl"><table><thead><tr><th>Nível</th><th>Vida do boss</th><th>Dano que você toma</th><th>Loot</th></tr></thead><tbody>`
+      +`<tr><td><b>0</b></td><td>normal</td><td><b style="color:#57b85a">−${b.nivel0}%</b></td><td>normal</td></tr>`
+      +`<tr><td><b>1</b></td><td>normal</td><td>normal</td><td>normal</td></tr>`
+      +`<tr><td><b>N</b> (acima de 1)</td><td>+${b.hpPorNivel}% por nível</td><td>+${b.danoPorNivel}% por nível</td><td>+${b.lootPorNivel}% por nível</td></tr>`
+      +(st?`<tr><td><b>N</b> · bosses pesados</td><td>+${st.hp}% por nível</td><td>+${st.dano}% por nível</td><td>+${b.lootPorNivel}% por nível</td></tr>`:"")
+      +`</tbody></table></div>`;
+  }
+
+  if(M.drops && M.drops.length){
+    h+=`<h3>Drop que só existe em nível alto</h3><div class="fgrid">`
+      +M.drops.map(d=>`<div class="fcard rbag">${itemSpr(d.item)}<div>`
+        +`<h3>${esc(d.item)}</h3>`
+        +`<ul><li>só no <b>${bossLink(d.boss)}</b>, do nível <b>${d.lv}</b> em diante</li>`
+        +`<li><b>${String(d.chance).replace(".",",")}%</b> de chance, <b>+${String(d.porNivel).replace(".",",")}%</b> por nível acima</li>`
+        +`</ul></div></div>`).join("")
+      +`</div>`;
+  }
+  return h+`</div>`;
+}
 function forjaHTML(){
-  if(!FORGE || !FORGE.tier) return raridadeHTML()||`<div class="empty">Dados da forja indisponíveis neste build.</div>`;
+  if(!FORGE || !FORGE.tier) return (raridadeHTML()+modosHTML())||`<div class="empty">Dados da forja indisponíveis neste build.</div>`;
   const ka=FORGE.tier.ka, C=FORGE.tier.cost;
   const perCore = Math.round(ka.sliversPerCore/ka.sliversPerBatch*ka.dustPerSliverBatch);
-  let h=raridadeHTML();
+  let h=raridadeHTML()+modosHTML();
 
   // ---- Forja de Tier ----
   h+=`<div class="fsec"><h2>⚒️ Forja de Tier</h2>`

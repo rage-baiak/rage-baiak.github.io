@@ -707,6 +707,46 @@ function diff(oldD, newD) {
       mochila
     };
   }
+  // ---- Nightmare / Hell ----
+  // Dois tiers mais dificeis das MESMAS hunts, em escada. LV(hp,atk,exp,expPerStep,
+  // itemChance) da os multiplicadores. O desbloqueio e por pontos; o boss tem um
+  // seletor de dificuldade a parte, que e de onde sai essence e soul.
+  function extractModos(src) {
+    const num = x => Number(x);
+    const lv = tag => {
+      const m = src.match(new RegExp(tag + ':(?:\\{\\.\\.\\.)?\\w+\\(([\\d.]+),([\\d.]+),([\\d.]+),([\\d.]+),([\\d.]+)\\)'));
+      return m ? { hp: num(m[1]), atk: num(m[2]), exp: num(m[3]), itemChance: num(m[5]) } : null;
+    };
+    const mPts = src.match(/points:\{gnomprona:([\d.]+),soulwar:([\d.]+),sanguine:([\d.]+),radiant:([\d.]+),devoted:([\d.]+),nightmarePerClear:([\d.]+),nightmareBonusFromStep:([\d.]+),nightmareBonusPerStep:([\d.]+)\}/);
+    const mUn = src.match(/unlock:\{nightmare:([\de.+]+),hell:([\de.+]+)\}/);
+    const mB = src.match(/monsterHpPerLevel:([\d.]+),playerDamagePerLevel:([\d.]+),lootPerLevel:([\d.]+),levelZeroDamageReduction:([\d.]+)/);
+    const mS = src.match(/steepHpPerLevel:([\d.]+),steepDamagePerLevel:([\d.]+)/);
+    const drops = [];
+    const mD = src.match(/levelDrops:\{([^}]*\}\])\}/);
+    if (mD) for (const d of mD[1].matchAll(/(\w+):\[\{item:"([^"]+)",level:([\d.]+),chance:([\d.]+),perLevel:([\d.]+)\}\]/g))
+      drops.push({ boss: d[1], item: d[2], lv: num(d[3]), chance: num(d[4]), porNivel: num(d[5]) });
+    const r = {
+      nm: lv("nm"), hl: lv("hl"),
+      pontos: mPts ? {
+        fonte: { gnomprona: num(mPts[1]), soulwar: num(mPts[2]), sanguine: num(mPts[3]), radiant: num(mPts[4]), devoted: num(mPts[5]) },
+        porClear: num(mPts[6]), bonusDoDegrau: num(mPts[7]), bonusPorDegrau: num(mPts[8])
+      } : null,
+      unlock: mUn ? { nm: num(mUn[1]), hl: num(mUn[2]) } : null,
+      boss: mB ? { hpPorNivel: num(mB[1]), danoPorNivel: num(mB[2]), lootPorNivel: num(mB[3]), nivel0: num(mB[4]) } : null,
+      steep: mS ? { hp: num(mS[1]), dano: num(mS[2]) } : null,
+      drops
+    };
+    if (!r.nm || !r.unlock) throw new Error("config de nightmare/hell nao encontrada");
+    return r;
+  }
+  let MODOS = null;
+  try {
+    MODOS = extractModos(src);
+    console.log("modos: nm x" + MODOS.nm.hp + "hp/x" + MODOS.nm.atk + "atk | hl x" + MODOS.hl.hp + "hp/x" + MODOS.hl.atk
+      + " | unlock " + MODOS.unlock.nm + "/" + MODOS.unlock.hl + " | drops por nivel: " + MODOS.drops.length);
+  } catch (e) { console.log("modos indisponiveis:", e.message); }
+  tpl = tpl.replace("const MODOS = __MODOS__;", "const MODOS = " + JSON.stringify(MODOS) + ";");
+
   let RARITY = null;
   try {
     RARITY = extractRarity(src);
