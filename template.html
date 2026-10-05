@@ -386,6 +386,14 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hchip.att.nm{color:#7fd4ff;border-color:color-mix(in srgb,#7fd4ff 40%,transparent);background:color-mix(in srgb,#7fd4ff 9%,transparent)}
 .hchip.att.hl{color:#ff7fd4;border-color:color-mix(in srgb,#ff7fd4 40%,transparent);background:color-mix(in srgb,#ff7fd4 9%,transparent)}
 .rlbl.at{color:#7fd4ff}
+.cxinfo{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;margin:4px 0 12px}
+.cxi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
+.cxi h4{margin:0 0 6px;font-size:13px;color:var(--accent)}
+.cxi ul{margin:0;padding-left:16px;font-size:12.5px;line-height:1.5;color:var(--muted)}
+.cxi li+li{margin-top:4px}
+.cxi b{color:var(--ink)}
+.cxwarn{border-color:color-mix(in srgb,#e0a038 45%,var(--line));background:color-mix(in srgb,#e0a038 7%,var(--panel))}
+.cxwarn h4{color:#e0a038}
 .cxbar{display:flex;flex-wrap:wrap;gap:7px;margin:4px 0 8px}
 .cxbar button{font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--panel);color:var(--muted)}
 .cxbar button:hover{color:var(--ink);border-color:var(--line2)}
@@ -1388,12 +1396,24 @@ function codexFiltra(qx){
 function codexHeader(){
   if(!CODEX) return "";
   const b=(f,t)=>`<button class="cxfilt" data-f="${f}">${t}</button>`;
-  return `<div class="cxbar">`
+  return `<div class="cxinfo">`
+    +`<div class="cxi"><h4>Como soma</h4><ul>`
+    +`<li>O bônus é <b>de conta</b>: vale pra todos os seus chars.</li>`
+    +`<li>Tudo que você conclui <b>acumula</b>. Cada entrada paga <b>uma vez só</b>.</li>`
+    +`<li>O nível repete as parcelas dos anteriores, então a <b>1ª parcela da cadeia é paga 3×</b>, `
+    +`a 2ª 2× e a 3ª 1×. O nível I costuma ser o melhor custo-benefício.</li>`
+    +`</ul></div>`
+    +`<div class="cxi cxwarn"><h4>⚠ Antes de entregar</h4><ul>`
+    +`<li>Os itens são <b>destruídos</b>, e não dá pra desfazer. Dá pra desmarcar na hora: `
+    +`o item fica bloqueado pro Codex dali em diante.</li>`
+    +`<li>Sem a raridade pedida, o jogo usa uma <b>maior</b> e conta como a pedida. `
+    +`Dá pra perder um Mítico numa entrada que pedia Comum.</li>`
+    +`</ul></div></div>`
+    +`<div class="cxbar">`
     +b("todas","Todas")+b("hunt","Domínio")+b("boss","Troféu")+b("gear","Set")
     +`<button class="cxextra" title="Cadeias fora do orçamento global: dão bônus sem diluir o que as outras pagam.">⭐ fora do orçamento</button>`
     +`</div>`
-    +`<p class="cxnote">Entregue os itens pra ganhar bônus de conta. O bônus de cada nível `
-    +`<b>já inclui os anteriores</b>, então o último é o total da cadeia. Busca também por item.</p>`;
+    +`<p class="cxnote">A busca também acha por item, pra saber onde um drop é usado.</p>`;
 }
 function codexCard(c,qx){
   const niveis=c.n.map(n=>{
