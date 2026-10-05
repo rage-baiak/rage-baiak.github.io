@@ -380,6 +380,27 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .fgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
 .fcard{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
 .fcard.wide{grid-column:1/-1}
+.rscale{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px;margin:12px 0 4px}
+.rarc{flex:0 1 128px;min-width:118px;display:flex;flex-direction:column;gap:2px;padding:8px 10px;border-radius:10px;border:1px solid color-mix(in srgb,var(--rc) 45%,var(--line));background:linear-gradient(180deg,color-mix(in srgb,var(--rc) 16%,transparent),color-mix(in srgb,var(--rc) 5%,transparent))}
+.rarc.nova{border-width:2px;box-shadow:0 0 0 3px color-mix(in srgb,var(--rc) 14%,transparent)}
+.rcn{font-weight:700;font-size:13.5px;color:var(--rc)}
+.rcd{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.rcd b{color:var(--ink)}
+.rarrow{font-style:normal;color:var(--muted);align-self:center;font-size:15px;opacity:.6}
+.rup .ruph{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.rtag{font-weight:700;font-size:13px;color:var(--rc);border:1px solid color-mix(in srgb,var(--rc) 50%,var(--line));background:color-mix(in srgb,var(--rc) 12%,transparent);border-radius:999px;padding:3px 10px}
+.rcost{display:flex;align-items:center;gap:8px;padding:5px 0;font-size:13.5px}
+.rcost b{font-variant-numeric:tabular-nums;color:var(--ink)}
+.rcost .spr{width:26px;height:26px;margin:0}
+.rcoin{width:26px;text-align:center;font-size:15px;flex:0 0 auto;color:#e5a13a}
+.rgold{color:var(--muted)}
+.rreq{margin-top:8px;font-size:12.5px;color:#e0a038}
+.rnote{font-size:12.5px;margin-top:10px}
+.rbag{display:flex;align-items:flex-start;gap:12px}
+.rbag .spr{width:40px;height:40px;margin:0;flex:0 0 auto}
+.rbag h3{margin:0 0 6px;font-size:14px;text-transform:capitalize;color:var(--ink)}
+.rbag ul{margin:0;padding-left:16px;font-size:13px;color:var(--muted)}
+.ftbl td .spr{width:22px;height:22px;margin-right:6px}
 .fcard h3{margin:0 0 6px;color:var(--fg)}
 .fcard p{margin:0 0 8px;color:var(--muted);font-size:13.5px;line-height:1.45}
 .fcard ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
@@ -541,6 +562,7 @@ const SPELLS = __SPELLS__;
 const SHOP = __SHOP__;
 // forja: {tier:{cost,ka}, bench:{tierMult,umbral,doom}}
 const FORGE = __FORGE__;
+const RARITY = __RARITY__;
 // guerra: dossie da guild adversaria (contas -> chars -> atributos/resistencias)
 const WAR = __WAR__;
 // atributos rolaveis do item (id -> bonus) + constantes da forja, do bundle
@@ -1275,11 +1297,80 @@ function recTable(title, picks){
 }
 // número grande em k/M/B
 const fmtBig = n => n>=1e9 ? +(n/1e9).toFixed(n%1e9?2:0)+"B" : n>=1e6 ? +(n/1e6).toFixed(n%1e6?1:0)+"M" : n>=1e3 ? +(n/1e3).toFixed(0)+"k" : String(n);
+// ---- Raridades (tiers 0-7) ----
+// Celestial e Cosmico nao dropam: so sobem por upgrade a partir do Mitico. As
+// formulas de material sao do proprio bundle, entao se o jogo mudar o numero
+// aqui muda junto.
+function raridadeHTML(){
+  if(!RARITY || !RARITY.escala) return "";
+  const R=RARITY, nf=n=>n.toLocaleString("pt-BR");
+  const escala=R.escala.map(t=>{
+    const novo=t.tier>=6?" nova":"";
+    return `<div class="rarc${novo}" style="--rc:${t.cor||"#888"}">`
+      +`<span class="rcn">${esc(t.pt)}</span>`
+      +(t.attrs?`<span class="rcd"><b>${t.attrs}</b> attr · até <b>+${t.max}</b></span>`:`<span class="rcd">sem atributo</span>`)
+      +`</div>`;
+  }).join(`<i class="rarrow">›</i>`);
+
+  let h=`<div class="fsec"><h2>🌟 Raridades</h2>`
+    +`<p class="fp">Cada tier dá <b>um atributo a mais</b> e <b>dois níveis de upgrade a mais</b>. `
+    +`<b>Celestial</b> e <b>Cósmico</b> entraram agora e <b>não dropam</b>: a única via é subir um Mítico.</p>`
+    +`<div class="rscale">${escala}</div>`;
+
+  if(R.up){
+    const passo=(de,pra,corDe,corPra,idMat,nMat,qtMat,gold,extra)=>
+      `<div class="fcard rup">`
+      +`<div class="ruph"><span class="rtag" style="--rc:${corDe}">${esc(de)}</span>`
+      +`<i class="rarrow">›</i><span class="rtag" style="--rc:${corPra}">${esc(pra)}</span></div>`
+      +`<div class="rcost">${spr(idMat)}<span><b>${nf(qtMat)}</b> ${esc(nMat)}</span></div>`
+      +`<div class="rcost rgold"><span class="rcoin">●</span><span><b>${nf(gold)}</b> gold</span></div>`
+      +(extra?`<div class="rreq">⚠ ${extra}</div>`:"")
+      +`</div>`;
+    const c=t=>R.escala.find(x=>x.tier===t)?.cor||"#888";
+    const n=t=>R.escala.find(x=>x.tier===t)?.pt||"";
+    h+=`<h3>Como subir</h3><div class="fgrid">`
+      +passo(n(5),n(6),c(5),c(6),R.mat.ess,"death essence",R.up.celEss,R.up.celGold,"")
+      +passo(n(6),n(7),c(6),c(7),R.mat.soul,"infernal soul",R.up.cosSoul,R.up.cosGold,"exige o modo <b>hell</b> ligado")
+      +`</div>`
+      +`<p class="fp rnote">Rerrolar um atributo custa <b>${nf(R.up.reroll)}</b> death essence. `
+      +`Item comprado na loja <b>não sobe de raridade</b>, e o upgrade só aceita equipamento com slot — `
+      +`fora munição, bolsa e item que quebra.</p>`;
+  }
+
+  if(R.boss){
+    const b=R.boss;
+    const ess=lv=>Math.min(b.essCap, b.essBase+Math.floor(lv*b.essPerLv));
+    const soul=lv=>lv>=b.soulLv?Math.max(0,Math.min(b.soulCap,Math.floor((lv-b.soulOff)/b.soulDiv))):0;
+    const lvs=[10,25,40,60,65,80];
+    h+=`<h3>De onde vem o material</h3>`
+      +`<p class="fp">Por boss morto. A <b>essence</b> precisa do <i>nightmare</i>; a <b>soul</b> precisa de `
+      +`<i>nightmare + hell</i> e de boss <b>nível ${b.soulLv}+</b>.</p>`
+      +`<div class="ftbl"><table><thead><tr><th>Nível do boss</th>`
+      +lvs.map(l=>`<th>${l}</th>`).join("")+`</tr></thead><tbody>`
+      +`<tr><td>${spr(R.mat.ess)} death essence</td>`+lvs.map(l=>`<td>${ess(l)}</td>`).join("")+`</tr>`
+      +`<tr><td>${spr(R.mat.soul)} infernal soul</td>`+lvs.map(l=>`<td>${soul(l)||"—"}</td>`).join("")+`</tr>`
+      +`</tbody></table></div>`
+      +`<p class="fp rnote">A essence trava em <b>${b.essCap}</b> por boss a partir do nível `
+      +`${Math.ceil((b.essCap-b.essBase)/b.essPerLv)}, e a soul trava em <b>${b.soulCap}</b> a partir do `
+      +`nível ${b.soulCap*b.soulDiv+b.soulOff}. O modo hell também gera material por hora, mas essa conta `
+      +`é do servidor e não aparece no jogo baixado — então não dá pra estimar aqui.</p>`;
+  }
+
+  if(R.mochila && R.mochila.length){
+    h+=`<h3>Mochilas novas</h3><div class="fgrid">`
+      +R.mochila.map(m=>`<div class="fcard rbag">${spr(m.id)}<div><h3>${esc(m.n)}</h3>`
+        +`<ul><li><b>${m.size}</b> espaços</li>`
+        +(m.absorb?`<li>absorve <b>${m.absorb}%</b> de todo elemento</li>`:"")
+        +`</ul></div></div>`).join("")
+      +`</div>`;
+  }
+  return h+`</div>`;
+}
 function forjaHTML(){
-  if(!FORGE || !FORGE.tier) return `<div class="empty">Dados da forja indisponíveis neste build.</div>`;
+  if(!FORGE || !FORGE.tier) return raridadeHTML()||`<div class="empty">Dados da forja indisponíveis neste build.</div>`;
   const ka=FORGE.tier.ka, C=FORGE.tier.cost;
   const perCore = Math.round(ka.sliversPerCore/ka.sliversPerBatch*ka.dustPerSliverBatch);
-  let h="";
+  let h=raridadeHTML();
 
   // ---- Forja de Tier ----
   h+=`<div class="fsec"><h2>⚒️ Forja de Tier</h2>`
@@ -1552,8 +1643,6 @@ function render(){
   if(mode==="war"){
     const qw=norm(q.value.trim());
     const res=WAR.contas.filter(a=>!qw||norm(a.c).includes(qw)||a.ch.some(c=>norm(c.n).includes(qw)));
-    // ordena pelo MESMO total que o card exibe (só os chars relevantes), senão o
-    // ranking não bate com o número mostrado
     // ordena pela mesma soma que o card exibe (todos os chars da conta), senao o
     // ranking nao bate com o numero mostrado
     const relTot=a=>warChars(a).reduce((t,c)=>t+c.lv,0);

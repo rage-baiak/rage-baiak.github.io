@@ -264,10 +264,19 @@ function diff(oldD, newD) {
 (async () => {
   const UA = { "user-agent": "Mozilla/5.0 baiak-drops-builder" };
   const page = await (await fetch("https://baiakidle.com/jogar/", { headers: UA })).text();
-  const bm = page.match(/\/jogar\/assets\/index-[^"']+\.js/);
-  if (!bm) throw new Error("bundle nao encontrado");
-  console.log("bundle:", bm[0]);
-  const src = await (await fetch("https://baiakidle.com" + bm[0], { headers: UA })).text();
+  // O jogo ja chamou o bundle de index-*.js e passou a dividir em main-*.js + game-*.js
+  // (05/10/2026). Nao da pra ancorar no NOME: busca todos os chunks e escolhe o que tem
+  // os dados, pelo conteudo. Se um dia dividirem de novo, isto continua achando.
+  const ANCORA = /kind:"offensive"/;
+  const urls = [...new Set([...page.matchAll(/\/jogar\/assets\/[\w-]+\.js/g)].map(m => m[0]))];
+  if (!urls.length) throw new Error("nenhum chunk .js na pagina do jogo");
+  let src = null, usado = null;
+  for (const u of urls.sort((a, b) => a.includes("game-") ? -1 : b.includes("game-") ? 1 : 0)) {
+    const t = await (await fetch("https://baiakidle.com" + u, { headers: UA })).text();
+    if (ANCORA.test(t)) { src = t; usado = u; break; }
+  }
+  if (!src) throw new Error("bundle de dados nao encontrado nos chunks: " + urls.join(", "));
+  console.log("bundle:", usado, `(${(src.length / 1e6).toFixed(1)} MB de ${urls.length} chunk(s))`);
 
   // ---- catalogo final do jogo (It): base ix + Db override + gde (escala hp/dmg/abil) + exp x yde ----
   // Replica o assembler do bundle. `Yne=It` e o catalogo que a UI mostra.
@@ -603,6 +612,58 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const ITEMID = __ITEMID__;", "const ITEMID = " + JSON.stringify(ITEMID) + ";");
   tpl = tpl.replace("const SHOP = __SHOP__;", "const SHOP = " + JSON.stringify(SHOP) + ";");
   tpl = tpl.replace("const FORGE = __FORGE__;", "const FORGE = " + JSON.stringify(FORGE) + ";");
+  // ---- Raridades (tiers 0-7). Celestial(6) e Cosmico(7) entraram em 05/10/2026.
+  // Ancora no CONTEUDO: a tabela base vai ate Mythical e a nova vem numa lista
+  // separada, entao leio as duas e junto. Nome minificado muda a cada deploy.
+  function extractRarity(src) {
+    const tiers = [];
+    const re = /\{tier:(?:\w+|\d+),name:"(\w+)",attrs:(\d+),maxLevel:(\d+)\}/g;
+    const seen = new Set();
+    for (const m of src.matchAll(re)) {
+      if (seen.has(m[1])) continue;
+      seen.add(m[1]);
+      tiers.push({ en: m[1], attrs: +m[2], max: +m[3] });
+    }
+    if (!tiers.length) throw new Error("tabela de tiers nao encontrada");
+    // nomes pt e cores: dois mapas indexados por tier, na mesma vizinhanca
+    const pt = {}, cor = {};
+    const mp = src.match(/\{0:"Comum",([^}]+)\}/);
+    if (mp) for (const m of ("0:\"Comum\"," + mp[1]).matchAll(/(\d+):"([^"]+)"/g)) pt[+m[1]] = m[2];
+    const mc = src.match(/\{0:"#[0-9a-f]{6}",(?:\d+:"#[0-9a-f]{6}",?)+\}/i);
+    if (mc) for (const m of mc[0].matchAll(/(\d+):"(#[0-9a-f]{6})"/gi)) cor[+m[1]] = m[2];
+    // tier 0 nao esta na tabela (nao tem attrs/maxLevel)
+    const escala = [{ tier: 0, en: "Common", attrs: 0, max: 0 }]
+      .concat(tiers.map((t, i) => ({ tier: i + 1, ...t })))
+      .map(t => ({ ...t, pt: pt[t.tier] || t.en, cor: cor[t.tier] || null }));
+    const mu = src.match(/rarity:\{celestialEssence:([\de.+]+),celestialGold:([\de.+]+),cosmicSoul:([\de.+]+),cosmicGold:([\de.+]+),rerollEssence:([\de.+]+)\}/);
+    const mb = src.match(/essenceBase:([\d.]+),essencePerLevel:([\d.]+),essenceCap:([\d.]+),soulFromLevel:([\d.]+),soulOffset:([\d.]+),soulDiv:([\d.]+),soulCap:([\d.]+)/);
+    const idDe = src.match(/"death essence":\{id:(\d+)/);
+    const idIs = src.match(/"infernal soul":\{id:(\d+)/);
+    const mochila = [];
+    for (const nome of ["celestial amon backpack", "cosmic amon backpack"]) {
+      const m = src.match(new RegExp('"' + nome + '":\\{id:(\\d+)[^}]*?absorb:\\{([^}]+)\\}'));
+      const sz = src.match(new RegExp('"' + nome + '":\\{id:(\\d+),size:(\\d+)'));
+      if (!m) continue;
+      const ab = /(\w+):(\d+)/.exec(m[2]);
+      mochila.push({ n: nome, id: +m[1], size: sz ? +sz[2] : null, absorb: ab ? +ab[2] : null });
+    }
+    return {
+      escala,
+      up: mu ? { celEss: +mu[1], celGold: +mu[2], cosSoul: +mu[3], cosGold: +mu[4], reroll: +mu[5] } : null,
+      boss: mb ? { essBase: +mb[1], essPerLv: +mb[2], essCap: +mb[3], soulLv: +mb[4], soulOff: +mb[5], soulDiv: +mb[6], soulCap: +mb[7] } : null,
+      mat: { ess: idDe ? +idDe[1] : 0, soul: idIs ? +idIs[1] : 0 },
+      mochila
+    };
+  }
+  let RARITY = null;
+  try {
+    RARITY = extractRarity(src);
+    console.log("raridades:", RARITY.escala.map(t => t.pt).join(" < "),
+      "| upgrade:", RARITY.up ? "ok" : "-", "| boss:", RARITY.boss ? "ok" : "-",
+      "| mochilas:", RARITY.mochila.length);
+  } catch (e) { console.log("raridades indisponiveis:", e.message); }
+  tpl = tpl.replace("const RARITY = __RARITY__;", "const RARITY = " + JSON.stringify(RARITY) + ";");
+
   let ATTRS = { tab: {}, forge: null };
   try { ATTRS = extractAttrs(src); console.log("atributos de item:", Object.keys(ATTRS.tab).length, "| forja:", ATTRS.forge ? "ok" : "-"); }
   catch (e) { console.log("atributos indisponiveis:", e.message); }
