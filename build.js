@@ -843,6 +843,7 @@ function diff(oldD, newD) {
       .map(t => ({ ...t, pt: pt[t.tier] || t.en, cor: cor[t.tier] || null }));
     const mu = src.match(/rarity:\{celestialEssence:([\de.+]+),celestialGold:([\de.+]+),cosmicSoul:([\de.+]+),cosmicGold:([\de.+]+),rerollEssence:([\de.+]+)\}/);
     const mb = src.match(/essenceBase:([\d.]+),essencePerLevel:([\d.]+),essenceCap:([\d.]+),soulFromLevel:([\d.]+),soulOffset:([\d.]+),soulDiv:([\d.]+),soulCap:([\d.]+)/);
+    const mEss = src.match(/essenceFromLevel:([\d.]+)/);
     const idDe = src.match(/"death essence":\{id:(\d+)/);
     const idIs = src.match(/"infernal soul":\{id:(\d+)/);
     const mochila = [];
@@ -867,7 +868,7 @@ function diff(oldD, newD) {
       perPeca, floor: mFloor ? Number(mFloor[1]) : null, head: mHead ? Number(mHead[1]) : null,
       chance,
       up: mu ? { celEss: +mu[1], celGold: +mu[2], cosSoul: +mu[3], cosGold: +mu[4], reroll: +mu[5] } : null,
-      boss: mb ? { essBase: +mb[1], essPerLv: +mb[2], essCap: +mb[3], soulLv: +mb[4], soulOff: +mb[5], soulDiv: +mb[6], soulCap: +mb[7] } : null,
+      boss: mb ? { essBase: +mb[1], essPerLv: +mb[2], essCap: +mb[3], soulLv: +mb[4], soulOff: +mb[5], soulDiv: +mb[6], soulCap: +mb[7], essLv: mEss ? +mEss[1] : null } : null,
       mat: { ess: idDe ? +idDe[1] : 0, soul: idIs ? +idIs[1] : 0 },
       mochila
     };
@@ -912,7 +913,15 @@ function diff(oldD, newD) {
       }
     }
     if (perdidos.length) console.log("  aviso: hunt de familia sumiu do jogo:", perdidos.join(", "));
+    // Quais bosses tem o seletor de dificuldade. A lista fixa SEMPRE tem; os demais
+    // so entram se o servidor ligar a flag boss_levels_all. E a escala pesada
+    // (steep) vale pros DEMAIS, nao pros da lista -- Ez = flag && !lista.
+    const mLista = src.match(/=\["mimar_haffar","maior_domus","phosphorus"\]|=\[(?:"[a-z_]+",){1,8}"[a-z_]+"\](?=,[\w$]+=\{all:)/);
+    const mFlag = src.match(/\(([\w$]+)\.boss_levels_all===!0\)/);
+    const sempre = mLista ? (mLista[0].match(/"([a-z_]+)"/g) || []).map(x => x.replace(/"/g, "")) : [];
     const r = {
+      bossSempre: sempre,
+      bossFlag: mFlag ? "boss_levels_all" : null,
       familias,
       nm: lv("nm"), hl: lv("hl"),
       pontos: mPts ? {
@@ -930,6 +939,7 @@ function diff(oldD, newD) {
   let MODOS = null;
   try {
     MODOS = extractModos(src, hunts);
+    console.log("  boss com seletor sempre:", MODOS.bossSempre.join(", ") || "-", "| flag:", MODOS.bossFlag || "-");
     console.log("modos: nm x" + MODOS.nm.hp + "hp/x" + MODOS.nm.atk + "atk | hl x" + MODOS.hl.hp + "hp/x" + MODOS.hl.atk
       + " | unlock " + MODOS.unlock.nm + "/" + MODOS.unlock.hl + " | drops por nivel: " + MODOS.drops.length);
   } catch (e) { console.log("modos indisponiveis:", e.message); }

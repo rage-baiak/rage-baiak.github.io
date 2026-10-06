@@ -1614,8 +1614,13 @@ function raridadeHTML(){
     const soul=lv=>lv>=b.soulLv?Math.max(0,Math.min(b.soulCap,Math.floor((lv-b.soulOff)/b.soulDiv))):0;
     const lvs=[10,25,40,60,65,80];
     h+=`<h3>De onde vem o material</h3>`
-      +`<p class="fp">Por boss morto. A <b>essence</b> precisa do <i>nightmare</i>; a <b>soul</b> precisa de `
+      +`<p class="fp">Por boss morto. A <b>essence</b> precisa do <i>nightmare</i>`
+      +(b.essLv?` e de boss <b>nível ${b.essLv}+</b>`:"")+`; a <b>soul</b> precisa de `
       +`<i>nightmare + hell</i> e de boss <b>nível ${b.soulLv}+</b>.</p>`
+      +`<p class="fp rnote">⚠ Os dois dependem da mesma flag <code>${esc((MODOS&&MODOS.bossFlag)||"boss_levels_all")}</code>: `
+      +`com ela desligada a função devolve <b>zero</b> de essence e de soul, por mais alto que seja o nível. `
+      +`Como hoje só três bosses têm o seletor, a flag parece estar desligada — então boss provavelmente `
+      +`não é fonte de material agora, e sobra o farm por hora da Hell.</p>`
       +`<div class="ftbl"><table><thead><tr><th>Nível do boss</th>`
       +lvs.map(l=>`<th>${l}</th>`).join("")+`</tr></thead><tbody>`
       +`<tr><td>${spr(R.mat.ess)} death essence</td>`+lvs.map(l=>`<td>${ess(l)}</td>`).join("")+`</tr>`
@@ -1773,13 +1778,17 @@ function modosHTML(){
     const b=M.boss, st=M.steep;
     h+=`<h3>Nível do boss</h3>`
       +`<p class="fp">Não é o boss que tem nível: é um <b>seletor de dificuldade</b> que você escolhe `
-      +`antes da luta. É daqui que sai a <i>death essence</i> e a <i>infernal soul</i>.</p>`
+      +`antes da luta. Hoje só <b>${(M.bossSempre||[]).length || 3} bosses</b> têm o seletor`
+      +((M.bossSempre||[]).length?`: ${M.bossSempre.map(x=>bossLink(x)).join(", ")}`:"")+`.</p>`
       +`<div class="ftbl"><table><thead><tr><th>Nível</th><th>Vida do boss</th><th>Dano que você toma</th><th>Loot</th></tr></thead><tbody>`
       +`<tr><td><b>0</b></td><td>normal</td><td><b style="color:#57b85a">−${b.nivel0}%</b></td><td>normal</td></tr>`
       +`<tr><td><b>1</b></td><td>normal</td><td>normal</td><td>normal</td></tr>`
-      +`<tr><td><b>N</b> (acima de 1)</td><td>+${b.hpPorNivel}% por nível</td><td>+${b.danoPorNivel}% por nível</td><td>+${b.lootPorNivel}% por nível</td></tr>`
-      +(st?`<tr><td><b>N</b> · bosses pesados</td><td>+${st.hp}% por nível</td><td>+${st.dano}% por nível</td><td>+${b.lootPorNivel}% por nível</td></tr>`:"")
-      +`</tbody></table></div>`;
+      +`<tr><td><b>cada nível acima de 1</b></td><td>+${b.hpPorNivel}%</td><td>+${b.danoPorNivel}%</td><td>+${b.lootPorNivel}%</td></tr>`
+      +`</tbody></table></div>`
+      +(st?`<p class="fp rnote">Existe uma segunda escala no código (<b>+${st.hp}%</b> de vida e `
+        +`<b>+${st.dano}%</b> de dano por nível) que vale para <b>todos os outros bosses</b>, e não `
+        +`para esses três. Ela só entra se o servidor ligar a flag <code>${esc(M.bossFlag||"boss_levels_all")}</code>, `
+        +`que hoje está desligada — é por isso que só esses três têm o seletor.</p>`:"");
   }
 
   if(M.drops && M.drops.length){
