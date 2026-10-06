@@ -620,6 +620,7 @@ const FORGE = __FORGE__;
 const RARITY = __RARITY__;
 const MODOS = __MODOS__;
 const CODEX = __CODEX__;
+const ASC = __ASC__;
 // guerra: dossie da guild adversaria (contas -> chars -> atributos/resistencias)
 const WAR = __WAR__;
 // atributos rolaveis do item (id -> bonus) + constantes da forja, do bundle
@@ -1600,7 +1601,7 @@ function raridadeHTML(){
     const n=t=>R.escala.find(x=>x.tier===t)?.pt||"";
     h+=`<h3>Como subir</h3><div class="fgrid">`
       +passo(n(5),n(6),c(5),c(6),R.mat.ess,"death essence",R.up.celEss,R.up.celGold,"")
-      +passo(n(6),n(7),c(6),c(7),R.mat.soul,"infernal soul",R.up.cosSoul,R.up.cosGold,"exige o modo <b>hell</b> ligado")
+      +passo(n(6),n(7),c(6),c(7),R.mat.soul,"infernal soul",R.up.cosSoul,R.up.cosGold,"exige a <b>Hell aberta no servidor</b>")
       +`</div>`
       +`<p class="fp rnote">Rerrolar um atributo custa <b>${nf(R.up.reroll)}</b> death essence. `
       +`Item comprado na loja <b>não sobe de raridade</b>, e o upgrade só aceita equipamento com slot — `
@@ -1659,6 +1660,50 @@ function raridadeHTML(){
       +t.map((_,i)=>`<th>${(R.escala.find(x=>x.tier===i)||{}).pt||i}</th>`).join("")
       +`</tr></thead><tbody><tr><td>multiplicador</td>`
       +t.map(v=>`<td>${v===1?"—":"×"+v}</td>`).join("")+`</tr></tbody></table></div>`;
+  }
+  // ---- Ascensão: o que aceita e quanto custa no total ----
+  if(ASC){
+    const nf=n=>n.toLocaleString("pt-BR");
+    const g=v=>v>=1e9?(v/1e9).toLocaleString("pt-BR",{maximumFractionDigits:1})+" bi":(v/1e6)+" mi";
+    const SLOTPT={weapon:"Arma",armor:"Armadura",helmet:"Elmo",shield:"Escudo",legs:"Pernas",
+      boots:"Botas",amulet:"Amuleto",ring:"Anel",trinket:"Trinket"};
+    const slots=Object.entries(ASC.porSlot).sort((a,b)=>b[1]-a[1]);
+    h+=`<h3>O que ascende</h3>`
+      +`<p class="fp"><b>${nf(ASC.total)}</b> itens aceitam, de ${nf(ASC.catalogo)} no catálogo. `
+      +`Na prática é quase todo equipamento:</p>`
+      +`<div class="hrow">`
+      +slots.map(([s,n])=>`<span class="hchip">${esc(SLOTPT[s]||s)} <b>${n}</b></span>`).join("")
+      +`</div>`
+      +`<p class="fp rnote">Não aceitam: <b>${ASC.fora.cargaTempo.length}</b> amuletos e anéis de `
+      +`carga ou tempo (${ASC.fora.cargaTempo.slice(0,4).map(esc).join(", ")}…), `
+      +`<b>${ASC.fora.ammo}</b> munições, <b>${ASC.fora.quebra}</b> que quebram e `
+      +`<b>${ASC.fora.bolsa}</b> bolsas. E peça comprada na loja é recusada, seja qual for.</p>`;
+
+    if(R.up && ASC.rift){
+      const S=ASC.slots;
+      const essSet=R.up.celEss*S, goldCel=R.up.celGold*S;
+      const soulSet=R.up.cosSoul*S, goldCos=R.up.cosGold*S;
+      const totEss=essSet+ASC.rift.essence, totSoul=soulSet+ASC.rift.soul, totGold=goldCel+goldCos;
+      h+=`<h3>Quanto custa o conjunto inteiro</h3>`
+        +`<p class="fp">A <b>árvore rift</b> come a mesma moeda que a ascensão, então as duas `
+        +`disputam o mesmo farm. Com ${S} slots equipados:</p>`
+        +`<div class="ftbl"><table><thead><tr><th>Etapa</th>`
+        +`<th>${spr(R.mat.ess)} essence</th><th>${spr(R.mat.soul)} soul</th><th>gold</th></tr></thead><tbody>`
+        +`<tr><td>Tudo Celestial (${S} peças)</td><td>${nf(essSet)}</td><td>—</td><td>${g(goldCel)}</td></tr>`
+        +`<tr><td>Tudo Cósmico (${S} peças)</td><td>—</td><td>${nf(soulSet)}</td><td>${g(goldCos)}</td></tr>`
+        +`<tr><td>Árvore rift cheia (${ASC.rift.nos} nós)</td><td>${nf(ASC.rift.essence)}</td><td>${nf(ASC.rift.soul)}</td><td>—</td></tr>`
+        +`<tr class="cxgoldrow"><td><b>Total</b></td><td><b>${nf(totEss)}</b></td><td><b>${nf(totSoul)}</b></td><td><b>${g(totGold)}</b></td></tr>`
+        +`</tbody></table></div>`;
+      if(R.boss){
+        const b=R.boss;
+        h+=`<p class="fp rnote">Nos tetos por abate (${b.essCap} de essence e ${b.soulCap} de soul), `
+          +`isso é <b>${nf(Math.ceil(totEss/b.essCap))}</b> bosses para a essence e `
+          +`<b>${nf(Math.ceil(totSoul/b.soulCap))}</b> para a soul. A essence é o gargalo de longe, `
+          +`o que reforça que o farm por hora da Hell deve ser a fonte principal, não boss.</p>`;
+      }
+    }
+    h+=`<p class="fp rnote">A peça ascendida vai para a <b>Caixa de Entrada</b>, não volta para a `
+      +`mochila. E a cadeia não pula etapa: só <i>Mythical → Celestial → Cosmic</i>.</p>`;
   }
   if(R.mochila && R.mochila.length){
     h+=`<h3>Mochilas novas</h3><div class="fgrid">`

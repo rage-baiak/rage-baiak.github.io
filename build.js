@@ -657,8 +657,9 @@ function diff(oldD, newD) {
   // isso erraria em silencio, entao EXECUTO o codigo do proprio jogo: extraio as
   // declaracoes necessarias do bundle e rodo. A conferencia e o orcamento: a soma
   // dos bonus tem que bater com zTe (ver verificacao abaixo).
-  function extractCodex(src) {
-    // recorta uma declaracao do bundle, com contagem de aspas e chaves
+  // Recorta uma declaracao do bundle minificado (funcao ou const), balanceando
+  // aspas e chaves. Usado pra EXECUTAR o codigo do jogo em vez de reimplementar.
+  function recortador(src) {
     const pulaStr = (i) => {
       const q = src[i];
       for (let k = i + 1; k < src.length; k++) {
@@ -668,7 +669,9 @@ function diff(oldD, newD) {
       return src.length;
     };
     const pega = (nome, tipo) => {
-      const re = tipo === "fn" ? new RegExp(`function ${nome}\\(`) : new RegExp(`(?<![A-Za-z0-9_$])${nome}=`);
+      // nome minificado pode conter $, que e metacaractere de regex
+      const esc = nome.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const re = tipo === "fn" ? new RegExp(`function ${esc}\\(`) : new RegExp(`(?<![A-Za-z0-9_$])${esc}=`);
       const m = re.exec(src);
       if (!m) throw new Error("declaracao nao encontrada: " + nome);
       const i = m.index;
@@ -691,25 +694,78 @@ function diff(oldD, newD) {
       }
       return "const " + src.slice(i, k);
     };
-    const decls = [
-      ["GU","const"],["Et","const"],["FTe","fn"],["HTe","const"],["DTe","const"],
-      ["VU","const"],["RTe","const"],["OTe","const"],["zTe","const"],["UTe","const"],
-      ["jTe","const"],["GTe","const"],["UN","fn"],["VTe","fn"],["gie","fn"],
-      ["Sne","const"],["Tne","const"],["Lf","fn"],["Te","const"],
-      ["zt","const"],["yie","const"],["pie","const"],["aqe","const"],
-      ["KTe","const"],["WTe","const"],["JTe","const"],["ZTe","const"],["eqe","const"],
-      ["tqe","const"],["Pa","const"],["nqe","const"],
-      ["XTe","fn"],["YTe","fn"],["oqe","fn"],["QTe","fn"],["rqe","fn"],
-    ];
+    return pega;
+  }
+  // Resolve o nome MINIFICADO atual de cada declaracao pelo seu CONTEUDO. Os nomes
+  // mudam a cada deploy do jogo (conferido: entre 05/10 e 06/10 quase todos
+  // trocaram, Et->At, Te->Me, zt->Ht), entao ancorar em nome quebra a aba sem
+  // avisar. Assinatura por conteudo sobrevive.
+  const CODEX_SIG = {
+    Et:/([A-Za-z_$][\w$]*)=\(e,t\)=>\(\{id:t\?/,
+    GU:/([A-Za-z_$][\w$]*)=\["physical","energy","earth","fire","ice","holy","death"\]/,
+    FTe:/function ([A-Za-z_$][\w$]*)\(e\)\{let t=2166136261/,
+    zTe:/([A-Za-z_$][\w$]*)=\{atkPct:15,\.\.\.Object\.fromEntries/,
+    HTe:/([A-Za-z_$][\w$]*)=150[,;]/,
+    UN:/function ([A-Za-z_$][\w$]*)\(e,t,a\)\{const n=[\w$]+\(e\);if\(e\.startsWith\("boss:"\)\)/,
+    VTe:/function ([A-Za-z_$][\w$]*)\(\)\{if\([\w$]+\)return [\w$]+;const e=\[\],t=new Map/,
+    gie:/function ([A-Za-z_$][\w$]*)\(e,t\)\{const n=[\w$]+\(\)\.get\(e\)\?\?\{tri:/,
+    GTe:/([A-Za-z_$][\w$]*)=e=>e\.startsWith\("boss:"\)\?[\w$]+\.has\(e\.slice\(5\)\)/,
+    UTe:/([A-Za-z_$][\w$]*)=new Set\(\["moonstone_excavator"/,
+    jTe:/([A-Za-z_$][\w$]*)=new Set\(\["moonstone-crater"/,
+    DTe:/([A-Za-z_$][\w$]*)=e=>\[[\w$]+\("absorbPct",e\),[\w$]+\("elementDmgPct",e\)/,
+    VU:/([A-Za-z_$][\w$]*)=\[\[[\w$]+\("hpPct"\),[\w$]+\("armorFlat"\),[\w$]+\("atkPct"\)\]/,
+    RTe:/([A-Za-z_$][\w$]*)=\[\[[\w$]+\("manaPct"\),[\w$]+\("manaLeech"\)/,
+    OTe:/([A-Za-z_$][\w$]*)=\[\[[\w$]+\("atkPct"\),[\w$]+\("spellDmgPct"\),[\w$]+\("spellHealPct"\)\]/,
+    yie:/([A-Za-z_$][\w$]*)=\{"gazer-lair":\[\{item:/,
+    pie:/([A-Za-z_$][\w$]*)=\[\{id:"boss-ahau-1"/,
+    aqe:/([A-Za-z_$][\w$]*)=\[\{id:"leather",name:"Leather",pieces:/,
+    zt:/([A-Za-z_$][\w$]*)=\[\{id:"troll-cave",name:"Troll Cave"/,
+    KTe:/([A-Za-z_$][\w$]*)=\[\{suffix:"I",qty:1\}/,
+    WTe:/([A-Za-z_$][\w$]*)=\["I","II","III"\]/,
+    JTe:/([A-Za-z_$][\w$]*)=\[1,1\.5,2,3\]/,
+    ZTe:/([A-Za-z_$][\w$]*)=\.175[,;]/,
+    eqe:/([A-Za-z_$][\w$]*)=\.35[,;]/,
+    tqe:/([A-Za-z_$][\w$]*)=\.5,[A-Za-z_$][\w$]*=\[\{id:"leather"/,
+    Pa:/([A-Za-z_$][\w$]*)=\{0:"Comum",1:"Incomum"/,
+    nqe:/([A-Za-z_$][\w$]*)=\[[\w$]+\[0\],[\w$]+\[1\],[\w$]+\[2\],[\w$]+\[3\]\]/,
+    Te:/([A-Za-z_$][\w$]*)=\{"gold coin":\{value:1/,
+    Sne:/([A-Za-z_$][\w$]*)=\[\{charged:"enchanted pendulet"/,
+    rqe:/function ([A-Za-z_$][\w$]*)\(\)\{return\[\.\.\.[\w$]+\(\),\.\.\.[\w$]+\.map\([\w$]+\),\.\.\.[\w$]+\(\)\]\}/,
+    XTe:/function ([A-Za-z_$][\w$]*)\(\)\{const e=\[\];for\(const t of [\w$]+\)\{const a=[\w$]+\[t\.id\]/,
+    YTe:/function ([A-Za-z_$][\w$]*)\(e\)\{const t=[\w$]+\[e\.monster\]\?\.name\?\?e\.mname/,
+    oqe:/function ([A-Za-z_$][\w$]*)\(\)\{const e=\[\];for\(const t of [\w$]+\)\{const a=t\.id\.endsWith\("-w"\)/,
+    QTe:/function ([A-Za-z_$][\w$]*)\(e,t\)\{return [\w$]+\(`boss:\$\{e\}`,t\)\}/,
+  };
+  function resolverNomes(src) {
+    const N = {};
+    for (const [k, re] of Object.entries(CODEX_SIG)) { const m = re.exec(src); if (m) N[k] = m[1]; }
+    // auxiliares que nao tem assinatura propria boa
+    N.Lt = (/\(e\)\{const t=([\w$]+)\[e\.monster\]\?\.name/.exec(src) || [])[1];
+    N.i = (/name:([\w$]+)\("Domínio: \{name\} \{step\}"/.exec(src) || [])[1];
+    N.hv = (/function [\w$]+\(\)\{if\(([\w$]+)\)return \1;const e=\[\],t=new Map/.exec(src) || [])[1];
+    N.VN = (/([\w$]+)=new Map;for\(const\[n,o\]of a\)/.exec(src) || [])[1];
+    const lf = /function ([\w$]+)\(e\)\{return ([\w$]+)\.get\(e\)\}function [\w$]+\(e\)\{return ([\w$]+)\.get\(e\)\}/.exec(src) || [];
+    N.Lf = lf[1]; N.Tne = lf[2]; N.HO = lf[3];
+    const falta = Object.entries(N).filter(([, v]) => !v).map(([k]) => k);
+    if (falta.length) throw new Error("assinatura nao casou: " + falta.join(", "));
+    return N;
+  }
+  function extractCodex(src) {
+    const pega = recortador(src);
+    const N = resolverNomes(src);
+    const ordem = [["GU","const"],["Et","const"],["FTe","fn"],["HTe","const"],["DTe","const"],
+      ["VU","const"],["RTe","const"],["OTe","const"],["zTe","const"],["UTe","const"],["jTe","const"],
+      ["GTe","const"],["UN","fn"],["VTe","fn"],["gie","fn"],["Sne","const"],["Tne","const"],
+      ["HO","const"],["Lf","fn"],["Te","const"],["zt","const"],["yie","const"],["pie","const"],
+      ["aqe","const"],["KTe","const"],["WTe","const"],["JTe","const"],["ZTe","const"],["eqe","const"],
+      ["tqe","const"],["Pa","const"],["nqe","const"],["XTe","fn"],["YTe","fn"],["oqe","fn"],
+      ["QTe","fn"],["rqe","fn"]];
     let corpo = "";
-    for (const [n, t] of decls) corpo += pega(n, t) + ";\n";
-    const prelude = `
-      let VN=null, hv=null;
-      const i=(t,p)=>String(t).replace(/\\{(\\w+)\\}/g,(_,k)=>(p&&p[k]!=null?p[k]:""));
-      const Lt={};
-    `;
-    const entradas = new Function(prelude + corpo + "\nreturn {lista:rqe(), zTe, GTe};")();
-    return entradas;
+    for (const [k, t] of ordem) corpo += pega(N[k], t) + ";\n";
+    const prelude = `let ${N.VN}=null, ${N.hv}=null;\n`
+      + `const ${N.i}=(t,p)=>String(t).replace(/\\{(\\w+)\\}/g,(_,k)=>(p&&p[k]!=null?p[k]:""));\n`
+      + `const ${N.Lt}={};\n`;
+    return new Function(prelude + corpo + `\nreturn {lista:${N.rqe}(), zTe:${N.zTe}, GTe:${N.GTe}};`)();
   }
   let CODEX = null;
   try {
@@ -798,7 +854,8 @@ function diff(oldD, newD) {
       mochila.push({ n: nome, id: +m[1], size: sz ? +sz[2] : null, absorb: ab ? +ab[2] : null });
     }
     // bonus por peca celestial/cosmica e as formulas de attunement/ward
-    const mW = src.match(/foe\(\w+\.tier\)&&\(\w+\.nmDmg\+=(\w+),\w+\.nmWard\+=\1/);
+    // ancora so no corpo (nmDmg/nmWard), nunca no nome de foe(), que e minificado
+    const mW = src.match(/\w+\.nmDmg\+=(\w+),\w+\.nmWard\+=\1/);
     const perPeca = mW ? Number((src.match(new RegExp(mW[1] + "=(\\d+)")) || [])[1]) : null;
     const mFloor = src.match(/dealtFloor:([\d.]+)/);
     const mHead = src.match(/recHead:([\d.]+)/);
@@ -877,6 +934,99 @@ function diff(oldD, newD) {
       + " | unlock " + MODOS.unlock.nm + "/" + MODOS.unlock.hl + " | drops por nivel: " + MODOS.drops.length);
   } catch (e) { console.log("modos indisponiveis:", e.message); }
   tpl = tpl.replace("const MODOS = __MODOS__;", "const MODOS = " + JSON.stringify(MODOS) + ";");
+
+  // ---- Ascensao (Mythical -> Celestial -> Cosmic) ----
+  // Quais pecas aceitam, e quanto a arvore rift come da MESMA moeda. Tudo por
+  // assinatura de conteudo; nome minificado nao serve de ancora (ver CODEX_SIG).
+  function extractAscensao(src) {
+    const pega = recortador(src);
+    const sig = (re, i = 1) => { const m = re.exec(src); return m ? m[i] : null; };
+    const N = {
+      Te:  sig(/([\w$]+)=\{"gold coin":\{value:1/),
+      ia:  sig(/for\(const\[e,t\]of Object\.entries\(([\w$]+)\)\)\{const a=[\w$]+\[e\]/),
+      Mx:  sig(/([\w$]+)=e=>[\w$]+\[e\]\?\.slot!=="ammo"&&[\w$]+\[e\]\?\.breakChance===void 0/),
+      Ed:  sig(/([\w$]+)=\{bag:\{id:2853/),
+      gA:  sig(/function ([\w$]+)\(e\)\{return e in [\w$]+\}/),
+      ike: sig(/function ([\w$]+)\(e\)\{const t=[\w$]+\[e\];return!!t&&\(t\.slot==="amulet"/),
+      jO:  sig(/function ([\w$]+)\(e\)\{return [\w$]+\(e\)&&![\w$]+\(e\)\}/),
+      ske: sig(/function ([\w$]+)\(e\)\{return![\w$]+\[e\]\?\.slot&&![\w$]+\(e\)\}/),
+      Jwe: sig(/([\w$]+)=e=>[\w$]+\.has\(e\)\|\|[\w$]+\.has\(e\)/),
+      Sne: sig(/([\w$]+)=\[\{charged:"enchanted pendulet"/),
+      Tne: sig(/([\w$]+)=new Map\([\w$]+\.map\(e=>\[e\.charged,e\]\)\)/),
+      HO:  sig(/([\w$]+)=new Map\([\w$]+\.map\(e=>\[e\.depleted,e\]\)\)/),
+      eke: sig(/function ([\w$]+)\(e\)\{if\(!e\)return;const\{sword:t,axe:a,club:n,\.\.\.o\}=e/),
+      tke: sig(/([\w$]+)=\{"diamond arrow":1\.15\}/),
+      ake: sig(/([\w$]+)=\{"eldritch wand":4/),
+      EU:  sig(/function ([\w$]+)\(e\)\{const t=e==="nm",a=t\?"rn_":"rh_"/),
+      fEe: sig(/function ([\w$]+)\(\)\{const e=\[\.\.\.[\w$]+\("nm"\),\.\.\.[\w$]+\("hl"\)\]/),
+      O2:  sig(/([\w$]+)=[\w$]+\(\),[\w$]+=e=>[\w$]+\.find\(t=>t\.id===e\)/),
+      CD:  sig(/([\w$]+)=e=>e\.tier<[\w$]+\?"essence":"soul"/),
+      bEe: sig(/function ([\w$]+)\(e,t\)\{const a=Math\.min\(Math\.max\(0,t\),e\.maxRank\)/),
+      Eu:  sig(/([\w$]+)=6,[\w$]+=40,[\w$]+=13/),
+      // as 7 constantes de custo da rift vem num const so; pega o bloco inteiro
+      riftConst: sig(/([\w$]+=6,[\w$]+=40,[\w$]+=13,[\w$]+=500,[\w$]+=170,[\w$]+=1200,[\w$]+=400)/),
+      ko:  sig(/([\w$]+)=e=>\(\{physical:e,energy:e/),
+    };
+    const falta = Object.entries(N).filter(([, v]) => !v).map(([k]) => k);
+    if (falta.length) throw new Error("assinatura nao casou: " + falta.join(", "));
+
+    // o loop que funde `ia` dentro de `Te` -- sem ele, Te tem so a base (197 itens)
+    const iLoop = src.indexOf(`for(const[e,t]of Object.entries(${N.ia}))`);
+    let d = 0, j = src.indexOf("{", iLoop), k;
+    for (k = j; k < src.length; k++) { const c = src[k]; if (c === "{") d++; else if (c === "}") { d--; if (d === 0) break; } }
+    const merge = src.slice(iLoop, k + 1);
+
+    const deps = [["Te","const"],["ia","const"],["tke","const"],["ake","const"],["eke","fn"],
+      ["Ed","const"],["gA","fn"],["Sne","const"],["Tne","const"],["HO","const"],["Jwe","const"],
+      ["ike","fn"],["jO","fn"],["ske","fn"],["Mx","const"]];
+    let corpo = ""; for (const [n, t] of deps) corpo += pega(N[n], t) + ";\n";
+    // O merge le tabelas de preco/afins que nao afetam elegibilidade. Em vez de
+    // cacar cada nome, stuba automaticamente todo identificador livre do trecho.
+    const RESERVADAS = ["const","let","var","for","of","in","if","else","return","new","typeof","function","this","null","true","false"];
+    const declarados = new Set(deps.map(([n]) => N[n])
+      .concat(["e","t","a","n","o","r","s","l","c","d","Object","Math","String","Number","JSON"])
+      .concat(RESERVADAS));
+    const livres = new Set();
+    for (const m of merge.matchAll(/(?<![\w$.])([A-Za-z_$][\w$]*)(?=\[|\.)/g))
+      if (!declarados.has(m[1])) livres.add(m[1]);
+    const pre = [...livres].map(v => `const ${v}={};`).join("") + "\n";
+    const { Te, Mx } = new Function(pre + corpo + merge + ";\nreturn {Te:" + N.Te + ",Mx:" + N.Mx + "};")();
+
+    const nomes = Object.keys(Te);
+    const ok = nomes.filter(Mx);
+    const porSlot = {};
+    for (const n of ok) { const s = Te[n].slot || "?"; porSlot[s] = (porSlot[s] || 0) + 1; }
+    // por que os outros nao entram
+    const Ed = new Function(pega(N.Ed, "const") + ";return " + N.Ed + ";")();
+    const fora = { ammo: 0, quebra: 0, bolsa: 0, cargaTempo: [], semSlot: 0 };
+    for (const n of nomes) {
+      if (Mx(n)) continue;
+      const t = Te[n];
+      if (t?.slot === "ammo") fora.ammo++;
+      else if (t?.breakChance !== undefined) fora.quebra++;
+      else if (n in Ed) fora.bolsa++;
+      else if (!t?.slot) fora.semSlot++;
+      else fora.cargaTempo.push(n);
+    }
+
+    // custo da arvore rift inteira, por moeda
+    const rdeps = [["ko","const"],["EU","fn"],["fEe","fn"],["O2","const"],["CD","const"],["bEe","fn"]];
+    let rcorpo = "const " + N.riftConst + ";\n";
+    for (const [n, t] of rdeps) rcorpo += pega(N[n], t) + ";\n";
+    const rpre = `const i=(t,p)=>String(t);\n`;
+    const { O2, CD, bEe } = new Function(rpre + rcorpo + `return {O2:${N.O2},CD:${N.CD},bEe:${N.bEe}};`)();
+    const rift = { essence: 0, soul: 0, nos: O2.length };
+    for (const n of O2) rift[CD(n)] += bEe(n, n.maxRank);
+
+    return { total: ok.length, catalogo: nomes.length, porSlot, fora, rift, slots: Object.keys(porSlot).length };
+  }
+  let ASC = null;
+  try {
+    ASC = extractAscensao(src);
+    console.log("ascensao:", ASC.total, "de", ASC.catalogo, "itens aceitam |", ASC.slots, "slots |",
+      "rift cheia:", ASC.rift.essence, "essence +", ASC.rift.soul, "soul");
+  } catch (e) { console.log("ascensao indisponivel:", e.message); }
+  tpl = tpl.replace("const ASC = __ASC__;", "const ASC = " + JSON.stringify(ASC) + ";");
 
   let RARITY = null;
   try {
