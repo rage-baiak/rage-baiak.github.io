@@ -883,7 +883,11 @@ function diff(oldD, newD) {
       const m = src.match(new RegExp(tag + ':(?:\\{\\.\\.\\.)?\\w+\\(([\\d.]+),([\\d.]+),([\\d.]+),([\\d.]+),([\\d.]+)\\)'));
       return m ? { hp: num(m[1]), atk: num(m[2]), exp: num(m[3]), itemChance: num(m[5]) } : null;
     };
-    const mPts = src.match(/points:\{gnomprona:([\d.]+),soulwar:([\d.]+),sanguine:([\d.]+),radiant:([\d.]+),devoted:([\d.]+),nightmarePerClear:([\d.]+),nightmareBonusFromStep:([\d.]+),nightmareBonusPerStep:([\d.]+)\}/);
+    // As 5 familias e a formula de ponto de Nightmare sao capturadas SEPARADAMENTE:
+    // em 13/10/2026 o jogo removeu nightmarePerClear/BonusFromStep/BonusPerStep do
+    // cliente (foram pro servidor) e um match unico derrubava as familias junto.
+    const mPts = src.match(/points:\{gnomprona:([\d.]+),soulwar:([\d.]+),sanguine:([\d.]+),radiant:([\d.]+),devoted:([\d.]+)\}/);
+    const mNmPts = src.match(/nightmarePerClear:([\d.]+),nightmareBonusFromStep:([\d.]+),nightmareBonusPerStep:([\d.]+)/);
     const mUn = src.match(/unlock:\{nightmare:([\de.+]+),hell:([\de.+]+)\}/);
     const mB = src.match(/monsterHpPerLevel:([\d.]+),playerDamagePerLevel:([\d.]+),lootPerLevel:([\d.]+),levelZeroDamageReduction:([\d.]+)/);
     const mS = src.match(/steepHpPerLevel:([\d.]+),steepDamagePerLevel:([\d.]+)/);
@@ -926,7 +930,10 @@ function diff(oldD, newD) {
       nm: lv("nm"), hl: lv("hl"),
       pontos: mPts ? {
         fonte: { gnomprona: num(mPts[1]), soulwar: num(mPts[2]), sanguine: num(mPts[3]), radiant: num(mPts[4]), devoted: num(mPts[5]) },
-        porClear: num(mPts[6]), bonusDoDegrau: num(mPts[7]), bonusPorDegrau: num(mPts[8])
+        // null = o cliente nao carrega mais a formula; o calculo e server-side
+        porClear: mNmPts ? num(mNmPts[1]) : null,
+        bonusDoDegrau: mNmPts ? num(mNmPts[2]) : null,
+        bonusPorDegrau: mNmPts ? num(mNmPts[3]) : null
       } : null,
       unlock: mUn ? { nm: num(mUn[1]), hl: num(mUn[2]) } : null,
       boss: mB ? { hpPorNivel: num(mB[1]), danoPorNivel: num(mB[2]), lootPorNivel: num(mB[3]), nivel0: num(mB[4]) } : null,
@@ -944,6 +951,74 @@ function diff(oldD, newD) {
       + " | unlock " + MODOS.unlock.nm + "/" + MODOS.unlock.hl + " | drops por nivel: " + MODOS.drops.length);
   } catch (e) { console.log("modos indisponiveis:", e.message); }
   tpl = tpl.replace("const MODOS = __MODOS__;", "const MODOS = " + JSON.stringify(MODOS) + ";");
+
+  // ---- Especializacao ----
+  // Um degrau acima da promocao: passiva sempre ligada + magias exclusivas + outfit.
+  // Ancorado nas CHAVES do jogo ("warlord"), que sao dados e nao nome minificado.
+  // A tabela NAO esta completa no jogo: 3 das 10 vem com passiva {} e a Beastmaster
+  // vem sem passiva E sem magia. A wiki marca como incompleta em vez de omitir.
+  function extractSpec(src, spells) {
+    const anchor = src.indexOf('{key:"warlord",name:');
+    if (anchor < 0) throw new Error("tabela de especializacao nao encontrada");
+    // E um OBJETO (uw={warlord:{...},...}), nao um array: o `[` mais proximo antes
+    // da ancora e o da arrow function de dano da magia logo acima, nao o da tabela.
+    const obj = eval("(" + matchBalanced(src, src.lastIndexOf("{", anchor - 1)) + ")");
+    const arr = Object.values(obj);
+    if (arr.length < 2 || !arr[0].key) throw new Error("tabela de especializacao com forma inesperada");
+    const c = /spec:\{unlockEssence:([\de.+]+),swapEssence:([\de.+]+),swapSoul:([\de.+]+),swapCooldownMs:([\d*.e+]+)\}/.exec(src);
+    const cfg = c ? {
+      unlock: Number(c[1]), trocaEssence: Number(c[2]), trocaSoul: Number(c[3]),
+      trocaHoras: eval(c[4]) / 3600000
+    } : null;
+    // Multiplicador da variante "Max": MEDIDO contra a runa base (mesma formula,
+    // so escalada), nao cravado -- se rebalancearem, a wiki acompanha.
+    const porNome = {}, porWords = {};
+    for (const sp of spells) { porNome[sp.name] = sp; porWords[sp.words] = sp; }
+    const mult = sp => {
+      const base = porNome[(sp.name || "").replace(/^Max /, "")];
+      if (!base || !sp.dmg || !base.dmg || base === sp) return null;
+      try {
+        const a = sp.dmg(1000, 100), b = base.dmg(1000, 100);
+        const r = ((a[0] + a[1]) / 2) / ((b[0] + b[1]) / 2);
+        return Number.isFinite(r) && r > 1.001 ? Math.round(r * 100) / 100 : null;
+      } catch { return null; }
+    };
+    const lista = arr.map(e => ({
+      key: e.key, nome: e.name, voc: e.voc, par: e.partner,
+      // passive:{} NAO quer dizer "sem passiva": 3 delas tem efeito que nao cabe em
+      // percentual fixo (3o ataque, formas animais, buff de party) e vive so na
+      // descricao, que o proprio jogo escreve em portugues. desc e a fonte de verdade.
+      passiva: e.passive && Object.keys(e.passive).length ? e.passive : null,
+      taken: typeof e.takenPct === "number" ? e.takenPct : null,
+      desc: e.passiveDesc || null,
+      outfit: e.outfit || null,
+      magias: (e.spells || []).map(w => {
+        const sp = porWords[w];
+        if (!sp) return { words: w, nome: null };
+        const base = porNome[(sp.name || "").replace(/^Max /, "")];
+        return {
+          words: w, nome: sp.name, lv: sp.level, mana: sp.mana, cd: sp.cd,
+          gold: sp.goldCost ?? null, tipo: sp.type,
+          vezes: mult(sp),
+          base: base && base !== sp ? { nome: base.name, lv: base.level, gold: base.goldCost ?? null } : null
+        };
+      })
+    }));
+    return { lista, cfg };
+  }
+  let SPEC = null;
+  try {
+    SPEC = extractSpec(src, spells);
+    const semD = SPEC.lista.filter(x => !x.desc).map(x => x.nome);
+    const semM = SPEC.lista.filter(x => !x.magias.length).map(x => x.nome);
+    const naoFixa = SPEC.lista.filter(x => !x.passiva && x.desc).map(x => x.nome);
+    console.log("especializacao: " + SPEC.lista.length + " | sem magia exclusiva: " + (semM.join(", ") || "-")
+      + " | passiva fora de percentual fixo: " + (naoFixa.join(", ") || "-")
+      + (semD.length ? " | SEM descricao: " + semD.join(", ") : ""));
+    if (SPEC.cfg) console.log("  custo: " + SPEC.cfg.unlock + " essence | troca "
+      + SPEC.cfg.trocaEssence + " essence ou " + SPEC.cfg.trocaSoul + " soul, " + SPEC.cfg.trocaHoras + "h");
+  } catch (e) { console.log("especializacao indisponivel:", e.message); }
+  tpl = tpl.replace("const SPEC = __SPEC__;", "const SPEC = " + JSON.stringify(SPEC) + ";");
 
   // ---- Ascensao (Mythical -> Celestial -> Cosmic) ----
   // Quais pecas aceitam, e quanto a arvore rift come da MESMA moeda. Tudo por

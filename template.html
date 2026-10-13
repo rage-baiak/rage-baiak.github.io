@@ -465,6 +465,30 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .ftbl th{background:var(--panel);text-align:right;font-size:12.5px;color:var(--muted)}
 .ftbl th:first-child,.ftbl td:first-child{text-align:left}
 .ftbl tbody tr:last-child td{border-bottom:0}
+/* aba Especializacao: prefixo sq- porque .rchip ja colidiu com os chips do Equip */
+.sqpair{margin-top:14px}
+.sqpair>h3{margin:0 0 7px;font-size:14px;color:var(--fg);display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.sqvoc{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);
+  border:1px solid var(--line);border-radius:6px;padding:2px 7px}
+.sqcard{position:relative}
+.sqcard.inc{border-style:dashed}
+.sqflag{font-size:10.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;
+  color:var(--rx);border:1px solid color-mix(in srgb,var(--rx) 45%,transparent);
+  background:color-mix(in srgb,var(--rx) 9%,transparent);border-radius:6px;padding:2px 7px;white-space:nowrap}
+.sqlbl{font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:9px 0 5px}
+.sqsp{display:flex;flex-direction:column;gap:6px}
+.sqspr{display:flex;flex-wrap:wrap;align-items:baseline;gap:5px 9px;font-size:13px;
+  border:1px solid var(--line2);border-radius:8px;padding:6px 9px;background:var(--panel2)}
+.sqspn{font-weight:700;color:var(--ink)}
+.sqspw{font-size:12px;color:var(--muted);font-style:italic}
+.sqspm{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;margin-left:auto}
+.sqspm b{color:var(--ink);font-weight:700}
+.sqx{font-size:12px;font-weight:800;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 50%,transparent);
+  background:color-mix(in srgb,var(--accent) 12%,transparent);border-radius:6px;padding:1px 6px;font-variant-numeric:tabular-nums}
+.sqnone{font-size:13px;color:var(--muted);font-style:italic}
+.sqdesc{margin:0;font-size:13.5px;line-height:1.5;color:var(--ink)}
+.hchip.att.mal{color:var(--rx);border-color:color-mix(in srgb,var(--rx) 45%,transparent);background:color-mix(in srgb,var(--rx) 9%,transparent)}
+.hchip.att.bom{color:#57b85a;border-color:color-mix(in srgb,#57b85a 45%,transparent);background:color-mix(in srgb,#57b85a 9%,transparent)}
 .ft-t{font-weight:700;color:var(--accent)}
 .fwp{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 10px}
 .fstep{border-top:1px solid var(--line2);padding:10px 0 0;margin:10px 0 0}
@@ -563,6 +587,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
       <button class="mode" id="mExped" aria-pressed="false">🗺️ Expedição</button>
       <button class="mode" id="mCasket" aria-pressed="false">🎁 Casket</button>
       <button class="mode" id="mCodex" aria-pressed="false">📖 Codex</button>
+      <button class="mode" id="mSpec" aria-pressed="false">🎓 Especialização</button>
       <button class="mode" id="mWar" aria-pressed="false">⚔️ Guerra</button>
     </div>
   </div>
@@ -621,6 +646,7 @@ const RARITY = __RARITY__;
 const MODOS = __MODOS__;
 const CODEX = __CODEX__;
 const ASC = __ASC__;
+const SPEC = __SPEC__;
 // guerra: dossie da guild adversaria (contas -> chars -> atributos/resistencias)
 const WAR = __WAR__;
 // atributos rolaveis do item (id -> bonus) + constantes da forja, do bundle
@@ -641,6 +667,7 @@ const ITEMS = [...ITEM.keys()].sort();
 const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 // chip(s) de loja pra um item: gold (mercador) e/ou boss token. "" se n\u00e3o vende.
 const fmtG = n => n>=1e6 ? +(n/1e6).toFixed(n%1e6?1:0)+"M" : n.toLocaleString("pt-BR");
+const nf = n => Number(n).toLocaleString("pt-BR");
 function shopChips(name){
   const s = SHOP[norm(name)]; if(!s) return "";
   let out="";
@@ -664,7 +691,7 @@ const qty = mx => mx>1 ? "1–"+mx : "";
 
 let mode="mon";
 const q=document.getElementById("q"), list=document.getElementById("list"), count=document.getElementById("count");
-const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), mExped=document.getElementById("mExped"), mCasket=document.getElementById("mCasket"), mWar=document.getElementById("mWar"), legend=document.getElementById("legend");
+const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), mExped=document.getElementById("mExped"), mCasket=document.getElementById("mCasket"), mSpec=document.getElementById("mSpec"), mWar=document.getElementById("mWar"), legend=document.getElementById("legend");
 
 const ELPT={physical:"Físico",fire:"Fogo",ice:"Gelo",earth:"Terra",energy:"Energia",holy:"Sagrado",death:"Morte",healing:"Cura"};
 const byName={}; for(const m of M) byName[norm(m.n)]=m;
@@ -1766,8 +1793,12 @@ function modosHTML(){
       +`</div>`
       +`<div class="fcard"><h3 style="color:#ff7fd4">Hell</h3>`
       +`<p><b>${nf(M.unlock.hl)}</b> Pontos de clear Nightmare.</p>`
-      +`<ul><li>cada clear vale <b>${M.pontos.porClear}</b></li>`
-      +`<li>do degrau <b>${M.pontos.bonusDoDegrau}</b> em diante, <b>+${String(M.pontos.bonusPorDegrau).replace(".",",")}</b> por degrau acima</li>`
+      +`<ul>`
+      // porClear null = o jogo tirou a formula do cliente (13/10/2026); nao inventar numero
+      +(M.pontos.porClear===null
+        ? `<li>quanto cada clear vale <b>não está mais no código do jogo</b> — a conta virou server-side em 13/10/2026</li>`
+        : `<li>cada clear vale <b>${M.pontos.porClear}</b></li>`
+          +`<li>do degrau <b>${M.pontos.bonusDoDegrau}</b> em diante, <b>+${String(M.pontos.bonusPorDegrau).replace(".",",")}</b> por degrau acima</li>`)
       +`<li>e exige a escada Nightmare <b>fechada inteira</b></li></ul></div>`
       +`</div>`
       +`<p class="fp rnote">Dentro de cada tier a ordem é fixa: o jogo recusa entrar numa hunt se a `
@@ -2061,9 +2092,131 @@ function warCard(a,qq,open,rank){
       }</span>`
     +`</summary><div class="body warbody">${chars}</div></details>`;
 }
+// ---- Especializacao ----
+// Um degrau acima da promocao: passiva sempre ligada + magias exclusivas + outfit.
+// O jogo NAO terminou a tabela: 3 das 10 vem com passiva vazia e a Beastmaster vem
+// sem passiva e sem magia. A wiki marca isso em vez de esconder -- quem le precisa
+// saber que a escolha existe no codigo mas nao entrega o que o texto promete.
+const SQVOC={knight:"Knight",druid:"Druid",sorcerer:"Sorcerer",paladin:"Paladin",monk:"Monk"};
+// rotulos das chaves de passiva. elementDmgPct e aninhado ({earth:10}).
+const SQPAS={atkPct:"ataque",spellDmgPct:"dano de magia",spellHealPct:"cura de magia",
+  attackSpeedPct:"velocidade de ataque",critChancePct:"chance de crítico",critDmgPct:"dano crítico",
+  defPct:"defesa",hpPct:"vida",mpPct:"mana"};
+function sqPasTxt(p){
+  if(!p) return [];
+  const out=[];
+  for(const [k,v] of Object.entries(p)){
+    if(k==="elementDmgPct"&&v&&typeof v==="object"){
+      for(const [el,n] of Object.entries(v)) out.push([`dano de ${WEL_INV[el]||el}`,n]);
+    } else out.push([SQPAS[k]||k,v]);
+  }
+  return out;
+}
+function specMatch(x,qq){
+  if(!qq) return true;
+  return norm(x.nome).includes(qq)||norm(x.voc).includes(qq)||norm(x.par).includes(qq)
+    ||x.magias.some(m=>norm(m.nome||m.words).includes(qq)||norm(m.words).includes(qq));
+}
+function sqSpell(m){
+  const meta=[];
+  if(m.lv!=null) meta.push(`lv <b>${nf(m.lv)}</b>`);
+  if(m.mana!=null) meta.push(`<b>${m.mana}</b> mana`);
+  if(m.gold!=null) meta.push(`<b>${nf(m.gold)}</b> gold`);
+  return `<div class="sqspr"><span class="sqspn">${esc(m.nome||m.words)}</span>`
+    +`<span class="sqspw">${esc(m.words)}</span>`
+    // vezes e MEDIDO no build comparando com a runa base, nao cravado
+    +(m.vezes?`<span class="sqx" title="dano medido contra ${esc(m.base?m.base.nome:"a runa base")}">×${String(m.vezes).replace(".",",")}</span>`:"")
+    +(meta.length?`<span class="sqspm">${meta.join(" · ")}</span>`:"")
+    +`</div>`;
+}
+function sqCard(x){
+  const pas=sqPasTxt(x.passiva);
+  // "incompleta" e so sobre MAGIA exclusiva. passive:{} nao e passiva vazia: 3 delas
+  // tem efeito condicional (3o ataque, formas animais, buff de party) que nao cabe
+  // em percentual fixo e vive na descricao que o jogo escreve.
+  const inc=!x.magias.length;
+  return `<div class="fcard sqcard${inc?" inc":""}">`
+    +`<h3>${esc(x.nome)}${inc?` <span class="sqflag">sem magia própria</span>`:""}</h3>`
+    +`<div class="sqlbl">Passiva (sempre ligada)</div>`
+    +(x.desc?`<p class="sqdesc">${esc(x.desc)}</p>`:`<div class="sqnone">o jogo não descreve</div>`)
+    +((pas.length||x.taken)?`<div class="hrow">`
+      +pas.map(([r,v])=>`<span class="hchip att${v<0?" mal":""}">${esc(r)} <b>${v>0?"+":""}${String(v).replace(".",",")}%</b></span>`).join("")
+      // takenPct POSITIVO e desvantagem: voce toma mais dano. Negativo e blindagem.
+      +(x.taken?`<span class="hchip att ${x.taken>0?"mal":"bom"}">dano recebido <b>${x.taken>0?"+":""}${String(x.taken).replace(".",",")}%</b></span>`:"")
+      +`</div>`:"")
+    +`<div class="sqlbl">Magias exclusivas</div>`
+    +(x.magias.length ? `<div class="sqsp">`+x.magias.map(sqSpell).join("")+`</div>`
+      : `<div class="sqnone">nenhuma — só a passiva e o outfit</div>`)
+    +`</div>`;
+}
+function specHTML(qq){
+  const L=SPEC.lista, c=SPEC.cfg;
+  const semPas=L.filter(x=>!x.passiva), semMag=L.filter(x=>!x.magias.length);
+  let h=`<div class="fsec"><h2>Especialização</h2>`
+    +`<p class="fp">Um degrau acima da promoção: uma <b>passiva sempre ligada</b>, `
+    +`<b>magias exclusivas</b> e um outfit próprio. Cada vocação tem um par, e você `
+    +`escolhe um dos dois — a troca depois custa e tem espera.</p>`;
+  if(c){
+    h+=`<div class="fgrid">`
+      +`<div class="fcard"><h3>Para desbloquear</h3>`
+      +`<p><b>${nf(c.unlock)}</b> Death Essence.</p>`
+      +`<ul><li>precisa estar <b>promovido</b></li>`
+      +`<li>precisa da <b>Nightmare aberta</b>${MODOS&&MODOS.unlock?` (${nf(MODOS.unlock.nm)} pontos)`:""}</li></ul></div>`
+      +`<div class="fcard"><h3>Para trocar pro par</h3>`
+      +`<p><b>${nf(c.trocaEssence)}</b> Death Essence <b>ou</b> <b>${nf(c.trocaSoul)}</b> Infernal Soul.</p>`
+      +`<ul><li><b>${c.trocaHoras}h</b> de espera</li>`
+      +`<li>só dá pra ir pro <b>par</b> da sua vocação, não pra qualquer uma</li></ul></div>`
+      +`</div>`;
+    if(MODOS&&MODOS.unlock&&MODOS.unlock.nm!==5000)
+      h+=`<p class="fp rnote">O texto dentro do jogo ainda diz “Abra a Nightmare (5.000 Pontos de Progresso)”, `
+        +`mas a configuração pede <b>${nf(MODOS.unlock.nm)}</b>. A string ficou velha — vale o número da config.</p>`;
+  }
+  h+=`</div>`;
+  // pares na ordem em que o jogo declara, sem repetir o par invertido
+  const vistos=new Set(), res=[];
+  for(const x of L){
+    if(vistos.has(x.key)) continue;
+    const par=L.find(y=>y.key===x.par);
+    vistos.add(x.key); if(par) vistos.add(par.key);
+    res.push([x,par]);
+  }
+  const mostra=res.filter(([a,b])=>specMatch(a,qq)||(b&&specMatch(b,qq)));
+  h+=`<div class="fsec"><h2>As ${L.length} especializações</h2>`;
+  for(const [a,b] of mostra){
+    h+=`<div class="sqpair"><h3><span class="sqvoc">${esc(SQVOC[a.voc]||a.voc)}</span>`
+      +`${esc(a.nome)}${b?` ↔ ${esc(b.nome)}`:""}</h3>`
+      +`<div class="fgrid">`+sqCard(a)+(b?sqCard(b):"")+`</div></div>`;
+  }
+  if(!mostra.length) h+=`<p class="fp">Nada encontrado.</p>`;
+  h+=`</div>`;
+  const semMag2=L.filter(x=>!x.magias.length), naoFixa=L.filter(x=>!x.passiva&&x.desc);
+  if(semMag2.length||naoFixa.length){
+    h+=`<div class="fsec"><h2>Detalhes de leitura do código</h2>`;
+    if(semMag2.length)
+      h+=`<p class="fp">`+semMag2.map(x=>`<b>${esc(x.nome)}</b>`).join(", ")
+        +` ${semMag2.length===1?"não tem":"não têm"} magia exclusiva no código — `
+        +`${semMag2.length===1?"entrega":"entregam"} só a passiva e o outfit. `
+        +`${semMag2.length===1?"É a única":"São as únicas"} assim: as outras ${L.length-semMag2.length} têm de 1 a 3.</p>`;
+    if(naoFixa.length)
+      h+=`<p class="fp">`+naoFixa.map(x=>`<b>${esc(x.nome)}</b>`).join(", ")
+        +` ${naoFixa.length===1?"tem":"têm"} passiva <b>condicional</b>: o efeito não é um percentual `
+        +`sempre ligado, então não aparece na tabela de números do jogo — só na descrição. `
+        +`É o caso de gatilho por ataque, forma que você escolhe e bônus que vai pra party inteira.</p>`;
+    h+=`<p class="fp rnote">Os números e os textos aqui saem direto do código do jogo. `
+      +`O que o servidor faz por cima disso não dá pra ver daqui.</p></div>`;
+  }
+  return h;
+}
 function render(){
   setTimeout(pintaSprites,0);   // sprites de humanoide precisam de cor
   if(mode==="forja"){ list.innerHTML=forjaHTML(); count.textContent=""; return; }
+  if(mode==="spec"){
+    const qs=norm(q.value.trim());
+    list.innerHTML=specHTML(qs);
+    const n=list.querySelectorAll(".sqcard").length;
+    count.textContent=`${n} ${n===1?"especialização":"especializações"}`;
+    return;
+  }
   if(mode==="codex"){
     const qx=norm(q.value.trim());
     const res=codexFiltra(qx);
@@ -2241,14 +2394,14 @@ for(const el of [stLvl,stMag,stDist,stMelee,stBonus]) el.addEventListener("input
 
 function setMode(m){
   mode=m; limit=CHUNK;
-  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["casket",mCasket],["codex",mCodex],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
+  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["casket",mCasket],["codex",mCodex],["spec",mSpec],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   lvfilter.style.display = m==="hunt" ? "flex" : "none";
   slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = document.getElementById("eqelfilter").style.display = document.getElementById("eqelmodefilter").style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
   spellstats.style.display = m==="magia" ? "flex" : "none";
   document.getElementById("spellres").style.display = m==="magia" ? "flex" : "none";
   spellnote.style.display = m==="magia" ? "block" : "none";
-  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war"||m==="exped"||m==="casket") ? "none" : "flex";
+  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war"||m==="exped"||m==="casket"||m==="spec") ? "none" : "flex";
   q.style.display = m==="forja" ? "none" : "";
   q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
     : m==="magia" ? "Buscar magia (nome ou words: exori, exura…)…"
@@ -2258,6 +2411,7 @@ function setMode(m){
     : m==="exped" ? "Buscar expedição (nome, chefe ou bicho)…"
     : m==="war" ? "Buscar conta ou personagem inimigo…"
     : m==="codex" ? "Buscar cadeia ou item exigido (ex: troll green)…"
+    : m==="spec" ? "Buscar especialização, vocação ou magia…"
     : m==="boss" ? "Buscar boss (ex: deathstrike, ferumbras)…"
     : "Buscar monstro (ex: dragon, demon)…";
   render();
@@ -2272,9 +2426,11 @@ mForja.onclick=()=>setMode("forja");
 mCodex.onclick=()=>setMode("codex");
 mExped.onclick=()=>setMode("exped");
 mCasket.onclick=()=>setMode("casket");
+mSpec.onclick=()=>setMode("spec");
 mWar.onclick=()=>setMode("war");
 if(!WAR||!WAR.meta||!WAR.contas.length) mWar.style.display="none";
 if(!EXPED||!EXPED.length) mExped.style.display="none";
+if(!SPEC||!SPEC.lista||!SPEC.lista.length) mSpec.style.display="none";
 if(!OUTFITS||!OUTFITS.length) mCasket.style.display="none";
 // links cruzados: monstro <-> item <-> hunt
 list.addEventListener("click",ev=>{
