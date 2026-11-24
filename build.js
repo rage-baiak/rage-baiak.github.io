@@ -1171,69 +1171,119 @@ function diff(oldD, newD) {
   tpl = tpl.replace("const STANCE = __STANCE__;", "const STANCE = " + JSON.stringify(STANCE) + ";");
 
   // ---- Proficiencia de arma (arvore de perk por arma) ----
-  // Cada arma tem a propria arvore; evolui so com a arma equipada. O campo `t` de cada
-  // opcao NAO indexa a tabela de atributos de item -- indexa um enum PROPRIO de 33
-  // entradas (ATTACK_DAMAGE, SKILLID_BONUS, CRIT_EXTRA_AUTOATTACK...). Rotular pelo
-  // ATTRS.tab dava texto plausivel e TODO errado ("Armor +1" onde era "+1 melee
-  // fighting"). Entao aqui se RODA o formatador do proprio jogo, que monta a frase
-  // com skill, elemento e magia resolvidos.
+  // Cada arma tem a propria arvore; evolui so com a arma equipada. Tres coisas que o
+  // caminho obvio erra:
+  //  1. O `t` de cada opcao NAO indexa a tabela de atributo de item -- indexa um enum
+  //     proprio de 33 entradas. Rotular pelo ATTRS.tab da texto plausivel e todo errado
+  //     ("Armor +1" onde era "+1 melee fighting").
+  //  2. A tabela crua de arvores tem uma versao CORRIGIDA depois dela (reescreve o perk
+  //     de skill das arvores que sao so de wand). Hoje as duas sao iguais, mas e a
+  //     corrigida que o jogo usa, entao e nela que se ancora.
+  //  3. O mapa item->arvore exclui as variantes com prefixo (devilish/celestial/cosmic):
+  //     sao 714 itens no mapa cru e 670 no que vale.
+  // Rotulo e icone saem de DUAS funcoes do proprio jogo, executadas aqui.
   function extractProf(src) {
     const bal = (str, i) => { let d = 0; for (let j = i; j < str.length; j++) { const c = str[j];
       if (c === "{" || c === "[") d++; else if (c === "}" || c === "]") { d--; if (!d) return str.slice(i, j + 1); } }
       throw new Error("literal desbalanceado"); };
+    // recorta uma funcao a partir de um pedaco do corpo dela
+    const fnPorCorpo = (trecho, oque) => {
+      const i = src.indexOf(trecho);
+      if (i < 0) throw new Error(oque + ": ancora nao encontrada");
+      const ini = src.lastIndexOf("function ", i);
+      const b = src.indexOf("{", src.indexOf(")", ini));
+      return { nome: /function ([A-Za-z_$][\w$]*)\(/.exec(src.slice(ini))[1],
+               src: src.slice(ini, b) + bal(src, b) };
+    };
+    // resolve o fecho de uma funcao pelo proprio erro do eval. Prepend, porque cada
+    // identificador novo e dependencia do que ja esta no fecho (appendar da TDZ), e
+    // `let` porque parte do fecho e cache mutavel.
+    // `prova` e obrigatoria pra funcao: `new Function(...)` so DEFINE, e identificador
+    // livre no corpo nao estoura ate a chamada -- sem exercitar, o loop converge com o
+    // fecho vazio e o erro aparece depois, fora daqui.
+    const rodar = (fSrc, fNome, prova) => {
+      const decl = id => {
+        const rx = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        let m = new RegExp("function " + rx + "\\(").exec(src);
+        if (m) { const b = src.indexOf("{", src.indexOf(")", m.index)); return "function " + id + src.slice(src.indexOf("(", m.index), b) + bal(src, b); }
+        m = new RegExp("(?<![\\w$])" + rx + "=").exec(src);
+        if (!m) return null;
+        const pos = m.index + id.length + 1, c = src[pos];
+        if (c === "{" || c === "[") return "let " + id + "=" + bal(src, pos);
+        let d = 0;
+        for (let j = pos; j < src.length; j++) { const ch = src[j];
+          if ("{[(".includes(ch)) d++; else if ("}])".includes(ch)) d--;
+          else if (d === 0 && (ch === ";" || (ch === "," && /^[A-Za-z_$][\w$]*=/.test(src.slice(j + 1, j + 40)))))
+            return "let " + id + "=" + src.slice(pos, j); }
+        return null;
+      };
+      let pre = "", vistos = [];
+      for (let i = 0; i < 80; i++) {
+        try { const f = new Function(pre + "\n" + fSrc + "\nreturn " + fNome + ";")();
+              if (prova) prova(f);
+              return f; }
+        catch (e) {
+          const falta = (/^(\w[\w$]*) is not defined$/.exec(e.message)
+            || /^Cannot access '(\w[\w$]*)' before initialization$/.exec(e.message) || [])[1];
+          if (!falta) throw new Error(fNome + ": " + e.message);
+          const d = decl(falta);
+          if (!d) throw new Error(fNome + ": declaracao nao encontrada: " + falta);
+          if (vistos.includes(falta)) pre = pre.replace(d + ";\n", "");
+          pre = d + ";\n" + pre;
+          if (!vistos.includes(falta)) vistos.push(falta);
+        }
+      }
+      throw new Error(fNome + ": fecho nao convergiu");
+    };
 
-    // 1) o formatador. Ancora numa frase que ele monta, nao no nome minificado.
-    const fi = src.indexOf('`+${n} defence modifier`');
-    if (fi < 0) throw new Error("formatador de perk nao encontrado");
-    const fStart = src.lastIndexOf("function ", fi);
-    const fNome = /function ([A-Za-z_$][\w$]*)\(/.exec(src.slice(fStart))[1];
-    const fSrc = src.slice(fStart, src.indexOf("{", fStart) + bal(src, src.indexOf("{", fStart)).length);
+    // a arvore CORRIGIDA primeiro: ela e VALOR, converge sem prova, e as opcoes dela
+    // sao o material pra exercitar o formatador e o resolvedor de icone.
+    const nqM = /([A-Za-z_$][\w$]*)=Object\.fromEntries\(Object\.entries\(([A-Za-z_$][\w$]*)\)\.map\(\(\[[\w$]+,[\w$]+\]\)=>\{if\(![\w$]+\.levels/.exec(src);
+    if (!nqM) throw new Error("tabela corrigida de arvores nao encontrada");
+    const arvores = rodar("", nqM[1]);
+    const todasOpcoes = Object.values(arvores).flatMap(w => (w.levels || []).flat());
+    const exercita = f => { for (const o of todasOpcoes) f(o); };
 
-    // 2) as dependencias livres dele. Tira string e template ANTES de varrer: o corpo e
-    // cheio de frase em ingles ("attack", "bosses") que passaria por identificador.
-    // Trocar o template inteiro por "``" apagava os identificadores interpolados junto
-    // com a prosa (foi assim que o OLe sumiu). Mantem o que esta dentro de ${...} e
-    // joga fora so o texto, que e o que gerava identificador falso ("attack", "bosses").
-    const semTexto = fSrc
-      .replace(/`((?:[^`\\]|\\.)*)`/g, (_, dentro) =>
-        "(" + [...dentro.matchAll(/\$\{([^}]*)\}/g)].map(x => x[1]).join(",") + ")")
-      .replace(/"(?:[^"\\]|\\.)*"/g, '""').replace(/'(?:[^'\\]|\\.)*'/g, "''");
-    const LOCAIS = new Set(["function","return","case","switch","break","const","let","var","if","else","default",
-      "new","typeof","void","true","false","null","undefined","String","Math","Number","Object","Array",
-      fNome, "e","t","a","n","o","r","s","l","c","d","u","h","p","f","g","b","v","m","k"]);
-    const deps = [...new Set([...semTexto.matchAll(/(?<![\w$.])([A-Za-z_$][\w$]*)(?![\w$])/g)].map(m => m[1]))]
-      .filter(x => !LOCAIS.has(x));
-    let pre = "";
-    const naoResolvido = [];
-    for (const id of deps) {
-      const rx = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      let m = new RegExp("(?<![\\w$])" + rx + "=(\\{|\\[)").exec(src);
-      if (m) { pre += "const " + id + "=" + bal(src, src.indexOf(m[1], m.index)) + ";\n"; continue; }
-      m = new RegExp("(?<![\\w$])" + rx + "=(\\w+=>[^,;]+?)(?=,[A-Za-z_$][\\w$]*=|;)").exec(src);
-      if (m) { pre += "const " + id + "=" + m[1] + ";\n"; continue; }
-      m = new RegExp("function " + rx + "\\(").exec(src);
-      if (m) { const b = src.indexOf("{", src.indexOf(")", m.index)); pre += "function " + id + src.slice(src.indexOf("(", m.index), b) + bal(src, b) + "\n"; continue; }
-      naoResolvido.push(id);
-    }
-    if (naoResolvido.length) throw new Error("dependencia do formatador nao resolvida: " + naoResolvido.join(", "));
-    const fmt = new Function(pre + fSrc + ";return " + fNome + ";")();
+    const fTxt = fnPorCorpo('`+${n} defence modifier`', "formatador de perk");
+    const fmt = rodar(fTxt.src, fTxt.nome, exercita);
+    const fIco = fnPorCorpo("return{sheet:t,cell:Math.round(o/64),row:0}", "resolvedor de icone");
+    const ico = rodar(fIco.src, fIco.nome, exercita);
 
-    // 3) a tabela de arvores e a config
-    const tIdx = src.search(/[A-Za-z_$][\w$]*=\{\d+:\{id:\d+,name:"[^"]+",levels:\[\[/);
-    if (tIdx < 0) throw new Error("tabela de arvores de proficiencia nao encontrada");
-    const tab = (0, eval)("(" + bal(src, src.indexOf("{", tIdx)) + ")");
+    // item -> arvore, sem as variantes de prefixo
+    const zM = /([A-Za-z_$][\w$]*)=Object\.fromEntries\(Object\.entries\(([A-Za-z_$][\w$]*)\)\.filter\(\(\[([\w$]+)\]\)=>!([A-Za-z_$][\w$]*)\.some/.exec(src);
+    if (!zM) throw new Error("mapa item->arvore nao encontrado");
+    const porItem = rodar("", zM[1]);
+
+    // curva de xp por classe de arma + quem escolhe a classe (usa porItem, ja resolvido)
+    const jIdx = src.search(/\{regular:\[[\d.e,+]+\],knight:\[/);
+    if (jIdx < 0) throw new Error("curva de xp de proficiencia nao encontrada");
+    const curva = (0, eval)("(" + bal(src, jIdx) + ")");
+    const fCls = fnPorCorpo('?"knight":', "classificador de arma");
+    const classe = rodar(fCls.src, fCls.nome, f => { for (const nome of Object.keys(porItem)) f(nome); });
+
     const cIdx = src.search(/\{maxPerkLevel:\d+/);
     if (cIdx < 0) throw new Error("config de proficiencia nao encontrada");
     const cfg = (0, eval)("(" + bal(src, cIdx) + ")");
-    const mOrb = /([A-Za-z_$][\w$]*)="lunar ascension orb"/.exec(src);
 
-    const armas = Object.values(tab).map(w => ({
-      n: w.name,
-      t: (w.levels || []).map(lv => lv.map(o => { const txt = fmt(o); return txt && txt !== "—" ? txt : null; })),
-    }));
-    const semTxt = armas.reduce((a, w) => a + w.t.reduce((b, lv) => b + lv.filter(x => !x).length, 0), 0);
-    const opcoes = armas.reduce((a, w) => a + w.t.reduce((b, lv) => b + lv.length, 0), 0);
-    return { armas, opcoes, semTxt, orb: mOrb ? "lunar ascension orb" : null, cfg: {
+    const arv = {};
+    let opcoes = 0, semTxt = 0, semIco = 0;
+    for (const [id, w] of Object.entries(arvores)) {
+      arv[id] = { n: w.name, t: (w.levels || []).map(lv => lv.map(o => {
+        const txt = fmt(o), ic = ico(o);
+        opcoes++; if (!txt || txt === "—") semTxt++; if (!ic || !ic.sheet) semIco++;
+        return { x: txt && txt !== "—" ? txt : null,
+                 s: ic && ic.sheet || null, c: ic ? (ic.cell | 0) : 0, r: ic ? (ic.row | 0) : 0,
+                 ...(ic && ic.badge != null ? { b: ic.badge } : {}) };
+      })) };
+    }
+    // item -> [idDaArvore, classeDeXp]
+    const item = {};
+    for (const [nome, id] of Object.entries(porItem)) {
+      let cls = null; try { cls = classe(nome); } catch (_) { }
+      item[nome] = [String(id), cls || "regular"];
+    }
+    const folhas = [...new Set(Object.values(arv).flatMap(w => w.t.flat().map(o => o.s)).filter(Boolean))];
+    return { arv, item, opcoes, semTxt, semIco, folhas, xp: curva, cfg: {
       maxPerk: cfg.maxPerkLevel, maxMold: cfg.maxShapedPerks, maxCol: cfg.maxShapedColumns,
       slotXp: cfg.slotTrailXp, slotDust: cfg.slotDust,
       refDust: cfg.refineDust, refGold: cfg.refineGold,
@@ -1244,14 +1294,16 @@ function diff(oldD, newD) {
   let PROF = null;
   try {
     PROF = extractProf(src);
-    const niv = {};
-    for (const w of PROF.armas) niv[w.t.length] = (niv[w.t.length] || 0) + 1;
-    console.log("proficiencia:", PROF.armas.length, "armas |",
-      PROF.armas.reduce((a, w) => a + w.t.length, 0), "niveis |", PROF.opcoes, "opcoes de perk |",
-      Object.entries(niv).sort((a, b) => +a[0] - +b[0]).map(([k, v]) => k + "niv x" + v).join(", "));
-    console.log("  molde: " + PROF.cfg.maxMold + " slots, " + (PROF.cfg.slotXp.reduce((a, b) => a + b, 0) / 1e6) + "M de xp |"
-      + " refino 0->" + PROF.cfg.maxPerk + ": " + (PROF.cfg.refGold.reduce((a, b) => a + b, 0) / 1e9) + "B de gold por perk");
-    if (PROF.semTxt) console.log("  opcoes sem texto do jogo:", PROF.semTxt);
+    const nArv = Object.keys(PROF.arv).length;
+    console.log("proficiencia:", nArv, "arvores |", Object.keys(PROF.item).length, "itens apontando pra elas |",
+      PROF.opcoes, "opcoes |", PROF.folhas.length, "folhas de icone");
+    const cls = {};
+    for (const [, [, c]] of Object.entries(PROF.item)) cls[c] = (cls[c] || 0) + 1;
+    console.log("  classe de xp:", Object.entries(cls).map(([k, v]) => k + " " + v).join(", "),
+      "| ao nivel " + (PROF.xp.regular.length + 1) + ":",
+      Object.entries(PROF.xp).map(([k, v]) => k + " " + (v.reduce((a, b) => a + b, 0) / 1e6).toFixed(1) + "M").join(", "));
+    if (PROF.semTxt) console.log("  opcoes sem texto:", PROF.semTxt);
+    if (PROF.semIco) console.log("  opcoes sem icone:", PROF.semIco);
   } catch (e) { console.log("proficiencia indisponivel:", e.message); }
   tpl = tpl.replace("const PROF = __PROF__;", "const PROF = " + JSON.stringify(PROF) + ";");
 
