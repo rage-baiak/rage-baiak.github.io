@@ -588,6 +588,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
       <button class="mode" id="mCasket" aria-pressed="false">🎁 Casket</button>
       <button class="mode" id="mCodex" aria-pressed="false">📖 Codex</button>
       <button class="mode" id="mSpec" aria-pressed="false">🎓 Especialização</button>
+      <button class="mode" id="mPost" aria-pressed="false">🧘 Postura</button>
       <button class="mode" id="mWar" aria-pressed="false">⚔️ Guerra</button>
     </div>
   </div>
@@ -647,6 +648,7 @@ const MODOS = __MODOS__;
 const CODEX = __CODEX__;
 const ASC = __ASC__;
 const SPEC = __SPEC__;
+const STANCE = __STANCE__;
 // guerra: dossie da guild adversaria (contas -> chars -> atributos/resistencias)
 const WAR = __WAR__;
 // atributos rolaveis do item (id -> bonus) + constantes da forja, do bundle
@@ -691,7 +693,7 @@ const qty = mx => mx>1 ? "1–"+mx : "";
 
 let mode="mon";
 const q=document.getElementById("q"), list=document.getElementById("list"), count=document.getElementById("count");
-const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), mExped=document.getElementById("mExped"), mCasket=document.getElementById("mCasket"), mSpec=document.getElementById("mSpec"), mWar=document.getElementById("mWar"), legend=document.getElementById("legend");
+const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), mExped=document.getElementById("mExped"), mCasket=document.getElementById("mCasket"), mSpec=document.getElementById("mSpec"), mPost=document.getElementById("mPost"), mWar=document.getElementById("mWar"), legend=document.getElementById("legend");
 
 const ELPT={physical:"Físico",fire:"Fogo",ice:"Gelo",earth:"Terra",energy:"Energia",holy:"Sagrado",death:"Morte",healing:"Cura"};
 const byName={}; for(const m of M) byName[norm(m.n)]=m;
@@ -1188,6 +1190,14 @@ const VOCPT={sorcerer:"Sorc",druid:"Druid",paladin:"Pala",knight:"Knight",monk:"
 const VOCORD=["knight","paladin","druid","sorcerer","monk"];
 const SLOTPT={weapon:"Arma",shield:"Escudo",armor:"Armadura",helmet:"Elmo",legs:"Pernas",boots:"Botas",ring:"Anel",amulet:"Amuleto"};
 const WTPT={sword:"Espada",axe:"Machado",club:"Maça",distance:"Distância",wand:"Wand",rod:"Rod",fist:"Punho"};
+// categorias de imbuement, como o bundle as nomeia
+const IMBPT={"critical hit":"crítico","life leech":"roubo de vida","mana leech":"roubo de mana",
+  "increase speed":"velocidade","elemental damage":"dano elemental",
+  "skillboost axe":"axe","skillboost club":"club","skillboost sword":"sword","skillboost fist":"fist",
+  "skillboost distance":"distance","skillboost shielding":"shielding","skillboost magic level":"magic level",
+  "elemental protection fire":"prot. fogo","elemental protection ice":"prot. gelo",
+  "elemental protection earth":"prot. terra","elemental protection energy":"prot. energia",
+  "elemental protection holy":"prot. sagrado","elemental protection death":"prot. morte"};
 const SKPT={sword:"Espada",axe:"Machado",club:"Maça",distance:"Distância",fist:"Punho",shielding:"Shielding",magic:"Magic"};
 function equipCard(e,qq,open){
   const dot=el=>`<i class="edot e-${el}"></i>`;
@@ -1210,7 +1220,8 @@ function equipCard(e,qq,open){
   if(e.ll)extra.push(`Roubo vida +${e.ll}%`); if(e.ml)extra.push(`Roubo mana +${e.ml}%`);
   if(e.refl)extra.push(`Reflect ${e.refl}`); if(e.hpr)extra.push(`HP regen +${e.hpr}`); if(e.mpr)extra.push(`MP regen +${e.mpr}`);
   const badges=[];
-  if(e.imb)badges.push(`<span class="ebadge">${e.imb} imbu</span>`);
+  if(e.imb)badges.push(`<span class="ebadge"${e.imbc?` title="aceita: ${esc(e.imbc.map(c=>IMBPT[c]||c).join(", "))}"`:""}>${e.imb} imbu</span>`);
+  if(e.bond)badges.push(`<span class="ebadge charged">bond ${esc(ELPT[e.bond]||e.bond)}</span>`);
   if(e.dur)badges.push(`<span class="ebadge charged">charged ${Math.round(e.dur/3600)}h</span>`);
   badges.push(e.drop?`<span class="ebadge drop ilink" data-item="${esc(e.n)}">dropa ▸</span>`:`<span class="ebadge nodrop">não dropa</span>`);
   const _sc=shopChips(e.n); if(_sc)badges.push(_sc);
@@ -1220,6 +1231,8 @@ function equipCard(e,qq,open){
   if(res.length)body+=`<div class="rline"><span class="rlbl rs">resist</span>`+res.map(([el,v])=>`<span class="rchip ${v>=100?"im":"rs"}">${dot(el)}${ELPT[el]||el} ${v>0?"+":""}${v}%</span>`).join("")+`</div>`;
   if(mel.length)body+=`<div class="rline"><span class="rlbl">dano mág</span>`+mel.map(([el,v])=>`<span class="rchip wk">${dot(el)}${ELPT[el]||el} +${v}</span>`).join("")+`</div>`;
   if(extra.length)body+=`<div class="rline"><span class="rlbl">combate</span>`+extra.map(x=>`<span class="atk">${x}</span>`).join("")+`</div>`;
+  if(e.imbc&&e.imbc.length)body+=`<div class="rline"><span class="rlbl">imbu</span>`+e.imbc.map(c=>`<span class="rchip">${esc(IMBPT[c]||c)}</span>`).join("")+`</div>`;
+  if(e.aug&&e.aug.length)body+=`<div class="rline"><span class="rlbl wk">augment</span>`+e.aug.map(([sp,k,v])=>`<span class="rchip wk">${esc(sp)} ${k==="dmg"?"dano":k==="cd"?"cd":esc(k)} +${v}${k==="cd"?"s":"%"}</span>`).join("")+`</div>`;
   if(!main.length&&!sk.length&&!res.length&&!mel.length&&!extra.length)
     body+=`<div class="rline"><span class="hnone">sem stats no catálogo (item base/cosmético ou stats definidos no servidor)</span></div>`;
   body+=`<div class="ebadges">${badges.join("")}</div></div>`;
@@ -1254,13 +1267,28 @@ let magiaVoc=0;
 const MELEM=[["Todos",null],["Físico","physical"],["Fogo","fire"],["Gelo","ice"],["Energia","energy"],["Terra","earth"],["Sagrado","holy"],["Morte","death"]];
 let magiaEl=0;
 // elemento de cada magia: o jogo nao guarda, infere-se pela raiz do encantamento
-function spellEl(w){
+// Elemento da magia. As palavras resolvem a nomenclatura classica (flam/frigo/tera/...),
+// mas magia de especializacao usa palavra INVENTADA — "exori naturo" (Naturecaller) e
+// "exori obscuro" (Necromancer) nao casam com nada e caiam em "physical", lendo a
+// resistencia errada do alvo e rankeando errado no bestSpells. Fallback nos ids de
+// efeito/missil, que o bundle declara em TODA magia (constantes CONST_ME_*/CONST_ANI_*).
+// Palavra PRIMEIRO: efeito custom (>100, monk/knight) nao esta na tabela e cai em
+// physical, que e o certo pra esses. Assim uma magia nova com palavra inventada se
+// classifica sozinha, sem eu precisar notar.
+const ME_EL={1:"physical",5:"physical",7:"fire",10:"physical",12:"energy",16:"fire",
+  18:"death",35:"physical",37:"fire",38:"energy",39:"death",40:"holy",42:"ice",43:"ice",
+  44:"ice",45:"earth",46:"earth",47:"earth",49:"holy",50:"holy"};
+const ANI_EL={4:"fire",5:"energy",11:"death",29:"ice",30:"earth",31:"holy",32:"death",
+  36:"energy",37:"ice",38:"holy",39:"earth"};
+function spellEl(sp){
+  const w = typeof sp==="string" ? sp : (sp&&sp.words)||"";
   if(/flam/.test(w))return"fire";
   if(/frigo/.test(w))return"ice";
   if(/tera/.test(w)||/pox/.test(w))return"earth";
   if(/mort/.test(w))return"death";
   if(/san/.test(w))return"holy";
   if(/vis/.test(w))return"energy";
+  if(sp && typeof sp==="object") return ME_EL[sp.effect] || ANI_EL[sp.missile] || "physical";
   return"physical";
 }
 const ELCOL={physical:"#8b93a1",fire:"#e0642e",ice:"#35a3cf",earth:"#6a9a3a",energy:"#9b63e0",holy:"#d3a52a",death:"#a86fb5"};
@@ -1350,7 +1378,7 @@ function bestSpells(targets, isBoss, pack){
   for(const voc of SREC_VOCS){
     const isKnight = voc==="knight";
     let cands=SPELLS.filter(x=>x.dmg && (x.vocs||[]).includes(voc) && !(isKnight && x.goldCost!=null)).map(x=>{
-      const el=spellEl(x.words), base=spellBaseAvg(x), ef=takenAvg(targets,el);
+      const el=spellEl(x), base=spellBaseAvg(x), ef=takenAvg(targets,el);
       const shape=areaShape(x.name, x.words, x.type), isArea=x.type==="area";
       const alvos = isBoss ? 1 : (isArea ? Math.max(1, PACK*AREA_COV[shape]) : 1);  // beam/onda pegam menos
       return {s:x, el, isArea, shape, isRune:x.goldCost!=null,
@@ -2137,7 +2165,9 @@ function sqCard(x){
   const inc=!x.magias.length;
   return `<div class="fcard sqcard${inc?" inc":""}">`
     +`<h3>${esc(x.nome)}${inc?` <span class="sqflag">sem magia própria</span>`:""}</h3>`
-    +`<div class="sqlbl">Passiva (sempre ligada)</div>`
+    +(()=>{ const st=(typeof STANCE!=="undefined"&&STANCE||[]).find(y=>y.spec===x.key);
+        return st ? `<div class="sqlbl">Passiva <span class="sqflag">só com a postura ${esc(st.nome)} ligada</span></div>`
+                  : `<div class="sqlbl">Passiva (sempre ligada)</div>`; })()
     +(x.desc?`<p class="sqdesc">${esc(x.desc)}</p>`:`<div class="sqnone">o jogo não descreve</div>`)
     +((pas.length||x.taken)?`<div class="hrow">`
       +pas.map(([r,v])=>`<span class="hchip att${v<0?" mal":""}">${esc(r)} <b>${v>0?"+":""}${String(v).replace(".",",")}%</b></span>`).join("")
@@ -2148,6 +2178,77 @@ function sqCard(x){
     +(x.magias.length ? `<div class="sqsp">`+x.magias.map(sqSpell).join("")+`</div>`
       : `<div class="sqnone">nenhuma — só a passiva e o outfit</div>`)
     +`</div>`;
+}
+// ---- Postura (stance) ----
+// rotulos das chaves que aparecem em postura (estende o SQPAS da especializacao)
+const PSLBL={...SQPAS, takenPct:"dano recebido", rangedDodgePct:"esquiva à distância",
+  selfHealPct:"cura em si", sharedHealPct:"cura repassada à party", harmonyPct:"bônus do Harmony",
+  shielding:"shielding", melee:"corpo a corpo", distance:"distance", fist:"fist", magic:"magic level"};
+// chave cujo valor POSITIVO e desvantagem (voce TOMA mais dano)
+const PSRUIM=new Set(["takenPct"]);
+function postChips(st){
+  const e=st.efeito; if(!e) return "";
+  const out=[];
+  const pct=(rot,v,ruim)=>{ const mal = ruim ? v>0 : v<0;
+    out.push(`<span class="hchip att ${mal?"mal":"bom"}">${esc(rot)} <b>${v>0?"+":""}${String(v).replace(".",",")}%</b></span>`); };
+  for(const [k,v] of Object.entries(e)){
+    if((k==="skillPct"||k==="baseSkillPct") && v && typeof v==="object"){
+      for(const [sk,n] of Object.entries(v)) pct((k==="baseSkillPct"?"skill base de ":"skill de ")+(PSLBL[sk]||sk), n, false);
+    } else if(k==="mlFrom" && v){
+      out.push(`<span class="hchip att bom">${v.pct}% de ${esc(PSLBL[v.skill]||v.skill)} vira magic level de ${(v.elements||[]).map(x=>esc(WEL_INV[x]||x)).join(", ")}</span>`);
+    } else if(k==="foeDebuff"){
+      out.push(`<span class="hchip att bom">aplica debuff no alvo</span>`);
+    } else if(k==="noDefense"){
+      out.push(`<span class="hchip att mal">sem defesa de escudo</span>`);
+    } else if(typeof v==="number"){
+      pct(PSLBL[k]||k, v, PSRUIM.has(k));
+    }
+  }
+  return out.length?`<div class="hrow">${out.join("")}</div>`:"";
+}
+function postMatch(st,qq){
+  if(!qq) return true;
+  return norm(st.nome).includes(qq)||norm(st.words||"").includes(qq)||norm(st.voc||"").includes(qq)
+    ||norm(SQVOC[st.voc]||"").includes(qq)||norm(st.desc||"").includes(qq)||norm(st.spec||"").includes(qq);
+}
+function postHTML(qq){
+  if(!STANCE||!STANCE.length)
+    return `<div class="fsec"><h2>Postura</h2><p class="fp">A extração da postura não casou neste build — o jogo mexeu na tabela. `
+      +`Melhor não mostrar nada do que mostrar número errado.</p></div>`;
+  const comSpec=STANCE.filter(x=>x.spec);
+  let h=`<div class="fsec"><h2>Postura</h2>`
+    +`<p class="fp">Uma postura por vez. Liga lançando as <b>palavras</b> dela, custa mana, e depois `
+    +`de trocar tem uma <b>espera</b> até poder trocar de novo. O Helper tem uma aba de Postura que `
+    +`troca sozinho por regra durante a luta — e a troca em si também gasta mana.</p>`;
+  if(comSpec.length)
+    h+=`<p class="fp rnote">Atenção: a passiva de <b>${comSpec.map(x=>esc(SQVOC[x.voc]||x.voc)+" "+x.spec).join("</b>, <b>")}</b> `
+      +`<b>só vale com a postura da própria spec ligada</b> — não é passiva sempre-ligada como nas outras seis. `
+      +`Essas quatro abrem no level <b>${nf(comSpec[0].lv)}</b>.</p>`;
+  h+=`</div>`;
+  const ORD=["knight","paladin","sorcerer","druid","monk"];
+  const vocs=[...new Set(STANCE.map(x=>x.voc))].sort((a,b)=>ORD.indexOf(a)-ORD.indexOf(b));
+  let total=0, corpo="";
+  for(const voc of vocs){
+    const res=STANCE.filter(x=>x.voc===voc&&postMatch(x,qq));
+    if(!res.length) continue;
+    total+=res.length;
+    corpo+=`<div class="mgsec"><h3 class="mgh"><span class="mgi">🧘</span>${esc(SQVOC[voc]||voc)}<span class="mgc">(${res.length})</span></h3>`
+      +`<div class="mgtwrap"><table class="mgt"><thead><tr>`
+      +`<th class="thl">Postura</th><th>Level</th><th>Mana</th><th>Troca</th><th class="thl">O que faz</th>`
+      +`</tr></thead><tbody>`
+      +res.map(x=>`<tr>`
+        +`<td class="mg-nm"><b>${hl(x.nome,qq)}</b><i>${esc(x.words||"—")}</i>`
+          +(x.spec?`<span class="sqflag">spec ${esc(x.spec)}</span>`:"")
+          +(x.virtue?`<span class="sqflag">virtude</span>`:"")+`</td>`
+        +`<td>${x.lv!=null?nf(x.lv):"—"}</td>`
+        +`<td>${x.mana!=null?nf(x.mana):"—"}</td>`
+        +`<td>${x.swap!=null?(x.swap/1000)+"s":"—"}</td>`
+        +`<td class="thl">${x.desc?esc(x.desc):`<span class="mut">o jogo não descreve</span>`}${postChips(x)}</td>`
+        +`</tr>`).join("")
+      +`</tbody></table></div></div>`;
+  }
+  h+=total?corpo:`<div class="empty">Nada encontrado.</div>`;
+  return h;
 }
 function specHTML(qq){
   const L=SPEC.lista, c=SPEC.cfg;
@@ -2215,6 +2316,14 @@ function render(){
     list.innerHTML=specHTML(qs);
     const n=list.querySelectorAll(".sqcard").length;
     count.textContent=`${n} ${n===1?"especialização":"especializações"}`;
+    return;
+  }
+  if(mode==="post"){
+    const qp=norm(q.value.trim());
+    list.innerHTML=postHTML(qp);
+    // conta a LINHA renderizada, nao o filtro: foi o que ja me mordeu na aba de guerra
+    const n=list.querySelectorAll(".mgt tbody tr").length;
+    count.textContent=n?`${n} ${n===1?"postura":"posturas"}`:"";
     return;
   }
   if(mode==="codex"){
@@ -2311,7 +2420,7 @@ function render(){
     const match=s=> (!vk||(s.vocs||[]).includes(vk)) &&
       (!qq||norm(s.name).includes(qq)||norm(s.words).includes(qq));
     const valOf=s=>{ const f=s.dmg||s.heal; const r=f?f(st[0],st[1],st[2],st[3]):[0,0];
-      const isHeal=!!s.heal, el=isHeal?null:spellEl(s.words);
+      const isHeal=!!s.heal, el=isHeal?null:spellEl(s);
       const rf=isHeal?1:(res[el]??100)/100;                       // defesa elemental do alvo
       return {s, isHeal, el, min:Math.round(r[0]*mult*rf), max:Math.round(r[1]*mult*rf)}; };
     const GRP=[
@@ -2394,14 +2503,14 @@ for(const el of [stLvl,stMag,stDist,stMelee,stBonus]) el.addEventListener("input
 
 function setMode(m){
   mode=m; limit=CHUNK;
-  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["casket",mCasket],["codex",mCodex],["spec",mSpec],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
+  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["casket",mCasket],["codex",mCodex],["spec",mSpec],["post",mPost],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   lvfilter.style.display = m==="hunt" ? "flex" : "none";
   slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = document.getElementById("eqelfilter").style.display = document.getElementById("eqelmodefilter").style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
   spellstats.style.display = m==="magia" ? "flex" : "none";
   document.getElementById("spellres").style.display = m==="magia" ? "flex" : "none";
   spellnote.style.display = m==="magia" ? "block" : "none";
-  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war"||m==="exped"||m==="casket"||m==="spec") ? "none" : "flex";
+  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war"||m==="exped"||m==="casket"||m==="spec"||m==="post") ? "none" : "flex";
   q.style.display = m==="forja" ? "none" : "";
   q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
     : m==="magia" ? "Buscar magia (nome ou words: exori, exura…)…"
@@ -2412,6 +2521,7 @@ function setMode(m){
     : m==="war" ? "Buscar conta ou personagem inimigo…"
     : m==="codex" ? "Buscar cadeia ou item exigido (ex: troll green)…"
     : m==="spec" ? "Buscar especialização, vocação ou magia…"
+    : m==="post" ? "Buscar postura, palavras ou vocação…"
     : m==="boss" ? "Buscar boss (ex: deathstrike, ferumbras)…"
     : "Buscar monstro (ex: dragon, demon)…";
   render();
@@ -2427,6 +2537,7 @@ mCodex.onclick=()=>setMode("codex");
 mExped.onclick=()=>setMode("exped");
 mCasket.onclick=()=>setMode("casket");
 mSpec.onclick=()=>setMode("spec");
+mPost.onclick=()=>setMode("post");
 mWar.onclick=()=>setMode("war");
 if(!WAR||!WAR.meta||!WAR.contas.length) mWar.style.display="none";
 if(!EXPED||!EXPED.length) mExped.style.display="none";

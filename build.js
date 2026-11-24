@@ -54,6 +54,11 @@ function extractEquip(src) {
       cc: it.critChance || 0, cd: it.critDmg || 0, ll: it.lifeLeech || 0, ml: it.manaLeech || 0,
       ms: it.moveSpeed || 0, hpr: it.hpRegen || 0, mpr: it.mpRegen || 0, refl: it.reflect || 0,
       imb: it.imb && it.imb.slots ? it.imb.slots : 0, dur: it.durationSec || 0,
+      // imb.slots sozinho diz QUANTOS, nao QUAIS -- e a categoria e que decide o gear.
+      // augments buffam UMA magia pelo nome; elementalBond amarra a arma a um elemento.
+      imbc: it.imb && it.imb.cats && it.imb.cats.length ? it.imb.cats : null,
+      aug: it.augments && it.augments.length ? it.augments.map(a => [a.spell, a.kind, a.value]) : null,
+      bond: it.elementalBond || null,
     });
   }
   out.sort((a, b) => a.slot.localeCompare(b.slot) || a.lv - b.lv || a.n.localeCompare(b.n));
@@ -482,7 +487,11 @@ function diff(oldD, newD) {
           : x.length ? (x.length + (x.spread ? "×" + x.spread : "") + " tiles")
           : x.range ? ("alcance " + x.range) : "",
       })),
-      l: (m.loot || []).map(x => [x.name, x.chance, x.max || 1]),
+      // Parte do loot vem por ID numerico ({id:37608,chance:...}) e nao por nome --
+      // e o caso dos itens novos do Halloween. Guarda o id num marcador e resolve
+      // logo abaixo, quando o catalogo (idByName) existir; sem isso o drop ia pro ar
+      // com o nome em branco.
+      l: (m.loot || []).map(x => [x.name ?? ("\u0000" + x.id), x.chance, x.max || 1]),
     });
   }
 
@@ -509,6 +518,19 @@ function diff(oldD, newD) {
 
   // ---- equipamento (todo item com slot, dropando ou nao) ----
   const { equip, idByName } = extractEquip(src);
+  // resolve os drops que vieram por id (marcador \u0000<id>) usando o catalogo
+  const nameById = {};
+  for (const [nm, id] of Object.entries(idByName)) if (!(id in nameById)) nameById[id] = nm;
+  let semNome = 0, resolvidos = 0;
+  for (const m of data) for (const d of (m.l || [])) {
+    if (typeof d[0] === "string" && d[0].charCodeAt(0) === 0) {
+      const id = d[0].slice(1);
+      if (nameById[id]) { d[0] = nameById[id]; resolvidos++; }
+      else { d[0] = "item #" + id; semNome++; }   // visivel, nunca em branco
+    }
+  }
+  if (resolvidos || semNome) console.log("loot por id: " + resolvidos + " resolvidos"
+    + (semNome ? ", " + semNome + " sem nome no catalogo (mostrados como 'item #id')" : ""));
   const droppedNames = new Set();
   for (const m of data) for (const l of m.l) droppedNames.add(norm(l[0]));
   for (const e of equip) e.drop = droppedNames.has(norm(e.n)) ? 1 : 0;
@@ -557,8 +579,11 @@ function diff(oldD, newD) {
     const lvl = {};
     for (const h of hunts) lvl[h.id] = h.lv || 1;
     let anc = null;
-    for (const m of src.matchAll(/\[(?:\["[a-z0-9-]+",\d+\],){3,}\["[a-z0-9-]+",\d+\]\]/g)) {
-      const pares = [...m[0].matchAll(/\["([a-z0-9-]+)",(\d+)\]/g)].map(x => [x[1], +x[2]]);
+    // o valor pode vir em notacao exponencial: a hunt radiant-skyhold-devoted entrou com
+    // `1e3` (10/2026) e o `\d+` matava o array INTEIRO, nao so aquela entrada. Mesma
+    // armadilha da tabela de chance de raridade. Aceita 1e3/0.5/1.5e2 e converte com Number.
+    for (const m of src.matchAll(/\[(?:\["[a-z0-9-]+",[\d.eE+]+\],){3,}\["[a-z0-9-]+",[\d.eE+]+\]\]/g)) {
+      const pares = [...m[0].matchAll(/\["([a-z0-9-]+)",([\d.eE+]+)\]/g)].map(x => [x[1], Number(x[2])]);
       const conhecidos = pares.filter(([id]) => id in lvl).length;
       if (conhecidos / pares.length > 0.7) { anc = pares; break; }
     }
@@ -703,7 +728,10 @@ function diff(oldD, newD) {
   const CODEX_SIG = {
     Et:/([A-Za-z_$][\w$]*)=\(e,t\)=>\(\{id:t\?/,
     GU:/([A-Za-z_$][\w$]*)=\["physical","energy","earth","fire","ice","holy","death"\]/,
-    FTe:/function ([A-Za-z_$][\w$]*)\(e\)\{let t=2166136261/,
+    // o hash FNV-1a. O bundle passou a ter TRES funcoes identicas (10/2026) e pegar a
+    // primeira dava `rWe is not defined`: o codex chama a segunda. Captura o nome do
+    // proprio call site dentro do UN, nao da declaracao. Conferido como FNV abaixo.
+    FTe:/function [A-Za-z_$][\w$]*\(e,t,a\)\{const n=([\w$]+)\(e\);if\(e\.startsWith\("boss:"\)\)/,
     zTe:/([A-Za-z_$][\w$]*)=\{atkPct:15,\.\.\.Object\.fromEntries/,
     HTe:/([A-Za-z_$][\w$]*)=150[,;]/,
     UN:/function ([A-Za-z_$][\w$]*)\(e,t,a\)\{const n=[\w$]+\(e\);if\(e\.startsWith\("boss:"\)\)/,
@@ -748,6 +776,8 @@ function diff(oldD, newD) {
     N.Lf = lf[1]; N.Tne = lf[2]; N.HO = lf[3];
     const falta = Object.entries(N).filter(([, v]) => !v).map(([k]) => k);
     if (falta.length) throw new Error("assinatura nao casou: " + falta.join(", "));
+    if (!new RegExp("function " + N.FTe.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\(e\\)\\{let t=2166136261").test(src))
+      throw new Error("FTe resolveu pra " + N.FTe + ", que nao e o hash FNV");
     return N;
   }
   function extractCodex(src) {
@@ -861,7 +891,9 @@ function diff(oldD, newD) {
     const mFloor = src.match(/dealtFloor:([\d.]+)/);
     const mHead = src.match(/recHead:([\d.]+)/);
     // chance de subir atributo: tabela por nivel x multiplicador por tier
-    const mCh = src.match(/=\[(60(?:,\d+){10,})\],\w+=\[(1(?:,[\d.]+){5,})\]/);
+    // A tabela aceita DECIMAL: em 17/10/2026 a cauda virou [...,1,.75,.75,.5,.5] (era
+    // 1,1,1,1) e a versao so-inteiros parou de casar, zerando a chance silenciosamente.
+    const mCh = src.match(/=\[(60(?:,\d*\.?\d+){10,})\],[\w$]+=\[(1(?:,\d*\.?\d+){5,})\]/);
     const chance = mCh ? { nivel: mCh[1].split(",").map(Number), tier: mCh[2].split(",").map(Number) } : null;
     return {
       escala,
@@ -879,9 +911,32 @@ function diff(oldD, newD) {
   // seletor de dificuldade a parte, que e de onde sai essence e soul.
   function extractModos(src, hunts) {
     const num = x => Number(x);
+    // Os tiers vem de uma fabrica minificada (nm:yX(20,5,5,3.25,.19,1.1)). NAO travar a
+    // aridade: em 17/10/2026 ela ganhou um 2o parametro (bossHp) e a versao antiga, que
+    // exigia exatamente 5 argumentos, parou de casar e derrubou MODOS inteiro. Aqui le-se
+    // o mapeamento na PROPRIA fabrica (params -> campos) e aplica-se aos argumentos, entao
+    // argumento novo ou reordenado continua caindo no campo certo.
+    const fabrica = nome => {
+      const d = src.match(new RegExp('(?<![\\w$])' + nome + '=\\(([^)]*)\\)=>\\(\\{'));
+      if (!d) return null;
+      const params = d[1].split(",").map(x => x.trim());
+      const corpo = src.slice(d.index + d[0].length, d.index + d[0].length + 400);
+      const mapa = {};
+      for (const mm of corpo.matchAll(/([a-zA-Z]\w*):([a-zA-Z_$][\w$]*)(?=[,}])/g)) {
+        const i = params.indexOf(mm[2]);
+        if (i >= 0) mapa[mm[1]] = i;        // campo -> indice do argumento
+      }
+      return Object.keys(mapa).length ? mapa : null;
+    };
     const lv = tag => {
-      const m = src.match(new RegExp(tag + ':(?:\\{\\.\\.\\.)?\\w+\\(([\\d.]+),([\\d.]+),([\\d.]+),([\\d.]+),([\\d.]+)\\)'));
-      return m ? { hp: num(m[1]), atk: num(m[2]), exp: num(m[3]), itemChance: num(m[5]) } : null;
+      const m = src.match(new RegExp(tag + ':(?:\\{\\.\\.\\.)?([\\w$]+)\\(([\\d.,\\s]+)\\)'));
+      if (!m) return null;
+      const mapa = fabrica(m[1]);
+      const args = m[2].split(",").map(x => num(x.trim()));
+      if (!mapa) return null;
+      const pega = c => mapa[c] != null && args[mapa[c]] != null ? args[mapa[c]] : null;
+      return { hp: pega("hp"), bossHp: pega("bossHp"), atk: pega("atk"),
+               exp: pega("exp"), itemChance: pega("itemChance") };
     };
     // As 5 familias e a formula de ponto de Nightmare sao capturadas SEPARADAMENTE:
     // em 13/10/2026 o jogo removeu nightmarePerClear/BonusFromStep/BonusPerStep do
@@ -1020,12 +1075,83 @@ function diff(oldD, newD) {
   } catch (e) { console.log("especializacao indisponivel:", e.message); }
   tpl = tpl.replace("const SPEC = __SPEC__;", "const SPEC = " + JSON.stringify(SPEC) + ";");
 
+  // ---- Postura / Stance (11/2026) ----
+  // 15 posturas: 11 declaradas a mao + 4 mintadas por uma FABRICA a partir da tabela de
+  // spec. A fabrica e uma ARMADILHA DE ARIDADE: `FI("warlord","War Cry","utito bellum",250,X0)`
+  // tem 250 na 4a posicao, que PARECE level -- e mana. O minLevel das quatro e a constante
+  // B1 (=600), nao o argumento. Ler posicionalmente publica "Warlord no level 250", errado
+  // por 350 levels. Por isso aqui se RODA a fabrica do jogo em vez de interpretar os args.
+  function extractStances(src) {
+    const bal = (s, i) => { let d = 0; for (let j = i; j < s.length; j++) { const c = s[j];
+      if (c === "{" || c === "[") d++; else if (c === "}" || c === "]") { d--; if (!d) return s.slice(i, j + 1); } }
+      throw new Error("literal desbalanceado"); };
+    const aSpec = src.indexOf('{key:"warlord",name:');
+    if (aSpec < 0) throw new Error("tabela de spec nao encontrada");
+    const specOpen = src.lastIndexOf("{", aSpec - 1);
+    const specName = (/([A-Za-z_$][\w$]*)=$/.exec(src.slice(0, specOpen)) || [])[1];
+    const specLit = bal(src, specOpen);
+    const aW = src.search(/[A-Za-z_$][\w$]*=\{[a-z_]+:\{key:"protector"/);
+    if (aW < 0) throw new Error("tabela de postura nao encontrada");
+    const wOpen = src.indexOf("{", aW);
+    const wName = (/([A-Za-z_$][\w$]*)=\{$/.exec(src.slice(0, wOpen + 1)) || [])[1];
+    const wLit = bal(src, wOpen);
+    const fiM = /([A-Za-z_$][\w$]*)=\((?:[\w$],?){4,6}\)=>\(\{key:[\w$],name:[\w$],words:[\w$],voc:/.exec(src);
+    if (!fiM) throw new Error("fabrica de postura de spec nao encontrada");
+    const fiName = fiM[1];
+    const fiSrc = src.slice(fiM.index + fiName.length + 1, src.indexOf("}),", fiM.index) + 2);
+    // resolve SO o que o eval reclamar. Varrer identificador livre por regex resolvia
+    // nome de parametro de uma letra pra constante alheia do bundle (o `o` virava a
+    // semente do FNV); deixar o erro pedir pelo nome acerta exatamente o que falta.
+    const num = id => { const m = new RegExp("(?<![\\w$])" + id.replace(/\$/g, "\\$") + "=([0-9][0-9eE.+]*)(?![\\w$])").exec(src); return m ? m[1] : null; };
+    let pre = "", resolvidas = [];
+    for (let i = 0; i < 25; i++) {
+      try {
+        return { tab: new Function(`const ${specName}=${specLit};\n${pre}const ${fiName}=${fiSrc};\nreturn ${wLit};`)(), consts: resolvidas };
+      } catch (e) {
+        const falta = (/^(\w[\w$]*) is not defined$/.exec(e.message) || [])[1];
+        if (!falta) throw e;
+        const v = num(falta);
+        if (!v) throw new Error("constante da postura nao resolvida: " + falta);
+        pre += `const ${falta}=${v};\n`; resolvidas.push(falta + "=" + v);
+      }
+    }
+    throw new Error("postura: resolucao de constantes nao convergiu");
+  }
+  let STANCE = null;
+  try {
+    const st = extractStances(src);
+    const arr = Object.values(st.tab);
+    STANCE = arr.map(v => ({
+      key: v.key, nome: v.name, words: v.words || null, voc: v.voc || null,
+      lv: v.minLevel ?? null, mana: v.mana ?? null, swap: v.swapMs ?? null,
+      spec: v.spec || null, virtue: !!v.virtue, desc: v.desc || null,
+      // efeito = o patch (stats diretos) + os campos proprios da postura
+      efeito: (() => { const SKIP = ["key","name","words","voc","minLevel","mana","swapMs","desc","patch","spec","virtue"];
+        const o = { ...(v.patch || {}) };
+        for (const [k, val] of Object.entries(v)) if (!SKIP.includes(k)) {
+          if (val && typeof val === "object" && !Array.isArray(val) && !Object.keys(val).length) continue;
+          if (val === 0) continue;
+          o[k] = val;
+        }
+        return Object.keys(o).length ? o : null; })(),
+    }));
+    const porVoc = {};
+    for (const s2 of STANCE) porVoc[s2.voc || "?"] = (porVoc[s2.voc || "?"] || 0) + 1;
+    console.log("postura:", STANCE.length, "|", Object.entries(porVoc).map(([k, v]) => k + " " + v).join(", "),
+      "| de spec:", STANCE.filter(s2 => s2.spec).map(s2 => s2.nome).join("/"));
+    console.log("  constantes resolvidas:", st.consts.join(" ") || "(nenhuma)");
+    const semDesc = STANCE.filter(s2 => !s2.desc).map(s2 => s2.nome);
+    if (semDesc.length) console.log("  sem descricao:", semDesc.join(", "));
+  } catch (e) { console.log("postura indisponivel:", e.message); }
+  tpl = tpl.replace("const STANCE = __STANCE__;", "const STANCE = " + JSON.stringify(STANCE) + ";");
+
   // ---- Ascensao (Mythical -> Celestial -> Cosmic) ----
   // Quais pecas aceitam, e quanto a arvore rift come da MESMA moeda. Tudo por
   // assinatura de conteudo; nome minificado nao serve de ancora (ver CODEX_SIG).
   function extractAscensao(src) {
     const pega = recortador(src);
     const sig = (re, i = 1) => { const m = re.exec(src); return m ? m[i] : null; };
+    const riftTail = /([\w$]+)=6,(?:[\w$]+=(?:\{[^{}]*\}|[^,;{}]+),)*?[\w$]+=40,[\w$]+=13,[\w$]+=500,[\w$]+=170,[\w$]+=1200,[\w$]+=400/.exec(src);
     const N = {
       Te:  sig(/([\w$]+)=\{"gold coin":\{value:1/),
       ia:  sig(/for\(const\[e,t\]of Object\.entries\(([\w$]+)\)\)\{const a=[\w$]+\[e\]/),
@@ -1044,12 +1170,19 @@ function diff(oldD, newD) {
       ake: sig(/([\w$]+)=\{"eldritch wand":4/),
       EU:  sig(/function ([\w$]+)\(e\)\{const t=e==="nm",a=t\?"rn_":"rh_"/),
       fEe: sig(/function ([\w$]+)\(\)\{const e=\[\.\.\.[\w$]+\("nm"\),\.\.\.[\w$]+\("hl"\)\]/),
-      O2:  sig(/([\w$]+)=[\w$]+\(\),[\w$]+=e=>[\w$]+\.find\(t=>t\.id===e\)/),
+      // a lista de nodes da rift. O jogo passou a declarar `{on:!1}` e o setter no meio
+      // da cadeia (10/2026), entao `X=f(),Y=e=>X.find(...)` nao e mais adjacente: ancora no
+      // `.find(t=>t.id===e)` seguido da funcao de moeda (CD), que anda junto com ele.
+      O2:  sig(/([\w$]+)\.find\(t=>t\.id===e\),[\w$]+=e=>e\.tier<[\w$]+\?"essence":"soul"/),
       CD:  sig(/([\w$]+)=e=>e\.tier<[\w$]+\?"essence":"soul"/),
       bEe: sig(/function ([\w$]+)\(e,t\)\{const a=Math\.min\(Math\.max\(0,t\),e\.maxRank\)/),
-      Eu:  sig(/([\w$]+)=6,[\w$]+=40,[\w$]+=13/),
-      // as 7 constantes de custo da rift vem num const so; pega o bloco inteiro
-      riftConst: sig(/([\w$]+=6,[\w$]+=40,[\w$]+=13,[\w$]+=500,[\w$]+=170,[\w$]+=1200,[\w$]+=400)/),
+      // as constantes de custo da rift vem num const so. O jogo METE membro novo no meio
+      // (11/2026 entrou `T0t={nm:5e6,hl:1e7}` entre o limiar e o custo), entao casar membro
+      // a membro quebra a cada deploy: ancora no RABO numerico (500/170/1200/400), que e
+      // distintivo, e recorta dali ate o `;`. Comeca no limiar, NAO no `const`: o primeiro
+      // membro da cadeia e o Pi, que ja entra por `ko` -- recortar junto redeclara e explode.
+      Eu:  riftTail ? riftTail[1] : null,
+      riftConst: riftTail ? src.slice(riftTail.index, src.indexOf(";", riftTail.index + riftTail[0].length)) : null,
       ko:  sig(/([\w$]+)=e=>\(\{physical:e,energy:e/),
     };
     const falta = Object.entries(N).filter(([, v]) => !v).map(([k]) => k);
