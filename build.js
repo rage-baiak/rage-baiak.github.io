@@ -237,8 +237,14 @@ function extractForge(src) {
   const doom = lit(at('[{kind:"doom",step:1'), stripGain);                   // zme
   const umbralWeapons = lit(at('[{key:"axe",crude:"crude umbral axe"'));     // eV
   const doomWeapons = lit(at('["inferniarch arbalest","inferniarch battleaxe"')); // wM
-  const tmIdx = src.search(/\{0:1,1:1\.5,2:2,3:3,4:4\.5,5:6\}/);
-  const tierMult = tmIdx >= 0 ? lit(tmIdx) : { 0: 1, 1: 1.5, 2: 2, 3: 3, 4: 4.5, 5: 6 };
+  // O anchor exigia que o literal TERMINASSE em `5:6}`. O jogo estendeu pra
+  // `...,6:8,7:10}` (Celestial e Cosmico) e o regex parou de casar -- e o fallback
+  // hardcoded entrava no lugar, servindo os 6 tiers velhos como se fossem o dado real.
+  // Fallback de valor e pior que falhar: parece certo. Ancora so no PREFIXO e deixa o
+  // lit() fechar o objeto, entao entrada nova entra sozinha; sem match, estoura.
+  const tmIdx = src.search(/\{0:1,1:1\.5,2:2,3:3,4:4\.5,5:6(?![\d.])/);
+  if (tmIdx < 0) throw new Error("forja: tabela tierMult da bancada nao encontrada");
+  const tierMult = lit(tmIdx);
 
   return {
     tier: { cost, ka },
@@ -604,10 +610,13 @@ function diff(oldD, newD) {
       if (conhecidos / pares.length > 0.7) { anc = pares; break; }
     }
     if (!anc) throw new Error("ancoras de attunement nao encontradas");
+    // sem fallback de valor: numero plausivel chutado aqui vira dado errado invisivel
     const mCap = src.match(/\]\],\w+=([\de.+]+),\w+=\(/);
-    const cap = mCap ? Number(mCap[1]) : 1000;
+    if (!mCap) throw new Error("attunement: teto (cap) nao encontrado");
+    const cap = Number(mCap[1]);
     const mPlus = src.match(/recPlus:([\d.]+)/);
-    const plus = mPlus ? Number(mPlus[1]) : 0.05;
+    if (!mPlus) throw new Error("attunement: bonus do hell (recPlus) nao encontrado");
+    const plus = Number(mPlus[1]);
     const pts = anc.map(([id, rec]) => ({ lvl: lvl[id] ?? 1, rec })).sort((a, b) => a.lvl - b.lvl);
     // copia fiel da interpolacao do bundle
     const rec = lv => {
