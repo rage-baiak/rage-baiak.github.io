@@ -295,6 +295,12 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .hchip.charm{color:var(--accent);border-color:color-mix(in srgb,var(--accent) 45%,transparent);background:color-mix(in srgb,var(--accent) 10%,transparent)}
 .hchip b{font-weight:800;font-variant-numeric:tabular-nums;margin-left:5px}
 .recrow .rlbl.ch{color:var(--accent)}
+.recrow .rlbl.ef{color:var(--rc)}
+.effbar{display:inline-block;width:40px;height:5px;border-radius:3px;background:color-mix(in srgb,var(--muted) 28%,transparent);margin:0 5px;vertical-align:middle;overflow:hidden}
+.effbar i{display:block;height:100%;border-radius:3px}
+.effbar i.ex{background:var(--rc)}
+.effbar i.lo{background:var(--accent)}
+.effwarn{font-style:normal;color:var(--muted);font-weight:700;margin-left:2px;cursor:help}
 .charmchip{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--accent);
   border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:7px;padding:2px 8px;white-space:nowrap;opacity:.72}
 .charmchip.top{opacity:1;background:color-mix(in srgb,var(--accent) 12%,transparent);border-color:color-mix(in srgb,var(--accent) 50%,transparent)}
@@ -595,6 +601,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
   </div>
 
   <div class="lvfilter" id="lvfilter"></div>
+  <div class="lvfilter" id="hordfilter"></div>
   <div class="lvfilter" id="slotfilter"></div>
   <div class="lvfilter" id="vocfilter"></div>
   <div class="lvfilter" id="eqlvfilter"></div>
@@ -655,6 +662,7 @@ const ASC = __ASC__;
 const SPEC = __SPEC__;
 const STANCE = __STANCE__;
 const PROF = __PROF__;
+const EFF = __EFF__;
 // guerra: dossie da guild adversaria (contas -> chars -> atributos/resistencias)
 const WAR = __WAR__;
 // atributos rolaveis do item (id -> bonus) + constantes da forja, do bundle
@@ -1152,6 +1160,30 @@ function expedCard(e,qq,open){
 // Attunement exigido pela hunt nos modos nightmare/hell. Abaixo do valor, o dano
 // que voce causa cai proporcionalmente ate o piso de 10%. Cada peca Celestial da
 // +35; a Cosmica da os mesmos +35 e mais +35 no hell.
+// ---- Eficiencia da hunt (conta do proprio jogo) ----
+// Os dois indices sao RELATIVOS: 100 = a melhor hunt do jogo naquele eixo.
+// O de loot sai do preco de item numa tabela de ~200 entradas; o que esta fora
+// conta zero, entao e PISO, nao estimativa. O `unk` do jogo conta quantos ficaram
+// de fora naquela hunt, e isso vai pro titulo em vez de ficar escondido.
+function effRow(h){
+  const e = EFF && EFF.h && EFF.h[h.id];
+  if(!e) return "";
+  const barra = (v,cls) => `<span class="effbar"><i class="${cls}" style="width:${Math.max(2,Math.min(100,v))}%"></i></span>`;
+  const cobertura = EFF.cob ? Math.round(EFF.cob.com/(EFF.cob.com+EFF.cob.sem)*100) : null;
+  const lootTit = `Gold por kill contando só o que o jogo precifica`
+    + (e.unk ? ` — ${e.unk} ${e.unk===1?"item":"itens"} do loot desta hunt ficaram de fora` : "")
+    + (cobertura!=null ? `. No geral só ${cobertura}% do loot das hunts tem preço, então é piso.` : "");
+  return `<div class="recrow"><span class="rlbl ef">📊 eficiência</span>`
+    +`<span class="hchip att ${e.lean==="exp"?"nm":"hl"}" title="Comparado à média das hunts, esta rende mais ${e.lean==="exp"?"experiência":"loot"}.">`
+      +`puxa pra <b>${e.lean==="exp"?"exp":"loot"}</b></span>`
+    +`<span class="hchip att" title="Índice de exp por HP efetivo. 100 = a melhor hunt do jogo.">exp ${barra(e.ex,"ex")}<b>${e.ex}</b></span>`
+    +`<span class="hchip att" title="${esc(lootTit)}">loot ${barra(e.lo,"lo")}<b>${e.lo}</b>${e.unk?`<i class="effwarn" title="${e.unk} itens sem preço">*</i>`:""}</span>`
+    +`<span class="hchip att" title="Experiência média por kill, ponderada pelos bichos da hunt.">exp/kill <b>${nf(e.epk)}</b></span>`
+    +`<span class="hchip att" title="${esc(lootTit)}">gold/kill <b>${nf(e.gpk)}</b>${e.unk?"*":""}</span>`
+    +(e.est && h.lv && e.est!==h.lv
+      ? `<span class="hchip att" title="Level que a conta de combate do jogo sugere, contra o level ${h.lv} que a hunt exige.">lvl sugerido <b>${nf(e.est)}</b></span>` : "")
+    +`<span class="hnote">por HP efetivo · 100 = melhor do jogo${e.unk?" · * loot é piso":""}</span></div>`;
+}
 function attRow(h){
   if(!h.rec) return "";
   const pecas=n=>Math.ceil(n/35);
@@ -1189,6 +1221,7 @@ function huntCard(h,qq,open){
     +`<span class="meta">lv ${h.lv}+ · <span class="chip">${h.mons.length}</span> bichos</span></summary>`
     +`<div class="body hbody"><div class="rec">`
     +attRow(h)
+    +effRow(h)
     +`<div class="recrow"><span class="rlbl wk">⚔ arma / imbu</span>${arma}</div>`
     +`<div class="recrow"><span class="rlbl rs">🛡 proteção</span>${def}</div>`
     
@@ -2162,6 +2195,10 @@ function warCard(a,qq,open,rank){
 // sem passiva e sem magia. A wiki marca isso em vez de esconder -- quem le precisa
 // saber que a escolha existe no codigo mas nao entrega o que o texto promete.
 const SQVOC={knight:"Knight",druid:"Druid",sorcerer:"Sorcerer",paladin:"Paladin",monk:"Monk"};
+// ordem da aba Hunts. O indice de eficiencia so serve pra comparar, e comparar exige
+// ordenar -- sem isto o numero fica preso dentro de cada card.
+const HORD=[["nível",""],["mais exp","ex"],["mais loot","lo"]];
+let huntOrd=0;
 // rotulos das chaves de passiva. elementDmgPct e aninhado ({earth:10}).
 const SQPAS={atkPct:"ataque",spellDmgPct:"dano de magia",spellHealPct:"cura de magia",
   attackSpeedPct:"velocidade de ataque",critChancePct:"chance de crítico",critDmgPct:"dano crítico",
@@ -2468,6 +2505,10 @@ function render(){
   } else if(mode==="hunt"){
     const [,lo,hiv]=LVB[huntLv];
     const res = HUNTS.filter(h=>(h.lv>=lo&&h.lv<=hiv) && (!qq || norm(h.name).includes(qq) || h.mons.some(x=>norm(x).includes(qq))));
+    const ordK=HORD[huntOrd][1];
+    // hunt sem eficiencia extraida vai pro FIM em vez de virar 0 e parecer a pior
+    if(ordK) res.sort((a,b)=>{ const ea=EFF&&EFF.h&&EFF.h[a.id], eb=EFF&&EFF.h&&EFF.h[b.id];
+      if(!ea&&!eb) return 0; if(!ea) return 1; if(!eb) return -1; return eb[ordK]-ea[ordK]; });
     open = raw && res.length<=8 ? " open":"";
     cards = res.map(h=>()=>huntCard(h,qq,open));
     noun = res.length===1?"hunt":"hunts";
@@ -2553,6 +2594,7 @@ const lvfilter=document.getElementById("lvfilter");
 lvfilter.innerHTML=LVB.map((b,i)=>`<button class="lvb" data-lv="${i}" aria-pressed="${i===0}">${b[0]}</button>`).join("");
 function setLv(i){ huntLv=i; [...lvfilter.children].forEach((c,j)=>c.setAttribute("aria-pressed",j===i)); }
 lvfilter.addEventListener("click",ev=>{ const b=ev.target.closest(".lvb"); if(!b)return; setLv(+b.getAttribute("data-lv")); limit=CHUNK; render(); });
+const hordfilter=document.getElementById("hordfilter");
 
 function wireFilter(el, opts, lbl, setState){
   el.innerHTML=`<span class="lvlbl">${lbl}</span>`+opts.map((b,i)=>`<button class="lvb" data-i="${i}" aria-pressed="${i===0}">${b[0]}</button>`).join("");
@@ -2571,6 +2613,7 @@ wireFilter(document.getElementById("eqelfilter"), EQEL, "elem", i=>equipEl=i);
 wireFilter(document.getElementById("eqelmodefilter"), EQELMODE, "def/atk", i=>equipElMode=i);
 const mvocfilter=document.getElementById("mvocfilter");
 const mtypefilter=document.getElementById("mtypefilter");
+wireFilter(hordfilter, HORD, "ordem", i=>huntOrd=i);
 wireFilter(mvocfilter, MVOC, "voc", i=>{ magiaVoc=i; stVis(); });
 wireFilter(mtypefilter, MELEM, "elem", i=>magiaEl=i);
 // inputs de resistencia elemental do alvo (default 100 = dano normal)
@@ -2604,7 +2647,7 @@ function stVis(){
 function setMode(m){
   mode=m; limit=CHUNK;
   [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["casket",mCasket],["codex",mCodex],["spec",mSpec],["post",mPost],["prof",mProf],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
-  lvfilter.style.display = m==="hunt" ? "flex" : "none";
+  lvfilter.style.display = hordfilter.style.display = m==="hunt" ? "flex" : "none";
   slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = document.getElementById("eqelfilter").style.display = document.getElementById("eqelmodefilter").style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
   spellstats.style.display = m==="magia" ? "flex" : "none";

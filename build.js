@@ -1255,6 +1255,88 @@ function diff(oldD, newD) {
   } catch (e) { console.log("proficiencia indisponivel:", e.message); }
   tpl = tpl.replace("const PROF = __PROF__;", "const PROF = " + JSON.stringify(PROF) + ";");
 
+  // ---- Eficiencia de hunt (exp/gold por HP efetivo) ----
+  // O jogo tem a conta pronta: effHp = hp inflado pela auto-cura, dps das abilities,
+  // ecr = effHp^.4 * dps^.6, e exp/gold por kill ponderado pelo peso de cada bicho.
+  // Reimplementar isso erraria em silencio, entao RODA a funcao do bundle, resolvendo
+  // o fecho pelo proprio erro do eval (mesmo padrao da fabrica de postura).
+  // ATENCAO ao gold: ele vem da tabela de VALOR de item, que tem ~200 entradas. Item
+  // fora dela conta ZERO, e o jogo conta quantos ficaram de fora em `unknownLoot`.
+  // Por isso o indice de loot sai junto com essa contagem -- sem ela o numero mente.
+  function extractEff(src) {
+    const bal = (str, i) => { let d = 0; for (let j = i; j < str.length; j++) { const c = str[j];
+      if (c === "{" || c === "[") d++; else if (c === "}" || c === "]") { d--; if (!d) return str.slice(i, j + 1); } }
+      throw new Error("literal desbalanceado"); };
+    const decl = id => {
+      const rx = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      let m = new RegExp("function " + rx + "\\(").exec(src);
+      if (m) { const b = src.indexOf("{", src.indexOf(")", m.index)); return "function " + id + src.slice(src.indexOf("(", m.index), b) + bal(src, b); }
+      m = new RegExp("(?<![\\w$])" + rx + "=").exec(src);
+      if (!m) return null;
+      const pos = m.index + id.length + 1, c = src[pos];
+      // `let` e nao `const`: parte do fecho e cache mutavel (let x=null) e o jogo reatribui
+      if (c === "{" || c === "[") return "let " + id + "=" + bal(src, pos);
+      let d = 0;
+      for (let j = pos; j < src.length; j++) {
+        const ch = src[j];
+        if ("{[(".includes(ch)) d++; else if ("}])".includes(ch)) d--;
+        else if (d === 0 && (ch === ";" || (ch === "," && /^[A-Za-z_$][\w$]*=/.test(src.slice(j + 1, j + 40)))))
+          return "let " + id + "=" + src.slice(pos, j);
+      }
+      return null;
+    };
+    // a funcao: ancora nos campos que ela emite, nao no nome minificado
+    const fi = src.search(/function [A-Za-z_$][\w$]*\(\)\{const [\w$]+=\[\];for\(const [\w$]+ of [\w$]+\)\{const [\w$]+=Array\.isArray\([\w$]+\.weights\)/);
+    if (fi < 0) throw new Error("funcao de eficiencia nao encontrada");
+    const fNome = /function ([A-Za-z_$][\w$]*)\(/.exec(src.slice(fi))[1];
+    let pre = "", vistos = [];
+    for (let i = 0; i < 80; i++) {
+      try {
+        const r = new Function(pre + "\nreturn " + fNome + "();")();
+        return { res: r, deps: vistos };
+      } catch (e) {
+        const falta = (/^(\w[\w$]*) is not defined$/.exec(e.message)
+          || /^Cannot access '(\w[\w$]*)' before initialization$/.exec(e.message) || [])[1];
+        if (!falta) throw new Error("fecho da eficiencia: " + e.message);
+        const d = decl(falta);
+        if (!d) throw new Error("declaracao nao encontrada no bundle: " + falta);
+        // PREPEND: cada identificador novo e dependencia do que ja esta no fecho,
+        // entao appendar colocava o uso antes da declaracao (TDZ).
+        if (vistos.includes(falta)) pre = pre.replace(d + ";\n", "");
+        pre = d + ";\n" + pre;
+        if (!vistos.includes(falta)) vistos.push(falta);
+      }
+    }
+    throw new Error("fecho da eficiencia nao convergiu");
+  }
+  let EFF = null;
+  try {
+    const { res, deps } = extractEff(src);
+    // cobertura da tabela de valor sobre o loot das hunts: sem isso o gold/kill mente
+    const vIdx = src.search(/\{"gold coin":\{value:1,/);
+    const valor = vIdx >= 0 ? (0, eval)("(" + matchBalanced(src, vIdx) + ")") : {};
+    let com = 0, sem = 0;
+    for (const h of hunts) for (const nome of h.mons) {
+      const m = data.find(x => x.n === nome);
+      if (!m) continue;
+      for (const d of (m.l || [])) (valor[d[0]] ? com++ : sem++);
+    }
+    EFF = { h: {}, valorados: Object.keys(valor).length, cob: { com, sem } };
+    for (const [id, v] of Object.entries(res)) EFF.h[id] = {
+      ex: Math.round(v.expIdx), lo: Math.round(v.lootIdx),
+      epk: Math.round(v.expPerKill), gpk: Math.round(v.goldPerKill),
+      lean: v.lean, est: v.estLevel, unk: v.unknownLoot,
+    };
+    const lean = {};
+    for (const v of Object.values(EFF.h)) lean[v.lean] = (lean[v.lean] || 0) + 1;
+    console.log("eficiencia de hunt:", Object.keys(EFF.h).length, "hunts |",
+      Object.entries(lean).map(([k, v]) => k + " " + v).join(", "),
+      "| fecho de", deps.length, "identificadores");
+    console.log("  tabela de valor:", EFF.valorados, "itens | loot das hunts com preco:",
+      com + "/" + (com + sem), "(" + Math.round(com / (com + sem) * 100) + "%) -> gold/kill e PISO, nao estimativa");
+  } catch (e) { console.log("eficiencia de hunt indisponivel:", e.message); }
+  tpl = tpl.replace("const EFF = __EFF__;", "const EFF = " + JSON.stringify(EFF) + ";");
+
   // ---- Ascensao (Mythical -> Celestial -> Cosmic) ----
   // Quais pecas aceitam, e quanto a arvore rift come da MESMA moeda. Tudo por
   // assinatura de conteudo; nome minificado nao serve de ancora (ver CODEX_SIG).
