@@ -589,6 +589,7 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
       <button class="mode" id="mCodex" aria-pressed="false">📖 Codex</button>
       <button class="mode" id="mSpec" aria-pressed="false">🎓 Especialização</button>
       <button class="mode" id="mPost" aria-pressed="false">🧘 Postura</button>
+      <button class="mode" id="mProf" aria-pressed="false">⚒️ Proficiência</button>
       <button class="mode" id="mWar" aria-pressed="false">⚔️ Guerra</button>
     </div>
   </div>
@@ -653,6 +654,7 @@ const CODEX = __CODEX__;
 const ASC = __ASC__;
 const SPEC = __SPEC__;
 const STANCE = __STANCE__;
+const PROF = __PROF__;
 // guerra: dossie da guild adversaria (contas -> chars -> atributos/resistencias)
 const WAR = __WAR__;
 // atributos rolaveis do item (id -> bonus) + constantes da forja, do bundle
@@ -706,7 +708,7 @@ const qty = mx => mx>1 ? "1–"+mx : "";
 
 let mode="mon";
 const q=document.getElementById("q"), list=document.getElementById("list"), count=document.getElementById("count");
-const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), mExped=document.getElementById("mExped"), mCasket=document.getElementById("mCasket"), mSpec=document.getElementById("mSpec"), mPost=document.getElementById("mPost"), mWar=document.getElementById("mWar"), legend=document.getElementById("legend");
+const mMon=document.getElementById("mMon"), mBoss=document.getElementById("mBoss"), mHunt=document.getElementById("mHunt"), mMagia=document.getElementById("mMagia"), mEquip=document.getElementById("mEquip"), mItem=document.getElementById("mItem"), mExped=document.getElementById("mExped"), mCasket=document.getElementById("mCasket"), mSpec=document.getElementById("mSpec"), mPost=document.getElementById("mPost"), mProf=document.getElementById("mProf"), mWar=document.getElementById("mWar"), legend=document.getElementById("legend");
 
 const ELPT={physical:"Físico",fire:"Fogo",ice:"Gelo",earth:"Terra",energy:"Energia",holy:"Sagrado",death:"Morte",healing:"Cura"};
 const byName={}; for(const m of M) byName[norm(m.n)]=m;
@@ -2245,6 +2247,49 @@ function postMatch(st,qq){
   return norm(st.nome).includes(qq)||norm(st.words||"").includes(qq)||norm(st.voc||"").includes(qq)
     ||norm(SQVOC[st.voc]||"").includes(qq)||norm(st.desc||"").includes(qq)||norm(st.spec||"").includes(qq);
 }
+// ---- Proficiencia de arma ----
+const nfB = n => n>=1e9 ? +(n/1e9).toFixed(n%1e9?1:0)+"B" : n>=1e6 ? +(n/1e6).toFixed(n%1e6?1:0)+"M" : nf(n);
+function profHeader(){
+  const c=PROF.cfg, somaXp=c.slotXp.reduce((a,b)=>a+b,0), somaGold=c.refGold.reduce((a,b)=>a+b,0);
+  return `<div class="fsec"><h2>Proficiência de arma</h2>`
+    +`<p class="fp">Cada arma tem a <b>própria árvore de perks</b>, e ela só evolui com <b>essa arma na mão</b>. `
+    +`Trocar de arma não leva o progresso — a Stellar, por exemplo, começa do zero mesmo que a Moonsilver esteja no máximo.</p>`
+    +`<p class="fp">A cada nível da árvore você escolhe <b>um</b> dos perks daquela linha. Depois dá pra `
+    +`<b>moldar</b> até ${c.maxMold} deles (no máximo ${c.maxCol} colunas) e <b>refinar</b> cada um do nível 0 ao ${c.maxPerk}.</p>`
+    +`<div class="fgrid">`
+      +`<div class="fcard"><h3>Abrir os ${c.maxMold} slots de molde</h3>`
+        +`<p><b>${nfB(somaXp)}</b> de xp de proficiência no total.</p>`
+        +`<ul>`+c.slotXp.map((x,i)=>`<li>slot ${i+1}: <b>${nfB(x)}</b> de xp · ${nf(c.slotDust[i]||0)} dust</li>`).join("")+`</ul></div>`
+      +`<div class="fcard"><h3>Refinar 1 perk do 0 ao ${c.maxPerk}</h3>`
+        +`<p><b>${nfB(somaGold)}</b> de gold e <b>${nf(c.refDust.reduce((a,b)=>a+b,0))}</b> de dust.</p>`
+        +`<ul><li>os ${c.maxMold} perks no máximo: <b>${nfB(somaGold*c.maxMold)}</b> de gold</li>`
+        +`<li>remoldar: ${nfB(c.remoldBase)} + ${nfB(c.remoldPorNivel)} por nível, ${c.remoldOpc} opções</li>`
+        +`<li>limpar: ${nfB(c.limpar)}</li>`
+        +(PROF.orb?`<li><b>${esc(PROF.orb)}</b>: 1 leva um perk direto ao máximo</li>`:"")+`</ul></div>`
+    +`</div>`
+    +`<p class="fp rnote">O <b>quanto de xp cada kill dá</b> não existe no cliente — é calculado no servidor. `
+    +`Os degraus acima são os do jogo; o tempo pra chegar neles só sai medindo in-game. `
+    +`O texto de cada perk abaixo é o do próprio jogo, em inglês, gerado pela função que ele usa na janela de Proficiência.</p>`
+    +`</div>`;
+}
+function profCard(w,qq,open){
+  const n=w.t.length;
+  return `<details${open}><summary><span class="s-lead"><span class="name">${hl(w.n,qq)}</span></span>`
+    +`<span class="meta"><span class="chip">${n}</span> ${n===1?"nível":"níveis"} de perk</span></summary>`
+    +`<div class="body"><div class="mgtwrap"><table class="mgt"><thead><tr>`
+    +`<th>Nível</th><th class="thl">Escolha um</th></tr></thead><tbody>`
+    +w.t.map((lv,i)=>`<tr><td>${i+1}</td><td class="thl">`
+      +(lv.filter(Boolean).length
+        ? lv.filter(Boolean).map(txt=>`<span class="rchip wk">${esc(txt)}</span>`).join(" ")
+        : `<span class="mut">o jogo não descreve</span>`)
+      +`</td></tr>`).join("")
+    +`</tbody></table></div></div></details>`;
+}
+function profMatch(w,qq){
+  if(!qq) return true;
+  if(norm(w.n).includes(qq)) return true;
+  return w.t.some(lv=>lv.some(t=>t&&norm(t).includes(qq)));
+}
 function postHTML(qq){
   if(!STANCE||!STANCE.length)
     return `<div class="fsec"><h2>Postura</h2><p class="fp">A extração da postura não casou neste build — o jogo mexeu na tabela. `
@@ -2407,7 +2452,7 @@ function render(){
     return;
   }
   const raw=q.value.trim(), qq=norm(raw);
-  let cards=[], noun="", open="";
+  let cards=[], noun="", open="", header="";
 
   if(mode==="mon" || mode==="boss"){
     const wantBoss = mode==="boss";
@@ -2474,6 +2519,16 @@ function render(){
     list.innerHTML = total ? out : `<div class="empty">Nada encontrado pra “${esc(raw)}”.</div>`;
     count.textContent = total ? `${total} magias` : "";
     return;
+  } else if(mode==="prof"){
+    if(!PROF || !PROF.armas || !PROF.armas.length){
+      list.innerHTML=`<div class="fsec"><h2>Proficiência de arma</h2><p class="fp">A extração da proficiência não casou neste build — o jogo mexeu na tabela ou no formatador de perk. Melhor não mostrar nada do que mostrar perk errado.</p></div>`;
+      count.textContent=""; return;
+    }
+    header = profHeader();
+    const res = PROF.armas.filter(w=>profMatch(w,qq));
+    open = raw && res.length<=4 ? " open":"";
+    cards = res.map(w=>()=>profCard(w,qq,open));
+    noun = res.length===1?"arma":"armas";
   } else {
     const res = ITEMS.filter(it=>!qq || norm(it).includes(qq));
     open = raw && res.length<=6 ? " open":"";
@@ -2488,7 +2543,7 @@ function render(){
   if(limit>n) limit=n<=CHUNK?CHUNK:limit;
   const html = cards.slice(0,limit).map(fn=>fn()).join("");
   const more = n>limit ? `<button class="more" id="more">mostrar mais (+${Math.min(CHUNK,n-limit)})</button>` : "";
-  list.innerHTML = html ? html+more : `<div class="empty">Nada encontrado pra “${esc(raw)}”.</div>`;
+  list.innerHTML = header + (html ? html+more : `<div class="empty">Nada encontrado pra “${esc(raw)}”.</div>`);
   count.textContent = n? `${n} ${noun}${n>limit?` · mostrando ${limit}`:""}` : "";
   const mb=document.getElementById("more");
   if(mb) mb.onclick=()=>{ limit+=CHUNK; render(); };
@@ -2548,7 +2603,7 @@ function stVis(){
 
 function setMode(m){
   mode=m; limit=CHUNK;
-  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["casket",mCasket],["codex",mCodex],["spec",mSpec],["post",mPost],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
+  [["mon",mMon],["boss",mBoss],["hunt",mHunt],["magia",mMagia],["equip",mEquip],["item",mItem],["forja",mForja],["exped",mExped],["casket",mCasket],["codex",mCodex],["spec",mSpec],["post",mPost],["prof",mProf],["war",mWar]].forEach(([k,b])=>b.setAttribute("aria-pressed", m===k));
   lvfilter.style.display = m==="hunt" ? "flex" : "none";
   slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = document.getElementById("eqelfilter").style.display = document.getElementById("eqelmodefilter").style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
@@ -2556,7 +2611,7 @@ function setMode(m){
   if(m==="magia") stVis();
   document.getElementById("spellres").style.display = m==="magia" ? "flex" : "none";
   spellnote.style.display = m==="magia" ? "block" : "none";
-  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war"||m==="exped"||m==="casket"||m==="spec"||m==="post") ? "none" : "flex";
+  legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war"||m==="exped"||m==="casket"||m==="spec"||m==="post"||m==="prof") ? "none" : "flex";
   q.style.display = m==="forja" ? "none" : "";
   q.placeholder = m==="hunt" ? "Buscar hunt (ex: dragon, hydra)…"
     : m==="magia" ? "Buscar magia (nome ou words: exori, exura…)…"
@@ -2568,6 +2623,7 @@ function setMode(m){
     : m==="codex" ? "Buscar cadeia ou item exigido (ex: troll green)…"
     : m==="spec" ? "Buscar especialização, vocação ou magia…"
     : m==="post" ? "Buscar postura, palavras ou vocação…"
+    : m==="prof" ? "Buscar arma ou efeito de perk (ex: sanguine, life leech)…"
     : m==="boss" ? "Buscar boss (ex: deathstrike, ferumbras)…"
     : "Buscar monstro (ex: dragon, demon)…";
   render();
@@ -2584,6 +2640,7 @@ mExped.onclick=()=>setMode("exped");
 mCasket.onclick=()=>setMode("casket");
 mSpec.onclick=()=>setMode("spec");
 mPost.onclick=()=>setMode("post");
+mProf.onclick=()=>setMode("prof");
 mWar.onclick=()=>setMode("war");
 if(!WAR||!WAR.meta||!WAR.contas.length) mWar.style.display="none";
 if(!EXPED||!EXPED.length) mExped.style.display="none";

@@ -1170,6 +1170,91 @@ function diff(oldD, newD) {
   } catch (e) { console.log("postura indisponivel:", e.message); }
   tpl = tpl.replace("const STANCE = __STANCE__;", "const STANCE = " + JSON.stringify(STANCE) + ";");
 
+  // ---- Proficiencia de arma (arvore de perk por arma) ----
+  // Cada arma tem a propria arvore; evolui so com a arma equipada. O campo `t` de cada
+  // opcao NAO indexa a tabela de atributos de item -- indexa um enum PROPRIO de 33
+  // entradas (ATTACK_DAMAGE, SKILLID_BONUS, CRIT_EXTRA_AUTOATTACK...). Rotular pelo
+  // ATTRS.tab dava texto plausivel e TODO errado ("Armor +1" onde era "+1 melee
+  // fighting"). Entao aqui se RODA o formatador do proprio jogo, que monta a frase
+  // com skill, elemento e magia resolvidos.
+  function extractProf(src) {
+    const bal = (str, i) => { let d = 0; for (let j = i; j < str.length; j++) { const c = str[j];
+      if (c === "{" || c === "[") d++; else if (c === "}" || c === "]") { d--; if (!d) return str.slice(i, j + 1); } }
+      throw new Error("literal desbalanceado"); };
+
+    // 1) o formatador. Ancora numa frase que ele monta, nao no nome minificado.
+    const fi = src.indexOf('`+${n} defence modifier`');
+    if (fi < 0) throw new Error("formatador de perk nao encontrado");
+    const fStart = src.lastIndexOf("function ", fi);
+    const fNome = /function ([A-Za-z_$][\w$]*)\(/.exec(src.slice(fStart))[1];
+    const fSrc = src.slice(fStart, src.indexOf("{", fStart) + bal(src, src.indexOf("{", fStart)).length);
+
+    // 2) as dependencias livres dele. Tira string e template ANTES de varrer: o corpo e
+    // cheio de frase em ingles ("attack", "bosses") que passaria por identificador.
+    // Trocar o template inteiro por "``" apagava os identificadores interpolados junto
+    // com a prosa (foi assim que o OLe sumiu). Mantem o que esta dentro de ${...} e
+    // joga fora so o texto, que e o que gerava identificador falso ("attack", "bosses").
+    const semTexto = fSrc
+      .replace(/`((?:[^`\\]|\\.)*)`/g, (_, dentro) =>
+        "(" + [...dentro.matchAll(/\$\{([^}]*)\}/g)].map(x => x[1]).join(",") + ")")
+      .replace(/"(?:[^"\\]|\\.)*"/g, '""').replace(/'(?:[^'\\]|\\.)*'/g, "''");
+    const LOCAIS = new Set(["function","return","case","switch","break","const","let","var","if","else","default",
+      "new","typeof","void","true","false","null","undefined","String","Math","Number","Object","Array",
+      fNome, "e","t","a","n","o","r","s","l","c","d","u","h","p","f","g","b","v","m","k"]);
+    const deps = [...new Set([...semTexto.matchAll(/(?<![\w$.])([A-Za-z_$][\w$]*)(?![\w$])/g)].map(m => m[1]))]
+      .filter(x => !LOCAIS.has(x));
+    let pre = "";
+    const naoResolvido = [];
+    for (const id of deps) {
+      const rx = id.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      let m = new RegExp("(?<![\\w$])" + rx + "=(\\{|\\[)").exec(src);
+      if (m) { pre += "const " + id + "=" + bal(src, src.indexOf(m[1], m.index)) + ";\n"; continue; }
+      m = new RegExp("(?<![\\w$])" + rx + "=(\\w+=>[^,;]+?)(?=,[A-Za-z_$][\\w$]*=|;)").exec(src);
+      if (m) { pre += "const " + id + "=" + m[1] + ";\n"; continue; }
+      m = new RegExp("function " + rx + "\\(").exec(src);
+      if (m) { const b = src.indexOf("{", src.indexOf(")", m.index)); pre += "function " + id + src.slice(src.indexOf("(", m.index), b) + bal(src, b) + "\n"; continue; }
+      naoResolvido.push(id);
+    }
+    if (naoResolvido.length) throw new Error("dependencia do formatador nao resolvida: " + naoResolvido.join(", "));
+    const fmt = new Function(pre + fSrc + ";return " + fNome + ";")();
+
+    // 3) a tabela de arvores e a config
+    const tIdx = src.search(/[A-Za-z_$][\w$]*=\{\d+:\{id:\d+,name:"[^"]+",levels:\[\[/);
+    if (tIdx < 0) throw new Error("tabela de arvores de proficiencia nao encontrada");
+    const tab = (0, eval)("(" + bal(src, src.indexOf("{", tIdx)) + ")");
+    const cIdx = src.search(/\{maxPerkLevel:\d+/);
+    if (cIdx < 0) throw new Error("config de proficiencia nao encontrada");
+    const cfg = (0, eval)("(" + bal(src, cIdx) + ")");
+    const mOrb = /([A-Za-z_$][\w$]*)="lunar ascension orb"/.exec(src);
+
+    const armas = Object.values(tab).map(w => ({
+      n: w.name,
+      t: (w.levels || []).map(lv => lv.map(o => { const txt = fmt(o); return txt && txt !== "—" ? txt : null; })),
+    }));
+    const semTxt = armas.reduce((a, w) => a + w.t.reduce((b, lv) => b + lv.filter(x => !x).length, 0), 0);
+    const opcoes = armas.reduce((a, w) => a + w.t.reduce((b, lv) => b + lv.length, 0), 0);
+    return { armas, opcoes, semTxt, orb: mOrb ? "lunar ascension orb" : null, cfg: {
+      maxPerk: cfg.maxPerkLevel, maxMold: cfg.maxShapedPerks, maxCol: cfg.maxShapedColumns,
+      slotXp: cfg.slotTrailXp, slotDust: cfg.slotDust,
+      refDust: cfg.refineDust, refGold: cfg.refineGold,
+      remoldBase: cfg.reshapeGoldBase, remoldPorNivel: cfg.reshapeGoldPerLevel,
+      remoldOpc: cfg.reshapeOptions, limpar: cfg.clearGold,
+    } };
+  }
+  let PROF = null;
+  try {
+    PROF = extractProf(src);
+    const niv = {};
+    for (const w of PROF.armas) niv[w.t.length] = (niv[w.t.length] || 0) + 1;
+    console.log("proficiencia:", PROF.armas.length, "armas |",
+      PROF.armas.reduce((a, w) => a + w.t.length, 0), "niveis |", PROF.opcoes, "opcoes de perk |",
+      Object.entries(niv).sort((a, b) => +a[0] - +b[0]).map(([k, v]) => k + "niv x" + v).join(", "));
+    console.log("  molde: " + PROF.cfg.maxMold + " slots, " + (PROF.cfg.slotXp.reduce((a, b) => a + b, 0) / 1e6) + "M de xp |"
+      + " refino 0->" + PROF.cfg.maxPerk + ": " + (PROF.cfg.refGold.reduce((a, b) => a + b, 0) / 1e9) + "B de gold por perk");
+    if (PROF.semTxt) console.log("  opcoes sem texto do jogo:", PROF.semTxt);
+  } catch (e) { console.log("proficiencia indisponivel:", e.message); }
+  tpl = tpl.replace("const PROF = __PROF__;", "const PROF = " + JSON.stringify(PROF) + ";");
+
   // ---- Ascensao (Mythical -> Celestial -> Cosmic) ----
   // Quais pecas aceitam, e quanto a arvore rift come da MESMA moeda. Tudo por
   // assinatura de conteudo; nome minificado nao serve de ancora (ver CODEX_SIG).
