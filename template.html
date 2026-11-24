@@ -603,14 +603,18 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
   <div class="lvfilter" id="mvocfilter"></div>
   <div class="lvfilter" id="mtypefilter"></div>
   <div class="spellstats" id="spellstats">
-    <label>lvl <input id="stLvl" type="number" min="1" value="100" inputmode="numeric"></label>
-    <label>magic <input id="stMag" type="number" min="0" value="50" inputmode="numeric"></label>
-    <label>dist <input id="stDist" type="number" min="0" value="50" inputmode="numeric"></label>
-    <label>melee <input id="stMelee" type="number" min="0" value="50" inputmode="numeric"></label>
-    <label title="% dano/cura de magia do teu gear/build/boosts">% mag <input id="stBonus" type="number" min="0" value="0" inputmode="numeric"></label>
+    <label data-voc="*">lvl <input id="stLvl" type="number" min="1" value="100" inputmode="numeric"></label>
+    <label data-voc="*">magic <input id="stMag" type="number" min="0" value="50" inputmode="numeric"></label>
+    <label data-voc="paladin" title="distance fighting — a skill das magias de paladin">dist <input id="stDist" type="number" min="0" value="50" inputmode="numeric"></label>
+    <label data-voc="knight" title="sword/axe/club — a skill das magias de knight">melee <input id="stMelee" type="number" min="0" value="50" inputmode="numeric"></label>
+    <label data-voc="monk" title="fist fighting — a skill das magias de monk">fist <input id="stFist" type="number" min="0" value="50" inputmode="numeric"></label>
+    <label data-voc="knight paladin monk" title="o Atk da arma equipada (nao a skill)">atk arma <input id="stAtk" type="number" min="0" value="50" inputmode="numeric"></label>
+    <label data-voc="knight" title="shielding — só Shield Bash e Shield Slam usam">shielding <input id="stShield" type="number" min="0" value="50" inputmode="numeric"></label>
+    <label data-voc="knight" title="Def do escudo equipado — só Shield Bash e Shield Slam usam">def escudo <input id="stDef" type="number" min="0" value="30" inputmode="numeric"></label>
+    <label data-voc="*" title="% dano/cura de magia do teu gear/build/boosts">% mag <input id="stBonus" type="number" min="0" value="0" inputmode="numeric"></label>
   </div>
   <div class="spellres" id="spellres"></div>
-  <div class="spellnote" id="spellnote">Dano = base × (1 + % mag) × <b>defesa do alvo</b>. Defesa <b>100</b> = normal, <b>0</b> = imune, <b>&gt;100</b> = fraco. Crítico/augments/eventos entram por cima.</div>
+  <div class="spellnote" id="spellnote">Dano = base × (1 + % mag) × <b>defesa do alvo</b>. Defesa <b>100</b> = normal, <b>0</b> = imune, <b>&gt;100</b> = fraco. Crítico/augments/eventos entram por cima.<br>As fórmulas de knight, monk e paladin usam a <b>skill da vocação</b> e o <b>Atk da arma</b> (não duas skills) — por isso as caixas separadas. Só Shield Bash e Shield Slam leem shielding e Def do escudo.</div>
   <div class="count" id="count"></div>
   <div class="list" id="list"></div>
 
@@ -1296,13 +1300,31 @@ const RES_EL=["physical","fire","ice","energy","earth","holy","death"];
 // lê os stats do char (level/magic/distance/melee) dos inputs
 const stLvl=document.getElementById("stLvl"), stMag=document.getElementById("stMag"),
       stDist=document.getElementById("stDist"), stMelee=document.getElementById("stMelee"),
+      stFist=document.getElementById("stFist"), stAtk=document.getElementById("stAtk"),
+      stShield=document.getElementById("stShield"), stDef=document.getElementById("stDef"),
       stBonus=document.getElementById("stBonus");
 const numv=el=>{ const n=parseInt(el.value,10); return isNaN(n)?0:Math.max(0,n); };
-function spellStats(){ return [numv(stLvl), numv(stMag), numv(stDist), numv(stMelee), numv(stBonus)]; }
+// objeto NOMEADO de proposito: o bug que isto conserta era de posicao de argumento,
+// entao array indexado aqui era o proprio pe no qual a wiki tropecou.
+function spellStats(){ return { lvl:numv(stLvl), mag:numv(stMag), dist:numv(stDist),
+  mel:numv(stMelee), fist:numv(stFist), atk:numv(stAtk), shield:numv(stShield),
+  def:numv(stDef), bonus:numv(stBonus) }; }
+// A convencao do bundle e (level, magicLevel, SKILL, ATAQUE DA ARMA, shielding, defesa).
+// A wiki passava (lvl, magic, dist, melee): o 3o e o 4o estavam errados em 28 das 122 --
+// todas as de knight e de monk. Das 30 que leem o 3o argumento ou alem, TODAS sao de
+// vocacao unica, entao a skill sai da vocacao da propria magia. Se um dia aparecer uma
+// multi-vocacao que leia a skill, cai no filtro de vocacao ativo e, sem filtro, em magic.
+const SKILLDE={knight:"mel", monk:"fist", paladin:"dist", sorcerer:"mag", druid:"mag"};
+function spellArgs(sp, st){
+  const vocs=sp.vocs||[];
+  const chave = vocs.length===1 ? SKILLDE[vocs[0]]
+    : (SKILLDE[(MVOC[magiaVoc]||[])[1]] || "mag");
+  return [st.lvl, st.mag, st[chave] ?? 0, st.atk, st.shield, st.def];
+}
 function spellCard(s,qq,open,st){
   const f=s.dmg||s.heal, isHeal=!!s.heal;
   let val="—";
-  if(f){ const r=f(st[0],st[1],st[2],st[3]); const mult=1+(st[4]||0)/100;
+  if(f){ const r=f(...spellArgs(s,st)); const mult=1+(st.bonus||0)/100;
     val=Math.round(r[0]*mult).toLocaleString("pt-BR")+"–"+Math.round(r[1]*mult).toLocaleString("pt-BR"); }
   const vocs=(s.vocs||[]).map(v=>VOCPT[v]||v).join("/");
   const tipo=s.type==="heal"?"cura":s.type==="area"?"área":"ataque";
@@ -1348,9 +1370,12 @@ function spellSection(g, rows, top, qq){
 // ---- recomendação de magias por hunt/boss ----
 // 4 slots de ataque por vocação (bundle: os=4). Rankeia por dano-base/cd ajustado
 // pelo dano-tomado do elemento nos alvos; em pack, magia de área pesa mais.
-const SPELL_REF=[300,120,120,120];               // lvl/magic/dist/melee de referência
+// char de referencia do bestSpells. Nomeado, e com ataque de arma separado da skill:
+// antes eram 4 numeros iguais passados como (lvl,magic,dist,melee), o que dava
+// skill+ataque = 240 pra knight/monk quando o par real e mais perto de 120+80.
+const SPELL_REF={lvl:300, mag:120, dist:120, mel:120, fist:120, atk:80, shield:110, def:40, bonus:0};
 const SREC_VOCS=["knight","paladin","sorcerer","druid","monk"];
-function spellBaseAvg(s){ const f=s.dmg; if(!f) return 0; const r=f(SPELL_REF[0],SPELL_REF[1],SPELL_REF[2],SPELL_REF[3]); return (r[0]+r[1])/2; }
+function spellBaseAvg(s){ const f=s.dmg; if(!f) return 0; const r=f(...spellArgs(s,SPELL_REF)); return (r[0]+r[1])/2; }
 function takenAvg(targets, el){ if(!targets.length) return 1; let a=0;
   for(const m of targets){ const v=Number((m.r||{})[el]||0); a+=Math.max(0,(100-v))/100; } return a/targets.length; }
 // Combate: cooldown GLOBAL (l9) — lança ~1 magia por gcd, sempre a melhor pronta.
@@ -2416,10 +2441,10 @@ function render(){
     noun = res.length===1?"equip":"equips";
   } else if(mode==="magia"){
     const vk=MVOC[magiaVoc][1], ek=MELEM[magiaEl][1], st=spellStats(), res=readRes();
-    const mult=1+(st[4]||0)/100;
+    const mult=1+(st.bonus||0)/100;
     const match=s=> (!vk||(s.vocs||[]).includes(vk)) &&
       (!qq||norm(s.name).includes(qq)||norm(s.words).includes(qq));
-    const valOf=s=>{ const f=s.dmg||s.heal; const r=f?f(st[0],st[1],st[2],st[3]):[0,0];
+    const valOf=s=>{ const f=s.dmg||s.heal; const r=f?f(...spellArgs(s,st)):[0,0];
       const isHeal=!!s.heal, el=isHeal?null:spellEl(s);
       const rf=isHeal?1:(res[el]??100)/100;                       // defesa elemental do alvo
       return {s, isHeal, el, min:Math.round(r[0]*mult*rf), max:Math.round(r[1]*mult*rf)}; };
@@ -2482,7 +2507,7 @@ wireFilter(document.getElementById("eqelfilter"), EQEL, "elem", i=>equipEl=i);
 wireFilter(document.getElementById("eqelmodefilter"), EQELMODE, "def/atk", i=>equipElMode=i);
 const mvocfilter=document.getElementById("mvocfilter");
 const mtypefilter=document.getElementById("mtypefilter");
-wireFilter(mvocfilter, MVOC, "voc", i=>magiaVoc=i);
+wireFilter(mvocfilter, MVOC, "voc", i=>{ magiaVoc=i; stVis(); });
 wireFilter(mtypefilter, MELEM, "elem", i=>magiaEl=i);
 // inputs de resistencia elemental do alvo (default 100 = dano normal)
 const spellres=document.getElementById("spellres");
@@ -2493,13 +2518,24 @@ for(const e of RES_EL) document.getElementById("rz_"+e).addEventListener("input"
 // stats do char: restaura do localStorage, salva ao digitar, re-renderiza
 const spellstats=document.getElementById("spellstats");
 const spellnote=document.getElementById("spellnote");
-try{ const s=JSON.parse(localStorage.getItem("baiak-stats")||"{}");
-  if(s.lvl)stLvl.value=s.lvl; if(s.mag)stMag.value=s.mag; if(s.dist)stDist.value=s.dist; if(s.mel)stMelee.value=s.mel; if(s.bonus)stBonus.value=s.bonus;
+const ST_CAIXAS=[["lvl",stLvl],["mag",stMag],["dist",stDist],["mel",stMelee],["fist",stFist],
+  ["atk",stAtk],["shield",stShield],["def",stDef],["bonus",stBonus]];
+try{ const sv=JSON.parse(localStorage.getItem("baiak-stats")||"{}");
+  for(const [k,el] of ST_CAIXAS) if(sv[k]!=null&&sv[k]!=="") el.value=sv[k];
 }catch(e){}
-for(const el of [stLvl,stMag,stDist,stMelee,stBonus]) el.addEventListener("input",()=>{
-  try{ localStorage.setItem("baiak-stats", JSON.stringify({lvl:stLvl.value,mag:stMag.value,dist:stDist.value,mel:stMelee.value,bonus:stBonus.value})); }catch(e){}
+for(const [,el] of ST_CAIXAS) el.addEventListener("input",()=>{
+  try{ localStorage.setItem("baiak-stats", JSON.stringify(Object.fromEntries(ST_CAIXAS.map(([k,e2])=>[k,e2.value])))); }catch(e){}
   if(mode==="magia") render();
 });
+// mostra so a caixa de skill que a vocacao filtrada usa; sem filtro, mostra todas.
+// data-voc="*" = sempre visivel.
+function stVis(){
+  const vk=(MVOC[magiaVoc]||[])[1]||"";
+  for(const lb of spellstats.querySelectorAll("label[data-voc]")){
+    const d=lb.getAttribute("data-voc");
+    lb.style.display = (d==="*"||!vk||d.split(" ").includes(vk)) ? "" : "none";
+  }
+}
 
 function setMode(m){
   mode=m; limit=CHUNK;
@@ -2508,6 +2544,7 @@ function setMode(m){
   slotfilter.style.display = vocfilter.style.display = eqlvfilter.style.display = document.getElementById("eqshopfilter").style.display = document.getElementById("eqelfilter").style.display = document.getElementById("eqelmodefilter").style.display = m==="equip" ? "flex" : "none";
   mvocfilter.style.display = mtypefilter.style.display = m==="magia" ? "flex" : "none";
   spellstats.style.display = m==="magia" ? "flex" : "none";
+  if(m==="magia") stVis();
   document.getElementById("spellres").style.display = m==="magia" ? "flex" : "none";
   spellnote.style.display = m==="magia" ? "block" : "none";
   legend.style.display = (m==="hunt"||m==="equip"||m==="magia"||m==="forja"||m==="war"||m==="exped"||m==="casket"||m==="spec"||m==="post") ? "none" : "flex";

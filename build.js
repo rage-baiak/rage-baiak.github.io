@@ -458,14 +458,29 @@ function diff(oldD, newD) {
   exped.sort((a, b) => b.xp - a.xp);
   console.log("expedicoes:", exped.length, exped.map(e => `${e.name}(${e.stages.length} stages)`).join(", "));
 
-  // ---- data: aplica o rate por categoria (in-hunt = "monster", senao = "boss") ----
+  // ---- data: aplica o rate por categoria ----
+  // A config do server tem CINCO categorias (monster, boss, stageBoss, worldBoss,
+  // expedition) e o build tinha so duas caixas: "nao esta em hunt" => rate de boss.
+  // Isso inflava 1.5x o HP dos 6 world boss e dos 4 chefes de expedicao -- e o chefe
+  // de expedicao aparecia com DOIS numeros diferentes na mesma wiki, porque a aba
+  // Expedicao usa o bossHp cru e a aba Bosses passava pelo mul(). Categoria sem
+  // override no config cai em 100% pelo proprio mul(), que e o que `defaults` diz.
+  // `stageBoss` existe na config mas nao marca nenhum bicho no cliente: fica de fora.
+  const WORLDBOSS = new Set([...src.matchAll(/bossKey:"([a-z_0-9]+)"[^}]*mapId:"worldboss"/g)].map(m => m[1]));
+  const EXPBOSS = new Set(exped.map(e => norm(e.boss || "")).filter(Boolean));
+  const catOf = (key, nome) => inHunt.has(key) ? "monster"
+    : WORLDBOSS.has(key) ? "worldBoss"
+    : EXPBOSS.has(norm(nome || key)) ? "expedition"
+    : "boss";
+  console.log("rate por categoria: worldBoss", WORLDBOSS.size, "| chefe de expedicao", EXPBOSS.size,
+    "| ambas sem override no config =", (rate && rate.worldBoss ? "TEM override agora" : "100%"));
   const data = [];
   for (const [k, m] of Object.entries(It)) {
     const hasCombat = m.resist || (m.abilities && m.abilities.length) || m.dmg;
     const hasLoot = m.loot && m.loot.length;
     if (!hasLoot && !hasCombat) continue;                 // pula dummy vazio
     const boss = inHunt.has(k) ? 0 : 1;
-    const cat = boss ? "boss" : "monster";
+    const cat = catOf(k, m.name || k);
     data.push({
       n: m.name || k, boss,
       hp: mul(m.hp || 0, cat, "hp"),
@@ -495,13 +510,14 @@ function diff(oldD, newD) {
     });
   }
 
-  // raid/world bosses (so no catalogo de combate, sem loot) — categoria boss
+  // raid/world bosses (so no catalogo de combate, sem loot). A categoria sai do
+  // mesmo catOf: cravar "boss" aqui era o que inflava justamente o world boss.
   const haveNames = new Set(data.map(m => norm(m.n)));
   const raid = extractRaidBosses(src, haveNames);
   for (const { key, m } of raid) {
     data.push({
       n: titleCase(key), boss: 1, raid: 1,
-      hp: mul(m.hp || 0, "boss", "hp"), exp: 0,
+      hp: mul(m.hp || 0, catOf(key, titleCase(key)), "hp"), exp: 0,
       arm: m.armor || 0, sp: m.speed || 0, lt: m.lookType || 0,
       oc: m.outfit ? [m.outfit.head|0, m.outfit.body|0, m.outfit.legs|0, m.outfit.feet|0] : null,
       dm: m.dmg || null, r: m.resist || null,
