@@ -659,7 +659,16 @@ const WAR = __WAR__;
 const ATTRS = __ATTRS__;
 // sprite do item por id (PNG 32x32 do jogo); some se falhar (item sem sprite)
 const spr = id => id ? `<img class="spr" src="https://baiakidle.com/api/things/object/${id}.png?v=2" loading="lazy" alt="" onerror="this.remove()">` : "";
-const itemSpr = name => spr(ITEMID[norm(name)] || 0);
+// O ITEMID e o SHOP vem do build, que normaliza a chave trocando - e _ por ESPACO
+// (`replace(/[_-]/g," ")`). O norm() daqui preserva o hifen, entao a chave nunca batia:
+// 11 itens ("wind-up key", "gold-brocaded cloth", "half-digested stones"...) ficavam sem
+// sprite em TODA a wiki -- aba Item, loot de bicho, requisito do codex, card de equip.
+// Chave propria pra esses dois mapas em vez de mexer no norm(), que a busca de toda aba
+// usa. Tenta a chave do build e cai no norm() antigo, pra nao perder nada que ja achava.
+const idKey = s => String(s).replace(/[_-]/g, " ").toLowerCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+const mapGet = (mapa, name) => mapa[idKey(name)] ?? mapa[norm(name)];
+const itemSpr = name => spr(mapGet(ITEMID, name) || 0);
 
 // indice reverso: item -> [{mon, chance, max}]
 const ITEM = new Map();
@@ -675,7 +684,7 @@ const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""
 const fmtG = n => n>=1e6 ? +(n/1e6).toFixed(n%1e6?1:0)+"M" : n.toLocaleString("pt-BR");
 const nf = n => Number(n).toLocaleString("pt-BR");
 function shopChips(name){
-  const s = SHOP[norm(name)]; if(!s) return "";
+  const s = mapGet(SHOP, name); if(!s) return "";
   let out="";
   if(s.g!=null) out+=`<span class="ebadge shop gold" title="Compr\u00e1vel no mercador por gold">\ud83e\ude99 ${fmtG(s.g)} gold</span>`;
   if(s.b!=null) out+=`<span class="ebadge shop boss" title="Compr\u00e1vel na loja por boss token">\ud83c\udf9f\ufe0f ${s.b} boss token${s.b>1?"s":""}</span>`;

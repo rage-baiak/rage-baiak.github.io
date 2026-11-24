@@ -659,7 +659,16 @@ const WAR = {"meta":null,"contas":[]};
 const ATTRS = {"tab":{"1":{"key":"weapon_attack","name":"Weapon Attack","bonus":1,"pct":true},"2":{"key":"defense","name":"Defense","bonus":2,"pct":false},"3":{"key":"armor","name":"Armor","bonus":1,"pct":false},"4":{"key":"onslaught","name":"Onslaught","bonus":0.5,"pct":true},"5":{"key":"crit_chance","name":"Crit Chance","bonus":0.35,"pct":true},"6":{"key":"crit_damage","name":"Crit Damage","bonus":1.5,"pct":true},"7":{"key":"life_leech","name":"Life Leech","bonus":0.4,"pct":true},"8":{"key":"mana_leech","name":"Mana Leech","bonus":0.4,"pct":true},"9":{"key":"loot","name":"Loot","bonus":1,"pct":true},"10":{"key":"exp","name":"Exp","bonus":1,"pct":true},"11":{"key":"protect_all","name":"Protect All","bonus":0.17,"pct":true},"12":{"key":"protect_fire","name":"Protect Fire","bonus":0.5,"pct":true},"13":{"key":"protect_earth","name":"Protect Earth","bonus":0.5,"pct":true},"14":{"key":"protect_energy","name":"Protect Energy","bonus":0.5,"pct":true},"15":{"key":"protect_ice","name":"Protect Ice","bonus":0.5,"pct":true},"16":{"key":"protect_holy","name":"Protect Holy","bonus":0.5,"pct":true},"17":{"key":"protect_death","name":"Protect Death","bonus":0.5,"pct":true},"18":{"key":"attack_speed","name":"Attack Speed","bonus":0.5,"pct":true},"19":{"key":"spell_damage","name":"Spell Damage","bonus":0.5,"pct":true},"20":{"key":"spell_healing","name":"Spell Healing","bonus":0.5,"pct":true},"21":{"key":"max_hp","name":"Max HP","bonus":0.5,"pct":true},"22":{"key":"max_mana","name":"Max Mana","bonus":0.5,"pct":true},"23":{"key":"hp_regen","name":"HP Regen","bonus":0.08,"pct":true},"24":{"key":"mp_regen","name":"MP Regen","bonus":0.08,"pct":true},"25":{"key":"execute","name":"Execute","bonus":0.25,"pct":true},"26":{"key":"frenzy","name":"Frenzy","bonus":0.25,"pct":true},"27":{"key":"damage_fire","name":"Fire Damage","bonus":0.5,"pct":true},"28":{"key":"damage_earth","name":"Earth Damage","bonus":0.5,"pct":true},"29":{"key":"damage_energy","name":"Energy Damage","bonus":0.5,"pct":true},"30":{"key":"damage_ice","name":"Ice Damage","bonus":0.5,"pct":true},"31":{"key":"damage_holy","name":"Holy Damage","bonus":0.5,"pct":true},"32":{"key":"damage_death","name":"Death Damage","bonus":0.5,"pct":true}},"forge":{"onslaught":[0.05,0.4,0.05],"momentum":[0.05,1.9,0.05],"ruse":[0.0307576,0.440697,0.026],"transcendence":[0.0127,0.107,0.0073],"amplification":[0.4,1.7,0.4]}};
 // sprite do item por id (PNG 32x32 do jogo); some se falhar (item sem sprite)
 const spr = id => id ? `<img class="spr" src="https://baiakidle.com/api/things/object/${id}.png?v=2" loading="lazy" alt="" onerror="this.remove()">` : "";
-const itemSpr = name => spr(ITEMID[norm(name)] || 0);
+// O ITEMID e o SHOP vem do build, que normaliza a chave trocando - e _ por ESPACO
+// (`replace(/[_-]/g," ")`). O norm() daqui preserva o hifen, entao a chave nunca batia:
+// 11 itens ("wind-up key", "gold-brocaded cloth", "half-digested stones"...) ficavam sem
+// sprite em TODA a wiki -- aba Item, loot de bicho, requisito do codex, card de equip.
+// Chave propria pra esses dois mapas em vez de mexer no norm(), que a busca de toda aba
+// usa. Tenta a chave do build e cai no norm() antigo, pra nao perder nada que ja achava.
+const idKey = s => String(s).replace(/[_-]/g, " ").toLowerCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+const mapGet = (mapa, name) => mapa[idKey(name)] ?? mapa[norm(name)];
+const itemSpr = name => spr(mapGet(ITEMID, name) || 0);
 
 // indice reverso: item -> [{mon, chance, max}]
 const ITEM = new Map();
@@ -675,7 +684,7 @@ const norm = s => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,""
 const fmtG = n => n>=1e6 ? +(n/1e6).toFixed(n%1e6?1:0)+"M" : n.toLocaleString("pt-BR");
 const nf = n => Number(n).toLocaleString("pt-BR");
 function shopChips(name){
-  const s = SHOP[norm(name)]; if(!s) return "";
+  const s = mapGet(SHOP, name); if(!s) return "";
   let out="";
   if(s.g!=null) out+=`<span class="ebadge shop gold" title="Compr\u00e1vel no mercador por gold">\ud83e\ude99 ${fmtG(s.g)} gold</span>`;
   if(s.b!=null) out+=`<span class="ebadge shop boss" title="Compr\u00e1vel na loja por boss token">\ud83c\udf9f\ufe0f ${s.b} boss token${s.b>1?"s":""}</span>`;
