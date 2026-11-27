@@ -960,8 +960,11 @@ function diff(oldD, newD) {
       const args = m[2].split(",").map(x => num(x.trim()));
       if (!mapa) return null;
       const pega = c => mapa[c] != null && args[mapa[c]] != null ? args[mapa[c]] : null;
+      // expPerStep e gold entram aqui porque sao o que o jogador pergunta: a exp do
+      // modo CRESCE por degrau (exp + expPerStep*(degrau-1)) e o gold NAO muda.
       return { hp: pega("hp"), bossHp: pega("bossHp"), atk: pega("atk"),
-               exp: pega("exp"), itemChance: pega("itemChance") };
+               exp: pega("exp"), expPerStep: pega("expPerStep"),
+               gold: pega("gold"), itemChance: pega("itemChance") };
     };
     // As 5 familias e a formula de ponto de Nightmare sao capturadas SEPARADAMENTE:
     // em 13/10/2026 o jogo removeu nightmarePerClear/BonusFromStep/BonusPerStep do
@@ -1016,7 +1019,10 @@ function diff(oldD, newD) {
         bonusPorDegrau: mNmPts ? num(mNmPts[3]) : null
       } : null,
       unlock: mUn ? { nm: num(mUn[1]), hl: num(mUn[2]) } : null,
-      boss: mB ? { hpPorNivel: num(mB[1]), danoPorNivel: num(mB[2]), lootPorNivel: num(mB[3]), nivel0: num(mB[4]) } : null,
+      // maxLootRolls e o TETO das rolagens extras por nivel -- sem ele o card
+      // prometeria rolagem infinita, que e o erro que o jogador percebe no dia 11.
+      boss: mB ? { hpPorNivel: num(mB[1]), danoPorNivel: num(mB[2]), lootPorNivel: num(mB[3]), nivel0: num(mB[4]),
+                   maxRolls: (() => { const m2 = src.match(/maxLootRolls:(\d+)/); return m2 ? num(m2[1]) : null; })() } : null,
       steep: mS ? { hp: num(mS[1]), dano: num(mS[2]) } : null,
       drops
     };
