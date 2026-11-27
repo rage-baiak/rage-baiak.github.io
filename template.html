@@ -317,6 +317,19 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .pkflag{font-size:10.5px;font-weight:700;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);
   background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:5px;padding:1px 5px}
 @media (max-width:600px){ .pkopt{font-size:11px;padding:2px 5px 2px 2px} .pkopts{gap:4px} }
+.bg{margin:2px 0 12px}
+.bglbl{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;font-size:12px;font-weight:700;color:var(--accent);margin-bottom:7px}
+.bglbl.bgsec{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.bgmeta{font-weight:500;color:var(--muted);font-size:11px}
+.bggrid{display:flex;flex-wrap:wrap;gap:5px}
+.bgit{display:inline-flex;align-items:center;gap:5px;padding:2px 7px 2px 3px;border-radius:7px;font-size:11.5px;
+  border:1px solid color-mix(in srgb,var(--accent) 24%,transparent);background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.bgit .ilink{cursor:pointer;text-decoration:underline dotted color-mix(in srgb,var(--accent) 45%,transparent)}
+.bgw{font-style:normal;font-size:10px;font-weight:700;color:var(--muted);
+  background:color-mix(in srgb,var(--muted) 18%,transparent);border-radius:4px;padding:0 4px}
+.bgr{font-weight:700}
+.bgnote{margin-top:8px;font-size:11px;color:var(--muted);line-height:1.55}
+.bgflag{font-size:10.5px;font-weight:700;color:var(--accent)}
 .charmchip{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--accent);
   border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:7px;padding:2px 8px;white-space:nowrap;opacity:.72}
 .charmchip.top{opacity:1;background:color-mix(in srgb,var(--accent) 12%,transparent);border-color:color-mix(in srgb,var(--accent) 50%,transparent)}
@@ -678,6 +691,7 @@ const SPEC = __SPEC__;
 const STANCE = __STANCE__;
 const PROF = __PROF__;
 const EFF = __EFF__;
+const BAGS = __BAGS__;
 // guerra: dossie da guild adversaria (contas -> chars -> atributos/resistencias)
 const WAR = __WAR__;
 // atributos rolaveis do item (id -> bonus) + constantes da forja, do bundle
@@ -1175,6 +1189,73 @@ function expedCard(e,qq,open){
 // Attunement exigido pela hunt nos modos nightmare/hell. Abaixo do valor, o dano
 // que voce causa cai proporcionalmente ate o piso de 10%. Cada peca Celestial da
 // +35; a Cosmica da os mesmos +35 e mais +35 no hell.
+// ---- Reward bag: o que sai, e com que raridade ----
+// Duas fontes, e a distincao importa pro leitor: o POOL vem do bundle; a RARIDADE vem
+// da config do servidor, que muda sem deploy. Quando a config nao vier, a secao de
+// raridade simplesmente nao aparece -- melhor faltar do que mostrar o default (que tem
+// Lendario e Mitico em zero) como se fosse o numero de hoje.
+function bagDe(nome){
+  if(!BAGS || !BAGS.b) return null;
+  const b = BAGS.b[nome] || BAGS.b[idKey(nome)];
+  if(!b) return null;
+  const srv = BAGS.srv ? (BAGS.srv[nome] || BAGS.srv[idKey(nome)] || null) : null;
+  return { b, srv };
+}
+function bagBloco(nome){
+  const d = bagDe(nome);
+  if(!d) return "";
+  const { b, srv } = d, n = b.it.length;
+  const umEm = v => v>0 ? "1 em " + nf(Math.round(100/v)) : "—";
+  let h = `<div class="bg"><div class="bglbl">🎁 o que sai desta bag`
+    +`<span class="bgmeta">${n} ${n===1?"item":"itens"}`
+    + (b.w ? ` · chance por item declarada` : ` · todos com a mesma chance, 1 em ${n}`)
+    + `</span></div>`;
+  // o pool
+  h += `<div class="bggrid">` + b.it.map(it=>{
+    const peso = b.w ? b.w[it] : null;
+    return `<span class="bgit"${peso!=null?` title="peso ${peso}"`:""}>${itemSpr(it)}`
+      +`<span class="ilink" data-item="${esc(it)}">${esc(it)}</span>`
+      + (peso!=null?`<i class="bgw">${peso}</i>`:"") + `</span>`;
+  }).join("") + `</div>`;
+  // a raridade, so com config do servidor em maos
+  if(srv && Array.isArray(srv.ch)){
+    const linhas = srv.ch.map((c,i)=>({ tier:i, nome:(BAGS.tiers||[])[i]||("tier "+i),
+      ch:c, ev:(srv.ev||[])[i]||0 })).filter(x=>x.ch>0 || x.ev>0).reverse();
+    h += `<div class="bglbl bgsec">🎲 raridade ao abrir<span class="bgmeta">chance por abertura</span></div>`
+      +`<div class="mgtwrap"><table class="mgt"><thead><tr><th class="thl">Raridade</th><th>Chance</th>`
+      +`<th>Garantido a cada</th><th>Uma peça escolhida</th></tr></thead><tbody>`
+      + linhas.map(x=>`<tr>`
+        +`<td class="thl"><span class="bgr" style="color:${RARCOR(x.tier)}">${esc(x.nome)}</span></td>`
+        +`<td>${x.ch>0?(+x.ch.toFixed(4))+"%":"—"}</td>`
+        +`<td>${x.ev>0?nf(x.ev)+" aberturas":`<span class="mut">—</span>`}</td>`
+        +`<td>${x.ch>0?umEm(x.ch/n):"—"}</td>`
+        +`</tr>`).join("")
+      +`</tbody></table></div>`;
+    // o que o servidor LIGOU em relacao ao default do cliente
+    const def = BAGS.def && BAGS.def.ch;
+    const ligados = def ? srv.ch.map((c,i)=> c>0 && !(def[i]>0) ? (BAGS.tiers||[])[i] : null).filter(Boolean) : [];
+    const piso = srv.ch[0] >= 100;
+    h += `<div class="bgnote">`
+      + (piso ? `Comum em 100% é o <b>piso</b>: você sempre recebe o item, a pergunta é em que raridade. ` : "")
+      + (ligados.length ? `<b>${ligados.join(" e ")}</b> ${ligados.length>1?"não existem":"não existe"} no padrão do jogo — `
+          + `quem ligou foi a <b>configuração do servidor</b>, que muda sem atualizar o jogo. ` : "")
+      + `A coluna da direita é a chance vezes 1/${n}, porque o item é sorteado por igual. `
+      + `O sorteio roda no servidor, então não dá pra saber se as linhas são independentes ou em escada — `
+      + `por isso elas somam mais de 100%. Quando a garantia é baixa, é ela que manda, não a chance.</div>`;
+  } else if(b.rar){
+    h += `<div class="bgnote">Esta bag tem raridade, mas a <b>configuração do servidor não veio neste build</b> — `
+      +`melhor não mostrar número do que mostrar o padrão do jogo, que tem Lendário e Mítico em zero.</div>`;
+  } else {
+    h += `<div class="bgnote">Esta bag não passa pelo sorteio de raridade: o item sai <b>comum</b>.</div>`;
+  }
+  return h + `</div>`;
+}
+// cor por tier, reusando a escala de raridade quando ela existe
+function RARCOR(t){
+  const e = RARITY && RARITY.escala && RARITY.escala.find(x=>x.tier===t);
+  return (e && e.cor) || "inherit";
+}
+
 // ---- Eficiencia da hunt (conta do proprio jogo) ----
 // Os dois indices sao RELATIVOS: 100 = a melhor hunt do jogo naquele eixo.
 // O de loot sai do preco de item numa tabela de ~200 entradas; o que esta fora
@@ -2579,10 +2660,10 @@ function render(){
   } else {
     const res = ITEMS.filter(it=>!qq || norm(it).includes(qq));
     open = raw && res.length<=6 ? " open":"";
-    cards = res.map(it=>()=>{ const drops=ITEM.get(it), best=drops[0], sc=shopChips(it);
+    cards = res.map(it=>()=>{ const drops=ITEM.get(it), best=drops[0], sc=shopChips(it), bg=bagBloco(it);
       return `<details${open}><summary><span class="s-lead">${itemSpr(it)}<span class="name item">${hl(it,qq)}</span></span>`
-        +`<span class="meta">dropa de <span class="chip">${drops.length}</span> · melhor <span class="${band(best.ch)}">${pct(best.ch)}%</span></span></summary>`
-        +`<div class="body">${sc?`<div class="ebadges">${sc}</div>`:""}<table>${monRows(drops,"")}</table></div></details>`; });
+        +`<span class="meta">${bg?`<span class="bgflag">🎁 abre</span> · `:""}dropa de <span class="chip">${drops.length}</span> · melhor <span class="${band(best.ch)}">${pct(best.ch)}%</span></span></summary>`
+        +`<div class="body">${sc?`<div class="ebadges">${sc}</div>`:""}${bg}<table>${monRows(drops,"")}</table></div></details>`; });
     noun = res.length===1?"item":"itens";
   }
 

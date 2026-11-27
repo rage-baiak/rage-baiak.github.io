@@ -1389,6 +1389,70 @@ function diff(oldD, newD) {
   } catch (e) { console.log("eficiencia de hunt indisponivel:", e.message); }
   tpl = tpl.replace("const EFF = __EFF__;", "const EFF = " + JSON.stringify(EFF) + ";");
 
+  // ---- Reward bags (bag you covet / desire / primal e as outras) ----
+  // Duas metades, e so uma esta no bundle:
+  //  - o POOL de itens de cada bag esta no cliente. Item com peso leva `chance`; as tres
+  //    bags grandes NAO tem o campo em item nenhum, e a mystic tem em 136 dos 227 -- ou
+  //    seja ausencia de peso e uniforme de verdade, nao campo que faltou extrair.
+  //  - a RARIDADE (chance por tier + garantia por contagem) vem da CONFIG DO SERVIDOR,
+  //    pelo mesmo tipo de endpoint do rate de monstro. O default do bundle tem Lendario
+  //    e Mitico em ZERO; quem liga e o servidor, e por isso isso muda sem deploy.
+  //    Sem fallback assado: config que nao vem = secao sem numero, nunca numero velho
+  //    com cara de atual (foi assim que o tierMult da forja serviu 6 tiers velhos).
+  // O sorteio em si (item e tier) roda no servidor: nenhum uso da tabela no cliente
+  // sorteia, so exibe.
+  function extractBags(src) {
+    const bal = (str, i) => { let d = 0; for (let j = i; j < str.length; j++) { const c = str[j];
+      if (c === "{" || c === "[") d++; else if (c === "}" || c === "]") { d--; if (!d) return str.slice(i, j + 1); } }
+      throw new Error("literal desbalanceado"); };
+    const a = src.indexOf('"bag you desire":{key:"bag_you_desire"');
+    if (a < 0) throw new Error("tabela de reward bag nao encontrada");
+    let j = a; while (j > 0 && !(src[j] === "{" && src[j - 1] === "=")) j--;
+    if (j <= 0) throw new Error("container da tabela de reward bag nao delimitado");
+    const tab = (0, eval)("(" + bal(src, j) + ")");
+    // quais bags tem raridade: o jogo guarda a lista numa constante propria
+    const temLista = /=\["bag you desire","bag you covet","primal bag"\]/.test(src);
+    if (!temLista) throw new Error("lista das bags com raridade nao encontrada");
+    const comRar = ["bag you desire", "bag you covet", "primal bag"];
+    // o default do cliente, pra poder dizer o que o servidor mudou
+    const mD = /\{chances:\[([\d.,e]+)\],every:\[([\d.,e]+)\]\}/.exec(src);
+    const def = mD ? { ch: mD[1].split(",").map(Number), ev: mD[2].split(",").map(Number) } : null;
+    const b = {};
+    for (const [nome, v] of Object.entries(tab)) {
+      const itens = (v.items || []).map(x => x.name).filter(Boolean);
+      const pesos = (v.items || []).filter(x => x.chance !== undefined);
+      b[nome] = { it: itens, rar: comRar.includes(nome),
+        w: pesos.length ? Object.fromEntries(pesos.map(x => [x.name, x.chance])) : null };
+    }
+    return { b, def };
+  }
+  let BAGS = null;
+  try {
+    const { b, def } = extractBags(src);
+    BAGS = { b, def, srv: null,
+      tiers: ["Comum", "Incomum", "Raro", "Épico", "Lendário", "Mítico", "Celestial", "Cósmico"] };
+    try {
+      const rb = await fetch("https://baiakidle.com/api/trpc/admin.rewardBagOpen?batch=1&input=%7B%220%22%3A%7B%7D%7D", { headers: UA });
+      const cfg = (await rb.json())[0].result.data;
+      BAGS.srv = {};
+      for (const [nome, v] of Object.entries((cfg.config && cfg.config.bags) || {}))
+        BAGS.srv[nome] = { ch: v.chances, ev: v.every };
+      console.log("reward bags:", Object.keys(b).length, "| com raridade:", Object.values(b).filter(x => x.rar).length,
+        "| config do servidor:", Object.keys(BAGS.srv).length, "bag(s)");
+      for (const [nome, v] of Object.entries(BAGS.srv)) {
+        const acima = (v.ch || []).map((x, i) => def && x !== def.ch[i] ? BAGS.tiers[i] + " " + x + "%" : null).filter(Boolean);
+        console.log("  " + nome.padEnd(16) + "chance " + JSON.stringify(v.ch) + " garantia " + JSON.stringify(v.ev)
+          + (acima.length ? "  | ligado pelo servidor: " + acima.join(", ") : ""));
+      }
+    } catch (e) {
+      console.log("reward bags: pool ok, config de raridade do servidor NAO veio:", e.message);
+    }
+    const comPeso = Object.entries(b).filter(([, v]) => v.w);
+    if (comPeso.length) console.log("  bags com peso por item:",
+      comPeso.map(([k, v]) => k + " (" + Object.keys(v.w).length + " de " + v.it.length + ")").join(", "));
+  } catch (e) { console.log("reward bags indisponivel:", e.message); }
+  tpl = tpl.replace("const BAGS = __BAGS__;", "const BAGS = " + JSON.stringify(BAGS) + ";");
+
   // ---- Ascensao (Mythical -> Celestial -> Cosmic) ----
   // Quais pecas aceitam, e quanto a arvore rift come da MESMA moeda. Tudo por
   // assinatura de conteudo; nome minificado nao serve de ancora (ver CODEX_SIG).
