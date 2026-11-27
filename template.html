@@ -283,6 +283,12 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .e-energy{background:#9b63e0} .e-holy{background:#d3a52a} .e-death{background:#a86fb5}
 .e-physical{background:var(--muted)} .e-healing{background:var(--rc)}
 .lootlbl{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin:12px 8px 0;padding-top:9px;border-top:1px solid var(--line2)}
+/* o multiplicador fica NO rotulo do loot: a tabela abaixo ja esta com ele aplicado,
+   entao o leitor precisa ver de onde veio sem ter que passar o mouse */
+.lootx{text-transform:none;letter-spacing:0;font-weight:700;font-size:10.5px;margin-left:8px;
+  padding:1px 6px;border-radius:5px;color:var(--rc);
+  background:color-mix(in srgb,var(--rc) 14%,transparent);
+  border:1px solid color-mix(in srgb,var(--rc) 40%,transparent)}
 /* hunt: recomendacao de arma/defesa */
 .hbody{padding:2px 8px 12px}
 .rec{display:flex;flex-direction:column;gap:8px;padding:6px 0}
@@ -804,13 +810,15 @@ function shopChips(name){
   if(s.b!=null) out+=`<span class="ebadge shop boss" title="Compr\u00e1vel na loja por boss token">\ud83c\udf9f\ufe0f ${s.b} boss token${s.b>1?"s":""}</span>`;
   return out;
 }
-function pct(ch){ const p=ch/1000;
+// chance da tabela (sobre 100.000) em %, opcionalmente com o bonus de loot aplicado.
+// Teto de 100% porque e o teto do proprio jogo (obt usa Math.min(100, ...)).
+function pct(ch,f){ const p=Math.min(100, ch/1000*(f||1));
   if(p>=10) return (p%1?p.toFixed(1):p.toFixed(0));
   if(p>=1) return p.toFixed(1);
   if(p>=0.1) return p.toFixed(2);
   return p.toFixed(3);
 }
-function band(ch){ const p=ch/1000;
+function band(ch,f){ const p=Math.min(100, ch/1000*(f||1));
   return p>=50?"rc":p>=10?"rf":p>=1?"ri":p>=0.1?"rr":"rx";
 }
 function esc(s){ return s.replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
@@ -860,13 +868,40 @@ function monStats(m){
   } else {
     h+=`<div class="rline"><span class="rlbl">ataques</span><span class="atk">Só corpo a corpo</span></div>`;
   }
-  return h + (m.l.length?`<div class="lootlbl">Loot</div>`:`<div class="lootlbl">Sem loot registrado</div>`) + `</div>`;
+  // o rotulo "Loot" saiu daqui pro lootBloco: ele carrega o multiplicador, e o nivel
+  // do boss precisa re-renderizar rotulo e tabela juntos
+  return h + (m.l.length?"":`<div class="lootlbl">Sem loot registrado</div>`) + `</div>`;
 }
 
-function lootRows(loot,qq){
-  return loot.slice().sort((a,b)=>b[1]-a[1]).map(([nm,ch,mx])=>
-    `<tr><td class="pct ${band(ch)}">${pct(ch)}%</td><td class="it"><span class="ilink" data-item="${esc(nm)}">${itemSpr(nm)}${hl(nm,qq)}</span></td><td class="qty">${qty(mx)}</td></tr>`
-  ).join("");
+function lootRows(loot,qq,f){
+  const x = f || 1;
+  return loot.slice().sort((a,b)=>b[1]-a[1]).map(([nm,ch,mx])=>{
+    const t = x!==1 ? ` title="Base ${pct(ch)}% ${xm(x)}${ch/1000*x>100?" — teto de 100%":""}"` : "";
+    return `<tr><td class="pct ${band(ch,x)}"${t}>${pct(ch,x)}%</td><td class="it"><span class="ilink" data-item="${esc(nm)}">${itemSpr(nm)}${hl(nm,qq)}</span></td><td class="qty">${qty(mx)}</td></tr>`;
+  }).join("");
+}
+// O bonus de loot e bonus de CHANCE DE ITEM -- e assim que o proprio jogo o chama
+// (na tabela de rotulos dos eventos, lootPct vira "chance de item"). Entao o modo
+// (itemChance x1,1 / x1,2) e o nivel do boss ({n}% mais loot) multiplicam a chance de
+// cada drop, e nao so aparecem como chip solto em cima da tabela.
+// Quem rola de fato e o servidor: isto e a chance da tabela com o bonus aplicado.
+function lootMult(m, lv){
+  const mm = mdAtivo();
+  let f = mm && mm.itemChance ? mm.itemChance : 1;
+  if(lv != null && bossTemNivel(m)) f *= 1 + bossNivelCalc(m, lv).lootPct / 100;
+  return Math.round(f * 1e6) / 1e6;
+}
+// label + tabela juntos, porque o nivel do boss re-renderiza os dois
+function lootBloco(m, lv){
+  if(!m.l.length) return "";
+  const f = lootMult(m, lv);
+  const parte = [];
+  const mm = mdAtivo();
+  if(mm && mm.itemChance && mm.itemChance !== 1) parte.push(`${MODO_NOME[MD]} ${xm(mm.itemChance)}`);
+  if(lv != null && bossTemNivel(m)){ const p = bossNivelCalc(m, lv).lootPct; if(p) parte.push(`nível ${lv} +${String(Math.round(p*100)/100).replace(".",",")}%`); }
+  return `<div class="lootbx">`
+    +`<div class="lootlbl">Loot${f!==1?`<span class="lootx" title="Bônus de loot é bônus de chance de item — é assim que o jogo chama. ${esc(parte.join(" · "))}. Passe o mouse numa linha pra ver a chance base.">chances ${xm(f)} · ${esc(parte.join(" · "))}</span>`:""}</div>`
+    +`<table>${lootRows(m.l,"",f)}</table></div>`;
 }
 function monRows(arr,qq){
   return arr.map(d=>
@@ -1158,7 +1193,7 @@ function monCard(m,qq,open){
   const E=mdEsc(m);
   return `<details${open}><summary><span class="name">${hl(m.n,qq)}</span>${mdTag()}`
     +`<span class="meta">${dropMeta} · hp ${E.hp.toLocaleString("pt-BR")} · exp ${E.exp.toLocaleString("pt-BR")}</span></summary>`
-    +`<div class="body">${huntLine}${bossNivelLinha(m)}${monStats(m)}${m.l.length?`<table>${lootRows(m.l,"")}</table>`:""}</div></details>`;
+    +`<div class="body">${huntLine}${bossNivelLinha(m)}${monStats(m)}${lootBloco(m, bossTemNivel(m)?1:null)}</div></details>`;
 }
 // charms de um monstro, EM ORDEM de indicação (fraqueza maior primeiro). Serve como
 // lista de opções: se o 1º já foi usado noutro bicho, ou a party não tem a voc, desce.
@@ -1201,12 +1236,13 @@ function huntMon(name, isBoss, atrib){
   // de 15 drops por bicho, ate 45), entao vai so imagem e %; o nome fica no title
   // e o clique abre o item.
   const drops=(m.l||[]).slice().sort((a,b)=>b[1]-a[1]);
+  const fL=lootMult(m,null);   // dentro da hunt so o modo pesa: nivel de boss e do card do boss
   const dropCol = drops.length
-    ? `<div class="hmon-col hmon-drops"><div class="rlbl">drops <span class="hint">· ${drops.length}</span></div>`
+    ? `<div class="hmon-col hmon-drops"><div class="rlbl">drops <span class="hint">· ${drops.length}${fL!==1?` · chances ${xm(fL)}`:""}</span></div>`
       +`<div class="hdrops">`
       +drops.map(([nm,ch,mx])=>
-         `<span class="hdrop ilink" data-item="${esc(nm)}" title="${esc(nm)}${mx>1?` · ate ${mx}`:""} · ${pct(ch)}%">`
-         +`${itemSpr(nm)}<b class="${band(ch)}">${pct(ch)}%</b></span>`).join("")
+         `<span class="hdrop ilink" data-item="${esc(nm)}" title="${esc(nm)}${mx>1?` · ate ${mx}`:""} · ${pct(ch,fL)}%${fL!==1?` — base ${pct(ch)}% ${xm(fL)}`:""}">`
+         +`${itemSpr(nm)}<b class="${band(ch,fL)}">${pct(ch,fL)}%</b></span>`).join("")
       +`</div></div>`
     : "";
   return `<div class="hmon${isBoss?" boss":""}">`
@@ -3010,6 +3046,10 @@ list.addEventListener("input",ev=>{
   if(rr&&rr!==el) rr.value=String(Math.min(lv, Number(rr.max)||50));
   if(nn&&nn!==el) nn.value=String(lv);
   box.querySelector(".bnvout").innerHTML=bossNivelOut(m,lv);
+  // o nivel muda a CHANCE de cada drop, nao so o chip de "+N% de loot": sem isto a
+  // tabela logo abaixo contradiz o painel que acabou de mudar.
+  const card=box.closest("details"), bx=card&&card.querySelector(".lootbx");
+  if(bx) bx.outerHTML=lootBloco(m,lv);
 });
 list.addEventListener("click",ev=>{
   const ml=ev.target.closest(".mlink"), il=ev.target.closest(".ilink"), hk=ev.target.closest(".hlink");
