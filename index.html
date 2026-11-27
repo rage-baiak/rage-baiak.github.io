@@ -401,6 +401,10 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
   background:color-mix(in srgb,var(--muted) 18%,transparent);border-radius:4px;padding:0 4px}
 .bgr{font-weight:700}
 .bgnote{margin-top:8px;font-size:11px;color:var(--muted);line-height:1.55}
+/* a linha que responde a pergunta real: "quantas bags ate um lendario?" */
+.bgdest{margin-top:8px;padding:7px 10px;border-radius:7px;font-size:12px;line-height:1.5;
+  color:var(--ink);background:color-mix(in srgb,var(--accent) 10%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
 .bgflag{font-size:10.5px;font-weight:700;color:var(--accent)}
 .charmchip{display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--accent);
   border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:7px;padding:2px 8px;white-space:nowrap;opacity:.72}
@@ -1448,11 +1452,27 @@ function bagDe(nome){
   const srv = BAGS.srv ? (BAGS.srv[nome] || BAGS.srv[idKey(nome)] || null) : null;
   return { b, srv };
 }
+// Cada raridade e um sorteio INDEPENDENTE, e o que sai e a melhor que passou. Nao e
+// roleta de peso nem escada: o proprio cliente prova, calculando a chance de Comum
+// como o produto de FALHAR em todas as raridades acima (g5t). Entao a chance de a bag
+// sair numa raridade e "passa nesta e falha em todas acima" -- e essas somam 100%,
+// ao contrario das chances cruas, que somam 125,875%.
+function bagResultado(ch){
+  const p = ch.map(c => Math.min(100, Math.max(0, c||0))/100);
+  return p.map((_,i)=>{
+    let acima = 1;
+    for(let j=i+1;j<p.length;j++) acima *= 1 - p[j];
+    return (i===0 ? 1 : p[i]) * acima;   // o Comum e piso: so sai quando todas falham
+  });
+}
 function bagBloco(nome){
   const d = bagDe(nome);
   if(!d) return "";
   const { b, srv } = d, n = b.it.length;
   const umEm = v => v>0 ? "1 em " + nf(Math.round(100/v)) : "—";
+  // casas suficientes pro Mitico (0,125%) sem encher de zero o Comum
+  const fp = v => v>=1 ? +v.toFixed(2) : v>=0.01 ? +v.toFixed(3) : +v.toFixed(4);
+  const ab = k => nf(k) + (k===1 ? " abertura" : " aberturas");
   let h = `<div class="bg"><div class="bglbl">🎁 o que sai desta bag`
     +`<span class="bgmeta">${n} ${n===1?"item":"itens"}`
     + (b.w ? ` · chance por item declarada` : ` · todos com a mesma chance, 1 em ${n}`)
@@ -1466,18 +1486,24 @@ function bagBloco(nome){
   }).join("") + `</div>`;
   // a raridade, so com config do servidor em maos
   if(srv && Array.isArray(srv.ch)){
+    const res = bagResultado(srv.ch);                    // chance de SAIR em cada raridade
     const linhas = srv.ch.map((c,i)=>({ tier:i, nome:(BAGS.tiers||[])[i]||("tier "+i),
-      ch:c, ev:(srv.ev||[])[i]||0 })).filter(x=>x.ch>0 || x.ev>0).reverse();
-    h += `<div class="bglbl bgsec">🎲 raridade ao abrir<span class="bgmeta">chance por abertura</span></div>`
-      +`<div class="mgtwrap"><table class="mgt"><thead><tr><th class="thl">Raridade</th><th>Chance</th>`
-      +`<th>Garantido a cada</th><th>Uma peça escolhida</th></tr></thead><tbody>`
+      ch:c, r:res[i]*100, ev:(srv.ev||[])[i]||0 })).filter(x=>x.ch>0 || x.ev>0).reverse();
+    // "Lendario ou melhor" e a pergunta que o jogador faz de verdade
+    const iLend = (BAGS.tiers||[]).indexOf("Lendário");
+    const bom = iLend>0 ? res.slice(iLend).reduce((a,x)=>a+x,0) : 0;
+    h += `<div class="bglbl bgsec">🎲 raridade ao abrir<span class="bgmeta">cada raridade é um sorteio separado · sai a melhor que passar</span></div>`
+      +`<div class="mgtwrap"><table class="mgt"><thead><tr><th class="thl">Raridade</th><th>Sai assim</th>`
+      +`<th>1 a cada</th><th>Garantido a cada</th><th>Uma peça escolhida</th></tr></thead><tbody>`
       + linhas.map(x=>`<tr>`
         +`<td class="thl"><span class="bgr" style="color:${RARCOR(x.tier)}">${esc(x.nome)}</span></td>`
-        +`<td>${x.ch>0?(+x.ch.toFixed(4))+"%":"—"}</td>`
-        +`<td>${x.ev>0?nf(x.ev)+" aberturas":`<span class="mut">—</span>`}</td>`
-        +`<td>${x.ch>0?umEm(x.ch/n):"—"}</td>`
+        +`<td${x.ch>0?` title="O sorteio desta raridade é ${+x.ch.toFixed(4)}%; o que está aqui já desconta as vezes em que uma raridade melhor passou junto."`:""}>${x.r>0?fp(x.r)+"%":"—"}</td>`
+        +`<td>${x.r>0?ab(Math.round(100/x.r)):"—"}</td>`
+        +`<td>${x.ev>0?ab(x.ev):`<span class="mut">—</span>`}</td>`
+        +`<td>${x.r>0?umEm(x.r/n):"—"}</td>`
         +`</tr>`).join("")
-      +`</tbody></table></div>`;
+      +`</tbody></table></div>`
+      + (bom>0?`<div class="bgdest">Lendário <b>ou melhor</b>: ${fp(bom*100)}% por abertura — <b>1 a cada ${nf(Math.round(100/(bom*100)))}</b>. Em 80 aberturas, a chance de <b>não</b> ver nenhum é ${Math.round(Math.pow(1-bom,80)*100)}%.</div>`:"");
     // o que o servidor LIGOU em relacao ao default do cliente
     const def = BAGS.def && BAGS.def.ch;
     const ligados = def ? srv.ch.map((c,i)=> c>0 && !(def[i]>0) ? (BAGS.tiers||[])[i] : null).filter(Boolean) : [];
@@ -1487,8 +1513,11 @@ function bagBloco(nome){
       + (ligados.length ? `<b>${ligados.join(" e ")}</b> ${ligados.length>1?"não existem":"não existe"} no padrão do jogo — `
           + `quem ligou foi a <b>configuração do servidor</b>, que muda sem atualizar o jogo. ` : "")
       + `A coluna da direita é a chance vezes 1/${n}, porque o item é sorteado por igual. `
-      + `O sorteio roda no servidor, então não dá pra saber se as linhas são independentes ou em escada — `
-      + `por isso elas somam mais de 100%. Quando a garantia é baixa, é ela que manda, não a chance.</div>`;
+      + `<b>Como o sorteio funciona:</b> cada raridade é testada por conta própria e você fica com a melhor que passar — `
+      + `é o que o próprio jogo mostra ao calcular a chance de Comum como "falhou em todas as outras". `
+      + `Por isso a coluna <b>Sai assim</b> já desconta as vezes em que uma raridade melhor passou junto, e as linhas fecham em 100%. `
+      + `<b>Quem rola é o servidor</b>, e a coluna de garantia também: o nome diz "a cada N", mas o cliente não mostra `
+      + `como o contador anda nem quando zera. Quando a garantia é baixa, é ela que manda, não a chance.</div>`;
   } else if(b.rar){
     h += `<div class="bgnote">Esta bag tem raridade, mas a <b>configuração do servidor não veio neste build</b> — `
       +`melhor não mostrar número do que mostrar o padrão do jogo, que tem Lendário e Mítico em zero.</div>`;
