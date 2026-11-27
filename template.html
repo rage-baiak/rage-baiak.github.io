@@ -317,18 +317,56 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
 .pkflag{font-size:10.5px;font-weight:700;color:var(--accent);border:1px solid color-mix(in srgb,var(--accent) 40%,transparent);
   background:color-mix(in srgb,var(--accent) 10%,transparent);border-radius:5px;padding:1px 5px}
 @media (max-width:600px){ .pkopt{font-size:11px;padding:2px 5px 2px 2px} .pkopts{gap:4px} }
-.mdtabs{display:inline-flex;gap:3px;margin-left:10px;vertical-align:middle}
-.mdb{font:inherit;font-size:10.5px;font-weight:700;letter-spacing:.02em;cursor:pointer;padding:2px 8px;border-radius:6px;
-  color:var(--muted);background:color-mix(in srgb,var(--muted) 12%,transparent);
-  border:1px solid color-mix(in srgb,var(--muted) 28%,transparent)}
-.mdb[aria-pressed="true"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);
+/* barra de dificuldade: um controle global, logo abaixo das abas, porque o modo
+   reescreve numero em toda a pagina e nao so no card aberto */
+.dif{margin:0 0 10px}
+.difbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.diflbl{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-right:2px}
+.difb{font:inherit;font-size:11.5px;font-weight:700;letter-spacing:.02em;cursor:pointer;padding:3px 10px;border-radius:7px;
+  color:var(--muted);background:color-mix(in srgb,var(--muted) 10%,transparent);
+  border:1px solid color-mix(in srgb,var(--muted) 26%,transparent)}
+.difb:hover{color:var(--fg)}
+.difb[aria-pressed="true"]{color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);
   border-color:color-mix(in srgb,var(--accent) 50%,transparent)}
-.mdb:nth-child(2)[aria-pressed="true"]{color:var(--rc);background:color-mix(in srgb,var(--rc) 14%,transparent);
-  border-color:color-mix(in srgb,var(--rc) 50%,transparent)}
-.mdb:nth-child(3)[aria-pressed="true"]{color:var(--rx);background:color-mix(in srgb,var(--rx) 14%,transparent);
-  border-color:color-mix(in srgb,var(--rx) 50%,transparent)}
-.mdbox{margin-bottom:4px}
-.mdp{display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:6px 0}
+.difb[data-md="nm"][aria-pressed="true"]{color:var(--rc);background:color-mix(in srgb,var(--rc) 15%,transparent);
+  border-color:color-mix(in srgb,var(--rc) 55%,transparent)}
+.difb[data-md="hl"][aria-pressed="true"]{color:var(--rx);background:color-mix(in srgb,var(--rx) 15%,transparent);
+  border-color:color-mix(in srgb,var(--rx) 55%,transparent)}
+.difnote{font-size:11px;color:var(--muted);flex:1 1 220px;min-width:0}
+.difnote b{color:var(--fg);font-weight:700}
+.difinfo{margin-top:6px;font-size:11.5px;color:var(--muted)}
+.difinfo>summary{cursor:pointer;color:var(--accent);font-size:11px;font-weight:700;letter-spacing:.02em;
+  padding:2px 0;list-style:none;width:max-content}
+.difinfo>summary::-webkit-details-marker{display:none}
+.difinfo>summary::before{content:"▸ "}
+.difinfo[open]>summary::before{content:"▾ "}
+.difbody{padding:7px 0 2px;line-height:1.6;border-top:1px solid var(--line);margin-top:4px}
+.difbody p{margin:7px 0 0}
+.difbody b{color:var(--fg)}
+.difrow{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;padding:2px 0}
+.difv{font-variant-numeric:tabular-nums}
+.difv i{font-style:normal;color:color-mix(in srgb,var(--muted) 80%,transparent)}
+/* o selo do modo: aparece no summary e na linha de stats, pro leitor nunca olhar um
+   numero escalado achando que e o do servidor */
+.mdtag{font-size:9.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:1px 5px;border-radius:4px;
+  margin-left:7px;vertical-align:middle;white-space:nowrap;
+  color:var(--accent);background:color-mix(in srgb,var(--accent) 14%,transparent);
+  border:1px solid color-mix(in srgb,var(--accent) 40%,transparent)}
+.mdtag.nm{color:var(--rc);background:color-mix(in srgb,var(--rc) 14%,transparent);
+  border-color:color-mix(in srgb,var(--rc) 45%,transparent)}
+.mdtag.hl{color:var(--rx);background:color-mix(in srgb,var(--rx) 14%,transparent);
+  border-color:color-mix(in srgb,var(--rx) 45%,transparent)}
+.rlbl.md.nm{color:var(--rc)}
+.rlbl.md.hl{color:var(--rx)}
+/* sugestao de magia: entra fechada, que era o que poluia o card da hunt */
+.recmagd{margin-top:4px}
+.recmagd>summary{cursor:pointer;font-size:11.5px;font-weight:700;color:var(--accent);padding:4px 0;
+  list-style:none;width:max-content}
+.recmagd>summary::-webkit-details-marker{display:none}
+.recmagd>summary::before{content:"▸ "}
+.recmagd[open]>summary::before{content:"▾ "}
+.recmagd>summary .hint{font-weight:400;color:var(--muted)}
+@media (max-width:600px){ .diflbl{flex-basis:100%;margin-bottom:-2px} }
 .bnv{margin:4px 0 10px;padding:8px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .bnvhead{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:7px}
 .bnvr{flex:1;min-width:140px;accent-color:var(--accent)}
@@ -647,6 +685,17 @@ mark{background:var(--accent-soft);color:inherit;border-radius:3px;padding:0 1px
     </div>
   </div>
 
+  <div class="dif" id="dif" hidden>
+    <div class="difbar" role="group" aria-label="Dificuldade">
+      <span class="diflbl">dificuldade</span>
+      <button class="difb" type="button" data-md="n" aria-pressed="true">Normal</button>
+      <button class="difb" type="button" data-md="nm" aria-pressed="false">Nightmare</button>
+      <button class="difb" type="button" data-md="hl" aria-pressed="false">Hell</button>
+      <span class="difnote" id="difnote"></span>
+    </div>
+    <details class="difinfo" id="difinfo"></details>
+  </div>
+
   <div class="lvfilter" id="lvfilter"></div>
   <div class="lvfilter" id="hordfilter"></div>
   <div class="lvfilter" id="slotfilter"></div>
@@ -774,10 +823,16 @@ const monHunts={}; for(const h of HUNTS) for(const nm of h.mons){ const k=norm(n
 const charmFor = el => (el && CHARMS.elem[el]) || CHARMS.pure;
 function monStats(m){
   let h='<div class="combat">';
-  const st=[`HP <b>${m.hp.toLocaleString("pt-BR")}</b>`, `EXP <b>${m.exp.toLocaleString("pt-BR")}</b>`];
+  // Tudo que o modo mexe sai JA multiplicado, com a base no title: HP, exp, o dano
+  // listado e o dano de cada habilidade. Armor e velocidade nao escalam.
+  const E=mdEsc(m), dx=v=>Math.round((v||0)*E.atk);
+  const st=[
+    `HP <b${E.on?` title="${mdTit(m.hp,E.hpM,m.boss?"HP de boss":"HP")}"`:""}>${E.hp.toLocaleString("pt-BR")}</b>`,
+    `EXP <b${E.on?` title="${mdTit(m.exp,E.expM,"Exp no degrau 1:")}"`:""}>${E.exp.toLocaleString("pt-BR")}</b>`];
+  if(E.on) st.push(`<span class="mdtag ${MD}">${MODO_NOME[MD]}</span>`);
   if(m.arm) st.push(`Armor <b>${m.arm}</b>`);
   if(m.sp) st.push(`Vel <b>${m.sp}</b>`);
-  if(m.dm) st.push(`Dano <b>${m.dm[0]}–${m.dm[1]}</b>`);
+  if(m.dm) st.push(`Dano <b${E.on?` title="${mdTit(m.dm[1],E.atk,"Dano")}"`:""}>${dx(m.dm[0])}–${dx(m.dm[1])}</b>`);
   h+=`<div class="infobox">`
     +monSpr(m.lt,false,m.oc)
     +`<div class="stats">${st.map(x=>`<span>${x}</span>`).join("")}</div>`
@@ -786,9 +841,12 @@ function monStats(m){
   if(m.a&&m.a.length){
     h+=`<div class="atksec"><div class="rlbl">ataques <span class="hint">· % = chance de sair</span></div><div class="atks">`
       +m.a.map(x=>{
+        // a cura do bicho fica como esta: o multiplicador do modo e de dano, e nao ha
+        // nada no cliente dizendo que ele cura mais -- escalar seria invencao
         const heal=x.el==="healing", nm=heal?"Cura":(ELPT[x.el]||x.el);
+        const vmn=heal?(x.mn||0):dx(x.mn), vmx=heal?(x.mx||0):dx(x.mx);
         return `<div class="atk2"><span class="aty">${x.ty||""}</span>`
-          +`<span class="ael"><i class="edot e-${x.el}"></i>${nm} <b>${x.mn}–${x.mx}</b>`
+          +`<span class="ael"><i class="edot e-${x.el}"></i>${nm} <b${E.on&&!heal?` title="${mdTit(x.mx,E.atk,"Dano")}"`:""}>${vmn}–${vmx}</b>`
           +`${x.sz?`<span class="asz">${x.sz}</span>`:""}</span>`
           +`<span class="ach">${x.ch}%</span></div>`;
       }).join("")+`</div></div>`;
@@ -1090,8 +1148,9 @@ function monCard(m,qq,open){
     ? `<div class="huntof"><span class="rlbl">${hs.length>1?"hunts":"hunt"}</span>`
       +hs.map(hn=>`<span class="hlink" data-hunt="${esc(hn)}">${esc(hn)}</span>`).join("")+`</div>`
     : "";
-  return `<details${open}><summary><span class="name">${hl(m.n,qq)}</span>`
-    +`<span class="meta">${dropMeta} · hp ${m.hp.toLocaleString("pt-BR")} · exp ${m.exp.toLocaleString("pt-BR")}</span></summary>`
+  const E=mdEsc(m);
+  return `<details${open}><summary><span class="name">${hl(m.n,qq)}</span>${mdTag()}`
+    +`<span class="meta">${dropMeta} · hp ${E.hp.toLocaleString("pt-BR")} · exp ${E.exp.toLocaleString("pt-BR")}</span></summary>`
     +`<div class="body">${huntLine}${bossNivelLinha(m)}${monStats(m)}${m.l.length?`<table>${lootRows(m.l,"")}</table>`:""}</div></details>`;
 }
 // charms de um monstro, EM ORDEM de indicação (fraqueza maior primeiro). Serve como
@@ -1113,9 +1172,11 @@ function huntMon(name, isBoss, atrib){
   // PICO de dano por turno por elemento (pior caso = todas as habilidades daquele
   // elemento acertam no mesmo turno; somo os MAX). O jogo solta várias no turno, então
   // é isso que hit-kill. mn = piso (soma dos min); mx = pico (soma dos max).
+  // o pico tambem sai no modo ativo: e ele que diz se o bicho hit-kill
+  const E=mdEsc(m,isBoss), dx=v=>Math.round((v||0)*E.atk);
   const th={}, thmn={};
-  if(m.dm&&m.dm[1]){ th.physical=(th.physical||0)+m.dm[1]; thmn.physical=(thmn.physical||0)+(m.dm[0]||0); }
-  for(const ab of m.a||[]) if(ab.el&&ab.el!=="healing"){ th[ab.el]=(th[ab.el]||0)+(ab.mx||0); thmn[ab.el]=(thmn[ab.el]||0)+(ab.mn||0); }
+  if(m.dm&&m.dm[1]){ th.physical=(th.physical||0)+dx(m.dm[1]); thmn.physical=(thmn.physical||0)+dx(m.dm[0]); }
+  for(const ab of m.a||[]) if(ab.el&&ab.el!=="healing"){ th[ab.el]=(th[ab.el]||0)+dx(ab.mx); thmn[ab.el]=(thmn[ab.el]||0)+dx(ab.mn); }
   const tot=Object.values(th).reduce((a,b)=>a+b,0);
   const dmg=Object.entries(th).map(([el,v])=>({el,v,mn:thmn[el]||0})).filter(d=>d.v>0).sort((a,b)=>b.v-a.v);
   // boss tem regra propria (crit); os outros recebem o charm que a distribuicao decidiu
@@ -1145,7 +1206,7 @@ function huntMon(name, isBoss, atrib){
     +monSpr(m.lt,true,m.oc)
     +`<div class="hmon-body"><div class="hmon-h">`
     +`<span class="hmon-lead"><span class="mlink" data-mon="${esc(m.n)}">${esc(m.n)}</span>${isBoss?'<span class="bosstag">👑 boss</span>':""}</span>`
-    +`<span class="hmon-hp">HP ${m.hp.toLocaleString("pt-BR")}</span></div>`
+    +`<span class="hmon-hp"${E.on?` title="${mdTit(m.hp,E.hpM,isBoss?"HP de boss":"HP")}"`:""}>HP ${E.hp.toLocaleString("pt-BR")}</span></div>`
     +(ch?`<div class="hmon-charms">${ch}</div>`:"")
     +`<div class="hmon-cols">`
     +`<div class="hmon-col"><div class="rlbl">dano que recebe <span class="hint">· 100% = normal</span></div>${resGrid(m.r)}</div>`
@@ -1209,58 +1270,86 @@ function expedCard(e,qq,open){
 // que voce causa cai proporcionalmente ate o piso de 10%. Cada peca Celestial da
 // +35; a Cosmica da os mesmos +35 e mais +35 no hell.
 // ---- Normal / Nightmare / Hell ----
-// A exp do modo CRESCE por degrau: exp + expPerStep*(degrau-1). O gold NAO muda
-// (gold:1 nos dois modos) e o loot muda pouco (itemChance 1,1 / 1,2) -- quem carrega
-// o ganho e a exp. As abas trocam o painel sem re-renderizar o card, entao abrir a
-// hunt e clicar no modo nao perde o que estava aberto.
-const MODO_INFO = [
-  ["n",  "Normal",    null],
-  ["nm", "Nightmare", "nm"],
-  ["hl", "Hell",      "hl"],
-];
+// O modo NAO e so um multiplicador na tela: os numeros do bicho (hp, exp, dano listado
+// e dano/turno) sao REESCRITOS com ele em todo card -- monstro, boss e hunt -- e o
+// multiplicador vai pro title, pra quem quiser a base. Mostrar so o x deixava a conta
+// na cabeca do leitor, que e justo o que a wiki existe pra evitar.
+// A exp CRESCE por degrau: exp + expPerStep*(degrau-1). O gold NAO muda (gold:1 nos dois
+// modos) e o loot muda pouco (itemChance 1,1 / 1,2) -- quem carrega o ganho e a exp.
+// E o atk do modo nao e o dano final: raio e nova entram POR CIMA (fator fx, 1,45),
+// e e com ele que o jogo estima o level recomendado.
+const MODO_NOME = { n: "Normal", nm: "Nightmare", hl: "Hell" };
 const DEGRAU_MAX = 20;
-function modoMult(k){ return k && MODOS && MODOS[k] ? MODOS[k] : null; }
-function modoPainel(h, k){
-  const mm = modoMult(k), e = EFF && EFF.h && EFF.h[h.id];
-  const x = v => v == null ? "—" : "×" + String(v).replace(".", ",");
-  if(!mm){
-    return `<div class="mdp">`
-      + (e ? `<span class="hchip att">exp/kill <b>${nf(e.epk)}</b></span>`
-           + `<span class="hchip att">gold/kill <b>${nf(e.gpk)}</b></span>` : "")
-      + `<span class="hnote">sem multiplicador — é a hunt como ela é</span></div>`;
-  }
-  const expFim = mm.expPerStep != null ? mm.exp + mm.expPerStep * (DEGRAU_MAX - 1) : null;
-  const arred = v => Math.round(v * 100) / 100;
-  return `<div class="mdp">`
-    +`<span class="hchip att mal" title="HP dos bichos da hunt">hp ${x(mm.hp)}</span>`
-    +(mm.bossHp!=null?`<span class="hchip att mal" title="O boss da hunt escala diferente dos bichos">hp do boss ${x(mm.bossHp)}</span>`:"")
-    +`<span class="hchip att mal" title="Dano que eles causam">atk ${x(mm.atk)}</span>`
-    +`<span class="hchip att bom" title="No degrau 1. Cresce ${x(mm.expPerStep)} por degrau.">exp ${x(mm.exp)}</span>`
-    +(expFim!=null?`<span class="hchip att bom" title="A exp sobe ${x(mm.expPerStep)} a cada degrau: no ${DEGRAU_MAX} fica ${x(arred(expFim))}.">no degrau ${DEGRAU_MAX} ${x(arred(expFim))}</span>`:"")
-    +`<span class="hchip att bom" title="Chance de item">loot ${x(mm.itemChance)}</span>`
-    +(mm.gold!=null?`<span class="hchip att" title="O gold por kill nao muda com o modo">gold ${x(mm.gold)}</span>`:"")
-    +(e?`<span class="hchip att" title="exp/kill da hunt no normal, vezes o multiplicador do degrau 1">exp/kill <b>${nf(Math.round(e.epk*mm.exp))}</b></span>`:"")
-    +(e?`<span class="hchip att" title="gold/kill nao muda: o multiplicador de gold e 1">gold/kill <b>${nf(e.gpk)}</b></span>`:"")
-    +`<span class="hnote">${MODOS&&MODOS.unlock?`abre com ${nf(MODOS.unlock[k]||0)} pontos · `:""}bichos também soltam raio e nova</span></div>`;
+let MD = "n";
+try { const v = localStorage.getItem("bk-md"); if (v === "nm" || v === "hl") MD = v; } catch (e) {}
+function mdAtivo(){ return MD !== "n" && MODOS && MODOS[MD] ? MODOS[MD] : null; }
+const xm = v => v == null ? "—" : "×" + String(Math.round(v * 100) / 100).replace(".", ",");
+const arr2 = v => Math.round(v * 100) / 100;
+// Numeros do bicho no modo ativo. Boss escala MENOS que o bicho comum (bossHp), entao a
+// escolha do multiplicador depende do flag de boss -- usar o x do bicho no boss inflava.
+function mdEsc(m, boss){
+  const mm = mdAtivo();
+  if(!mm) return { on:false, hp:m.hp, exp:m.exp, atk:1 };
+  // dentro da hunt quem manda e o papel na hunt (isBoss), nao so o flag do registro
+  const ehBoss = boss != null ? !!boss : !!m.boss;
+  const hpM = (ehBoss && mm.bossHp != null) ? mm.bossHp : (mm.hp || 1);
+  const expM = mm.exp || 1;
+  return { on:true, mm, hpM, expM, atk: mm.atk || 1,
+           hp: Math.round(m.hp * hpM), exp: Math.round(m.exp * expM) };
 }
-function modoLinha(h){
-  if(!MODOS || (!MODOS.nm && !MODOS.hl)) return "";
-  return `<div class="mdtabs" data-mdt="1">`
-    + MODO_INFO.map(([id,rot])=>`<button type="button" class="mdb" data-md="${id}" aria-pressed="${id==="n"}">${rot}</button>`).join("")
-    + `</div>`;
+const mdTit = (base, mult, oq) => `No Normal: ${nf(base)}. ${oq} ${xm(mult)} no ${MODO_NOME[MD]}.`;
+function mdTag(){ return mdAtivo() ? `<span class="mdtag ${MD}">${MODO_NOME[MD]}</span>` : ""; }
+// o dano efetivo: o atk do modo vezes o fator do raio+nova
+function mdDanoEf(mm){ return mm && mm.fx ? arr2(mm.atk * mm.fx) : null; }
+
+function modoPainel(h){
+  const mm = mdAtivo(); if(!mm) return "";
+  const expFim = mm.expPerStep != null ? arr2(mm.exp + mm.expPerStep * (DEGRAU_MAX - 1)) : null;
+  const ef = mdDanoEf(mm);
+  return `<div class="recrow"><span class="rlbl md ${MD}">${MODO_NOME[MD]}</span>`
+    +`<span class="hchip att mal" title="HP dos bichos comuns da hunt">hp ${xm(mm.hp)}</span>`
+    +(mm.bossHp!=null?`<span class="hchip att mal" title="O boss escala menos que os bichos comuns">hp do boss ${xm(mm.bossHp)}</span>`:"")
+    +`<span class="hchip att mal" title="O dano listado do bicho. Raio e nova vêm por cima disto.">atk ${xm(mm.atk)}</span>`
+    +(ef?`<span class="hchip att mal" title="Raio vale ${Math.round(mm.raio*100)}% de um ataque por turno e nova ${Math.round(mm.nova*100)}%, somados em cima do atk: ${xm(mm.atk)} × ${xm(mm.fx)}. É este número que o jogo usa pra estimar o level da hunt.">dano efetivo ${xm(ef)}</span>`:"")
+    +`<span class="hchip att bom" title="No degrau 1. Cresce ${xm(mm.expPerStep)} por degrau.">exp ${xm(mm.exp)}</span>`
+    +(expFim!=null?`<span class="hchip att bom" title="A exp sobe ${xm(mm.expPerStep)} a cada degrau: no ${DEGRAU_MAX} fica ${xm(expFim)}.">degrau ${DEGRAU_MAX} ${xm(expFim)}</span>`:"")
+    +`<span class="hchip att bom" title="Chance de item no loot">loot ${xm(mm.itemChance)}</span>`
+    +(mm.gold!=null?`<span class="hchip att" title="O gold por kill não muda com o modo">gold ${xm(mm.gold)}</span>`:"")
+    +`<span class="hnote">${MODOS&&MODOS.unlock?`abre com ${nf(MODOS.unlock[MD]||0)} pontos · `:""}os números dos bichos abaixo já estão no ${MODO_NOME[MD]}</span></div>`;
 }
-function modoBloco(h){
+
+// O explicador fica UMA vez, na barra, e nao em cada card: a informacao e a mesma pros
+// 482 bichos, e repetir por card era o que poluia.
+function difInfo(){
   if(!MODOS || (!MODOS.nm && !MODOS.hl)) return "";
-  return `<div class="mdbox">`
-    + MODO_INFO.map(([id,,k])=>`<div class="mdpane" data-md="${id}"${id==="n"?"":' hidden'}>${modoPainel(h,k)}</div>`).join("")
-    + `</div>`;
+  const v = MODOS.visual, d = MODOS.endemoniada;
+  const linha = k => {
+    const mm = MODOS[k]; if(!mm) return "";
+    const expFim = mm.expPerStep != null ? arr2(mm.exp + mm.expPerStep * (DEGRAU_MAX - 1)) : null;
+    const ef = mdDanoEf(mm);
+    return `<div class="difrow"><span class="mdtag ${k}">${MODO_NOME[k]}</span><span class="difv">`
+      +`hp ${xm(mm.hp)} · boss ${xm(mm.bossHp)} · atk ${xm(mm.atk)}`
+      +(ef?` <i>(dano efetivo ${xm(ef)} com raio e nova)</i>`:"")
+      +` · exp ${xm(mm.exp)}${expFim!=null?` <i>→ ${xm(expFim)} no degrau ${DEGRAU_MAX}</i>`:""}`
+      +` · loot ${xm(mm.itemChance)} · gold ${xm(mm.gold)}`
+      +`</span></div>`;
+  };
+  return `<summary>como a dificuldade muda o bicho — e a aura que aparece nele</summary><div class="difbody">`
+    +linha("nm")+linha("hl")
+    +`<p>O <b>gold por kill não muda</b> nos dois modos. Quem carrega o ganho é a exp, e ela <b>cresce por degrau</b>: o primeiro × é o degrau 1, o da direita é o degrau ${DEGRAU_MAX}. O <b>atk</b> é só o dano listado do bicho — raio e nova somam por cima, e é o <b>dano efetivo</b> que você sente.</p>`
+    +(v?`<p><b>A aparência do bicho.</b> Em Nightmare e Hell ele <b>não</b> ganha aura: o sprite passa por um filtro de cor — dessaturado, com contraste ${String(v.contraste).replace(".",",")}${v.tint?`, e no Hell entra um tint <b>${v.tint}</b> por cima`:""}. É isso que faz o monstro parecer outro.</p>`:"")
+    +(d?`<p><b>A aura é outra coisa: a corrida Endemoniada.</b> É um modificador do Passe, pago em gold — e o gold não volta se você desistir da missão. Nela os bichos ficam muito mais fortes e ganham uma aura <b>de verdade</b> em volta, <b>${esc(d.aura.nome||"aura")}</b> nos comuns e <b>${esc(d.auraBoss.nome||"aura")}</b> no boss, mais um contorno no sprite. Cada corrida <b>caçada até o fim</b> enche o caldeirão${d.selosNoCaldeirao?" (fechar a missão com Marcas não conta)":""}; cheio, ele dá +50 Marcas, 2h de boost de XP, ATK e DEF, e a conquista Endemoniado. Os multiplicadores dela são do servidor e não aparecem no cliente — por isso não há número aqui.</p>`:"")
+    +`</div>`;
 }
 
 // ---- Nivel de boss ----
-// O nivel NAO mexe na exp: mexe em HP, no dano que voce causa, e em ROLAGENS de loot
-// (cada nivel acima de 1 da +1 rolagem, com teto). Essence e soul tem degrau proprio.
-// Os tres bosses de `bossSempre` usam +8% de dano por nivel; os outros, quando o
-// servidor liga a flag, usam +15% -- por isso a conta depende de qual boss e.
+// Tres coisas mudam, e nenhuma e a exp. O que o jogo lista como CONTRA: o HP do boss
+// sobe, e o dano que TODOS OS PERSONAGENS RECEBEM sobe (nao e o seu dano que cresce --
+// era o que estava escrito aqui e estava invertido). Como PRO: o loot sobe em
+// PORCENTAGEM, (nivel-1) x lootPerLevel, e nao em rolagens. O nivel 0 e o unico degrau
+// que alivia: todo mundo recebe menos dano nele.
+// Os tres bosses de `bossSempre` usam +8%/nivel de dano; os outros, quando o servidor
+// liga a flag, usam +15% -- por isso a conta depende de qual boss e.
 function bossTemNivel(m){ return !!(m && m.boss && MODOS && MODOS.boss); }
 function bossSempreTem(nome){
   return !!(MODOS && (MODOS.bossSempre||[]).some(k=>norm(k.replace(/_/g," "))===norm(nome)));
@@ -1271,13 +1360,14 @@ function bossNivelCalc(m, lv){
   const hpPct   = sempre ? b.hpPorNivel   : (steep.hp   != null ? steep.hp   : b.hpPorNivel);
   const danoPct = sempre ? b.danoPorNivel : (steep.dano != null ? steep.dano : b.danoPorNivel);
   const hpMult  = lv <= 1 ? 1 : 1 + (lv - 1) * hpPct / 100;
-  const danoSeu = lv === 0 ? 1 - (b.nivel0 || 0) / 100 : (lv <= 1 ? 1 : 1 + (lv - 1) * danoPct / 100);
-  const rolls   = lv <= 1 ? 0 : Math.min(b.maxRolls != null ? b.maxRolls : Infinity, (lv - 1) * (b.lootPorNivel || 0));
+  // o que VOCE recebe: nivel 0 alivia, nivel >1 agrava
+  const dano    = lv === 0 ? 1 - (b.nivel0 || 0) / 100 : (lv <= 1 ? 1 : 1 + (lv - 1) * danoPct / 100);
+  const lootPct = lv <= 1 ? 0 : (lv - 1) * (b.lootPorNivel || 0);
   const ess = r && lv >= r.essLv ? Math.min(r.essCap, r.essBase + Math.floor(lv * r.essPerLv)) : 0;
   const soul = r && lv >= r.soulLv ? Math.max(0, Math.min(r.soulCap, Math.floor((lv - r.soulOff) / r.soulDiv))) : 0;
   const drop = (MODOS.drops || []).filter(d => norm(d.boss.replace(/_/g," "))===norm(m.n) && lv >= d.lv)
     .map(d => ({ item: d.item, ch: Math.min(100, d.chance + (lv - d.lv) * d.porNivel) }));
-  return { hpMult, danoSeu, rolls, ess, soul, drop, sempre, danoPct, hpPct };
+  return { hpMult, dano, lootPct, ess, soul, drop, sempre, danoPct, hpPct };
 }
 function bossNivelLinha(m){
   if(!bossTemNivel(m)) return "";
@@ -1290,15 +1380,17 @@ function bossNivelLinha(m){
 }
 function bossNivelOut(m, lv){
   const c = bossNivelCalc(m, lv), b = MODOS.boss;
-  const teto = b.maxRolls != null && c.rolls >= b.maxRolls;
-  return `<span class="hchip att mal" title="HP base ${nf(m.hp)} × ${c.hpPct}% por nível acima de 1">hp <b>${nf(Math.round(m.hp*c.hpMult))}</b></span>`
-    +`<span class="hchip att ${c.danoSeu<1?"mal":"bom"}" title="${lv===0?`No nível 0 todo personagem causa ${b.nivel0}% menos dano`:`+${c.danoPct}% por nível acima de 1`}">seu dano ×${String(Math.round(c.danoSeu*100)/100).replace(".",",")}</span>`
-    +`<span class="hchip att bom" title="Cada nível acima de 1 dá +${b.lootPorNivel} rolagem de loot${b.maxRolls!=null?`, até ${b.maxRolls}`:""}">+${c.rolls} ${c.rolls===1?"rolagem":"rolagens"} de loot${teto?" (teto)":""}</span>`
+  const E = mdEsc(m);                       // o nivel multiplica o HP JA no modo ativo
+  const hpLv = Math.round(E.hp * c.hpMult);
+  const pc = v => String(arr2(v)).replace(".", ",");
+  return `<span class="hchip att mal" title="HP ${E.on?`no ${MODO_NOME[MD]} (${nf(E.hp)})`:`base (${nf(m.hp)})`} × ${c.hpPct}% por nível acima de 1">hp <b>${nf(hpLv)}</b></span>`
+    +`<span class="hchip att ${c.dano<1?"bom":"mal"}" title="${lv===0?`O nível 0 é o único que alivia: todo personagem recebe ${b.nivel0}% menos dano.`:`Todos os personagens recebem +${c.danoPct}% de dano por nível acima de 1. Não é o seu dano que cresce — é o que você toma.`}">dano que você recebe ${xm(c.dano)}</span>`
+    +`<span class="hchip att bom" title="Cada nível acima de 1 dá +${pc(b.lootPorNivel)}% de loot. É porcentagem, não rolagem extra.">+${pc(c.lootPct)}% de loot</span>`
     +(c.ess?`<span class="hchip att bom" title="Precisa da Nightmare aberta">${c.ess} death essence</span>`:"")
     +(c.soul?`<span class="hchip att bom" title="Precisa de Nightmare e Hell">${c.soul} infernal soul</span>`:"")
-    +c.drop.map(d=>`<span class="hchip att bom" title="Só cai a partir do nível em que abre, e sobe por nível">${esc(d.item)} ${String(Math.round(d.ch*100)/100).replace(".",",")}%</span>`).join("")
-    +`<div class="hnote">A exp <b>não</b> muda com o nível — o que muda é HP, o seu dano e o número de rolagens de loot.`
-      +(c.sempre?` Este boss tem seletor sempre.`:` Para este boss o nível depende de uma flag do servidor (<b>${esc(MODOS.bossFlag||"?")}</b>), que o cliente não expõe.`)+`</div>`;
+    +c.drop.map(d=>`<span class="hchip att bom" title="Só cai a partir do nível em que abre, e a chance sobe por nível">${esc(d.item)} ${pc(d.ch)}%</span>`).join("")
+    +`<div class="hnote">A exp <b>não</b> muda com o nível. O que muda é o HP do boss, o dano que <b>você recebe</b> e a <b>porcentagem</b> de loot.`
+      +(c.sempre?` Este boss tem o seletor sempre.`:` Para este boss o nível depende de uma flag do servidor (<b>${esc(MODOS.bossFlag||"?")}</b>), que o cliente não expõe.`)+`</div>`;
 }
 
 // ---- Reward bag: o que sai, e com que raridade ----
@@ -1376,6 +1468,7 @@ function RARCOR(t){
 function effRow(h){
   const e = EFF && EFF.h && EFF.h[h.id];
   if(!e) return "";
+  const md = mdAtivo();
   const barra = (v,cls) => `<span class="effbar"><i class="${cls}" style="width:${Math.max(2,Math.min(100,v))}%"></i></span>`;
   const cobertura = EFF.cob ? Math.round(EFF.cob.com/(EFF.cob.com+EFF.cob.sem)*100) : null;
   const lootTit = `Gold por kill contando só o que o jogo precifica`
@@ -1386,8 +1479,11 @@ function effRow(h){
       +`puxa pra <b>${e.lean==="exp"?"exp":"loot"}</b></span>`
     +`<span class="hchip att" title="Índice de exp por HP efetivo. 100 = a melhor hunt do jogo.">exp ${barra(e.ex,"ex")}<b>${e.ex}</b></span>`
     +`<span class="hchip att" title="${esc(lootTit)}">loot ${barra(e.lo,"lo")}<b>${e.lo}</b>${e.unk?`<i class="effwarn" title="${e.unk} itens sem preço">*</i>`:""}</span>`
-    +`<span class="hchip att" title="Experiência média por kill, ponderada pelos bichos da hunt.">exp/kill <b>${nf(e.epk)}</b></span>`
-    +`<span class="hchip att" title="${esc(lootTit)}">gold/kill <b>${nf(e.gpk)}</b>${e.unk?"*":""}</span>`
+    // os indices (exp/loot) ficam na escala NORMAL de proposito: sao relativos as
+    // outras hunts, e multiplicar os dois pelo mesmo modo nao muda ranking nenhum.
+    // Ja o exp/kill e absoluto, entao esse sim entra no modo.
+    +`<span class="hchip att" title="Experiência média por kill, ponderada pelos bichos da hunt.${md?` No Normal: ${nf(e.epk)}, exp ${xm(md.exp)} no degrau 1 do ${MODO_NOME[MD]}.`:""}">exp/kill <b>${nf(md?Math.round(e.epk*(md.exp||1)):e.epk)}</b></span>`
+    +`<span class="hchip att" title="${esc(lootTit)}${md?" O gold por kill não muda com o modo.":""}">gold/kill <b>${nf(e.gpk)}</b>${e.unk?"*":""}</span>`
     +(e.est && h.lv && e.est!==h.lv
       ? `<span class="hchip att" title="Level que a conta de combate do jogo sugere, contra o level ${h.lv} que a hunt exige.">lvl sugerido <b>${nf(e.est)}</b></span>` : "")
     +`<span class="hnote">por HP efetivo · 100 = melhor do jogo${e.unk?" · * loot é piso":""}</span></div>`;
@@ -1426,10 +1522,10 @@ function huntCard(h,qq,open){
   const ordem = h.boss ? [h.boss, ...h.mons.filter(n=>n!==h.boss)] : h.mons;
   const mons = ordem.map(n=>huntMon(n, n===h.boss, porNome[norm(n)])).join("");
   return `<details${open}><summary><span class="name">${hl(h.name,qq)}</span>`
-    +modoLinha(h)
+    +mdTag()
     +`<span class="meta">lv ${h.lv}+ · <span class="chip">${h.mons.length}</span> bichos</span></summary>`
     +`<div class="body hbody"><div class="rec">`
-    +modoBloco(h)
+    +modoPainel(h)
     +attRow(h)
     +effRow(h)
     +`<div class="recrow"><span class="rlbl wk">⚔ arma / imbu</span>${arma}</div>`
@@ -1437,9 +1533,12 @@ function huntCard(h,qq,open){
     
     +bossRow
     +`<div class="recnote">Cada charm ocupa um slot e vai pra um monstro só, então dois bichos da hunt não podem levar o mesmo. A distribuição abaixo é a que rende mais no conjunto — não é o melhor de cada um isolado. O boss leva ${esc(CHARMS.boss.join(" + "))}.</div>`
+    // A sugestao de magia e longa (5 vocacoes x 2 tabelas) e nao e o que se abre a hunt
+    // pra ver: entra fechada, e quem quer o loadout clica.
+    +`<details class="recmagd"><summary>🪄 magias e runas sugeridas <span class="hint">· pack e boss, 4 por vocação</span></summary>`
     +recTable("🌐 Hunt (pack) — área: runas + magias, 4 por vocação", bestSpells(regs, false, h.ma||4))
     +(h.boss&&byName[norm(h.boss)]?recTable("👑 Boss (single-target) — 4 por vocação", bestSpells([byName[norm(h.boss)]], true)):"")
-    +`<div class="recnote">4 slots, <b>1 lançamento a cada 2s</b> (turno). A ordem é a prioridade de cast; a combinação simula os turnos pra maximizar o dano — por isso não repete runa de cd igual (só uma dispara por turno) e mistura nukes de cd maior com uma spammável. <b>Dano × fraqueza × alvos</b>; área pega o pack (cresce nas waves), boss é alvo único. Knight não usa runa (magia de área dele pega o imbuement da arma). Estimativa pra orientar o loadout.</div></div>`
+    +`<div class="recnote">4 slots, <b>1 lançamento a cada 2s</b> (turno). A ordem é a prioridade de cast; a combinação simula os turnos pra maximizar o dano — por isso não repete runa de cd igual (só uma dispara por turno) e mistura nukes de cd maior com uma spammável. <b>Dano × fraqueza × alvos</b>; área pega o pack (cresce nas waves), boss é alvo único. Knight não usa runa (magia de área dele pega o imbuement da arma). Estimativa pra orientar o loadout.</div></details></div>`
     +`<div class="hmons2"><div class="lootlbl" style="margin-top:0;border:0;padding-top:0">Monstros</div>${mons}</div></div></details>`;
 }
 
@@ -2889,19 +2988,9 @@ if(!EXPED||!EXPED.length) mExped.style.display="none";
 if(!SPEC||!SPEC.lista||!SPEC.lista.length) mSpec.style.display="none";
 if(!OUTFITS||!OUTFITS.length) mCasket.style.display="none";
 // links cruzados: monstro <-> item <-> hunt
-// aba de modo e nivel de boss: trocam SO o painel daquele card, sem re-renderizar.
-// Re-render fecharia o <details> e perderia o que o leitor estava olhando.
-list.addEventListener("click",ev=>{
-  const mb=ev.target.closest(".mdb");
-  if(mb){
-    ev.preventDefault();
-    const card=mb.closest("details"), alvo=mb.getAttribute("data-md");
-    if(!card) return;
-    for(const b of card.querySelectorAll(".mdb")) b.setAttribute("aria-pressed", b===mb);
-    for(const p of card.querySelectorAll(".mdpane")) p.hidden = p.getAttribute("data-md")!==alvo;
-    return;
-  }
-});
+// nivel de boss: troca SO o painel daquele card, sem re-renderizar. Re-render fecharia
+// o <details> e perderia o que o leitor estava olhando. O MODO e diferente: ele muda
+// numero em toda a lista, entao esse sim passa pelo render().
 list.addEventListener("input",ev=>{
   const r=ev.target.closest(".bnvr"), n=ev.target.closest(".bnvn");
   const el=r||n; if(!el) return;
@@ -2942,6 +3031,29 @@ themeBtn.onclick=()=>{
 try{ matchMedia("(prefers-color-scheme:dark)").addEventListener("change",()=>{
   if(!localStorage.getItem("baiak-theme")) pintaTema(); }); }catch(_){}
 pintaTema();
+
+// ---- barra de dificuldade ----
+// Um controle global em vez de abas por card: o modo muda hp, exp e dano de TODO bicho,
+// e ter o seletor em cada card deixava o leitor achando que valia so ali.
+function setMd(k, quieto){
+  if(k!=="n"&&k!=="nm"&&k!=="hl") k="n";
+  if(!MODOS || (k!=="n" && !MODOS[k])) k="n";
+  MD=k;
+  try{ localStorage.setItem("bk-md",k); }catch(_){}
+  for(const b of dif.querySelectorAll(".difb")) b.setAttribute("aria-pressed", String(b.getAttribute("data-md")===k));
+  dif.setAttribute("data-md",k);
+  const mm=mdAtivo(), ef=mdDanoEf(mm);
+  difnote.innerHTML = mm
+    ? `hp ${xm(mm.hp)} · dano ${ef?xm(ef):xm(mm.atk)} · exp ${xm(mm.exp)} · loot ${xm(mm.itemChance)} <b>— os números da página já estão no ${MODO_NOME[k]}</b>`
+    : `os números da página são os do servidor, sem multiplicador`;
+  if(!quieto) render();
+}
+if(MODOS && (MODOS.nm||MODOS.hl)){
+  dif.hidden=false;
+  difinfo.innerHTML=difInfo();
+  dif.addEventListener("click",ev=>{ const b=ev.target.closest(".difb"); if(b) setMd(b.getAttribute("data-md")); });
+  setMd(MD,true);
+}
 
 setMode("mon");
 

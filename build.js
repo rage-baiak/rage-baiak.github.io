@@ -945,26 +945,46 @@ function diff(oldD, newD) {
       const d = src.match(new RegExp('(?<![\\w$])' + nome + '=\\(([^)]*)\\)=>\\(\\{'));
       if (!d) return null;
       const params = d[1].split(",").map(x => x.trim());
-      const corpo = src.slice(d.index + d[0].length, d.index + d[0].length + 400);
+      const corpo = src.slice(d.index + d[0].length, d.index + d[0].length + 700);
       const mapa = {};
       for (const mm of corpo.matchAll(/([a-zA-Z]\w*):([a-zA-Z_$][\w$]*)(?=[,}])/g)) {
         const i = params.indexOf(mm[2]);
         if (i >= 0) mapa[mm[1]] = i;        // campo -> indice do argumento
       }
-      return Object.keys(mapa).length ? mapa : null;
+      // Os campos de raio/nova sao LITERAIS na fabrica (nao viram argumento), e sao
+      // o que fecha a conta de dano: o jogo soma o DPS deles ao ataque normal em _bt.
+      // Sem isto o card promete "atk x5" e o jogador toma x7,25.
+      const lits = {};
+      for (const mm of corpo.matchAll(/([a-zA-Z]\w*):([\d.]+(?:e\d+)?)(?=[,}])/g)) lits[mm[1]] = Number(mm[2]);
+      return Object.keys(mapa).length ? { mapa, lits } : null;
     };
     const lv = tag => {
       const m = src.match(new RegExp(tag + ':(?:\\{\\.\\.\\.)?([\\w$]+)\\(([\\d.,\\s]+)\\)'));
       if (!m) return null;
-      const mapa = fabrica(m[1]);
+      const f = fabrica(m[1]);
       const args = m[2].split(",").map(x => num(x.trim()));
-      if (!mapa) return null;
-      const pega = c => mapa[c] != null && args[mapa[c]] != null ? args[mapa[c]] : null;
+      if (!f) return null;
+      const { mapa, lits } = f;
+      // argumento primeiro, literal depois: gold e 1 FIXO na fabrica (nunca foi
+      // parametro), entao so o mapa de argumentos devolvia null e o chip de gold
+      // nunca aparecia -- justo o campo que responde "vale a pena pelo ouro?".
+      const pega = c => mapa[c] != null && args[mapa[c]] != null ? args[mapa[c]]
+                      : (lits[c] != null ? lits[c] : null);
+      // O fator de dano efetivo, igual ao _bt do jogo: cada fonte extra entra como
+      // chance x media do multiplicador x (turno de 2s / intervalo dela). Da 1,45 ->
+      // em cima do atk do modo, e nao em vez dele.
+      const fonte = (ch, mn, mx, iv) => ch == null || mn == null || mx == null || !iv
+        ? null : ch / 100 * ((mn + mx) / 2) * (2000 / iv);
+      const raio = fonte(lits.boltChance, lits.boltMin, lits.boltMax, lits.boltIntervalMs);
+      const nova = fonte(lits.novaChance, lits.novaMin, lits.novaMax, lits.novaIntervalMs);
+      const fx = raio == null || nova == null ? null : Math.round((1 + raio + nova) * 1000) / 1000;
       // expPerStep e gold entram aqui porque sao o que o jogador pergunta: a exp do
       // modo CRESCE por degrau (exp + expPerStep*(degrau-1)) e o gold NAO muda.
       return { hp: pega("hp"), bossHp: pega("bossHp"), atk: pega("atk"),
                exp: pega("exp"), expPerStep: pega("expPerStep"),
-               gold: pega("gold"), itemChance: pega("itemChance") };
+               gold: pega("gold"), itemChance: pega("itemChance"),
+               fx, raio: raio == null ? null : Math.round(raio * 1000) / 1000,
+               nova: nova == null ? null : Math.round(nova * 1000) / 1000 };
     };
     // As 5 familias e a formula de ponto de Nightmare sao capturadas SEPARADAMENTE:
     // em 13/10/2026 o jogo removeu nightmarePerClear/BonusFromStep/BonusPerStep do
@@ -1019,11 +1039,40 @@ function diff(oldD, newD) {
         bonusPorDegrau: mNmPts ? num(mNmPts[3]) : null
       } : null,
       unlock: mUn ? { nm: num(mUn[1]), hl: num(mUn[2]) } : null,
-      // maxLootRolls e o TETO das rolagens extras por nivel -- sem ele o card
-      // prometeria rolagem infinita, que e o erro que o jogador percebe no dia 11.
-      boss: mB ? { hpPorNivel: num(mB[1]), danoPorNivel: num(mB[2]), lootPorNivel: num(mB[3]), nivel0: num(mB[4]),
-                   maxRolls: (() => { const m2 = src.match(/maxLootRolls:(\d+)/); return m2 ? num(m2[1]) : null; })() } : null,
+      // lootPerLevel e PORCENTAGEM, nao rolagem: o jogo monta o texto com
+      // "{n}% mais loot" a partir de (nivel-1)*lootPerLevel. maxLootRolls existe na
+      // config mas o cliente nunca aplica -- fica fora pra nao virar teto inventado.
+      // danoPorNivel sobe o dano que os personagens RECEBEM (entra na lista de contras
+      // do jogo, ao lado do HP do boss); nivel 0 e o unico degrau que ALIVIA.
+      boss: mB ? { hpPorNivel: num(mB[1]), danoPorNivel: num(mB[2]), lootPorNivel: num(mB[3]), nivel0: num(mB[4]) } : null,
       steep: mS ? { hp: num(mS[1]), dano: num(mS[2]) } : null,
+      visual: (() => {
+        // A aparencia do bicho em nightmare/hell e um filtro de cor no sprite, nao uma
+        // aura: dessatura + contraste, e o hell leva um tint por cima.
+        const iv = src.indexOf(".blackAndWhite(!0)");
+        if (iv < 0) return null;
+        const jan = src.slice(Math.max(0, iv - 320), iv + 40);
+        const mT = jan.match(/\.tint\((\d+)/), mC = jan.match(/\.contrast\(([\d.]+)/);
+        if (!mC) return null;
+        return {
+          contraste: num(mC[1]),
+          tint: mT ? "#" + Number(mT[1]).toString(16).padStart(6, "0") : null,
+          tintSoHl: /==="hl"/.test(jan)
+        };
+      })(),
+      endemoniada: (() => {
+        // A corrida Endemoniada (DEMONIAC) e um 3o eixo: vem do Passe, custa gold e
+        // poe uma aura DE VERDADE no bicho -- e isso que se ve na tela. Os
+        // multiplicadores dela sao server-side, entao aqui so sai o que o cliente tem.
+        const mA = src.match(/demon\?[\w$]+\.isBoss\?(\d+):(\d+):0/);
+        if (!mA) return null;
+        const nome = id => { const m2 = src.match(new RegExp('\\{id:' + id + ',name:"([^"]+)"')); return m2 ? m2[1] : null; };
+        return {
+          auraBoss: { id: num(mA[1]), nome: nome(mA[1]) },
+          aura: { id: num(mA[2]), nome: nome(mA[2]) },
+          selosNoCaldeirao: /selos so vem da corrida cacada/.test(src)
+        };
+      })(),
       drops
     };
     if (!r.nm || !r.unlock) throw new Error("config de nightmare/hell nao encontrada");
@@ -1035,6 +1084,10 @@ function diff(oldD, newD) {
     console.log("  boss com seletor sempre:", MODOS.bossSempre.join(", ") || "-", "| flag:", MODOS.bossFlag || "-");
     console.log("modos: nm x" + MODOS.nm.hp + "hp/x" + MODOS.nm.atk + "atk | hl x" + MODOS.hl.hp + "hp/x" + MODOS.hl.atk
       + " | unlock " + MODOS.unlock.nm + "/" + MODOS.unlock.hl + " | drops por nivel: " + MODOS.drops.length);
+    console.log("  dano efetivo (raio+nova): x" + (MODOS.nm.fx || "?")
+      + " | visual: " + (MODOS.visual ? "contraste " + MODOS.visual.contraste + (MODOS.visual.tint ? " + tint " + MODOS.visual.tint : "") : "NAO ACHADO")
+      + " | endemoniada: " + (MODOS.endemoniada ? MODOS.endemoniada.aura.nome + " / boss " + MODOS.endemoniada.auraBoss.nome : "NAO ACHADO"));
+    if (!MODOS.nm.fx) console.log("  aviso: raio/nova sem numero -- o card vai mostrar so o atk do modo");
   } catch (e) { console.log("modos indisponiveis:", e.message); }
   tpl = tpl.replace("const MODOS = __MODOS__;", "const MODOS = " + JSON.stringify(MODOS) + ";");
 
